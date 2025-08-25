@@ -393,6 +393,7 @@ macro_rules! impl_vec_members {
         }
 
         /// Retains only the elements specified by the predicate.
+        #[cfg(not(hax))]
         #[inline]
         pub fn retain<F>(&mut self, f: F)
         where

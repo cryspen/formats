@@ -51,7 +51,8 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
             Some(e) => {
                 let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
                 out.push(1);
-                out.append(&mut e.tls_serialize()?);
+                let mut serialized_e = e.tls_serialize()?;
+                out.append(&mut serialized_e);
                 Ok(out)
             }
             None => Ok(vec![0]),
