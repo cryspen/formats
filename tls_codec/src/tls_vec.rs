@@ -56,7 +56,7 @@ macro_rules! impl_byte_deserialize {
             let mut result = Self {
                 vec: vec![0u8; len],
             };
-            bytes.read_exact(result.vec.as_mut_slice())?;
+            bytes.read_exact(&mut result.vec)?;
             Ok(result)
         }
 
@@ -448,6 +448,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[cfg(not(hax))]
         impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
@@ -646,6 +647,7 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[cfg(not(hax))]
         impl core::ops::IndexMut<usize> for $name {
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {

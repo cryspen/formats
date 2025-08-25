@@ -245,17 +245,7 @@ pub trait DeserializeExact: Deserialize {
     #[cfg(feature = "std")]
     fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
-        Self: Sized,
-    {
-        let mut bytes = bytes.as_ref();
-        let out = Self::tls_deserialize(&mut bytes)?;
-
-        if !bytes.is_empty() {
-            return Err(Error::TrailingData);
-        }
-
-        Ok(out)
-    }
+        Self: Sized;
 }
 
 #[cfg(hax)]
@@ -299,6 +289,7 @@ pub trait DeserializeBytes: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
+    #[cfg(not(hax))]
     fn tls_deserialize_exact_bytes(bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,

@@ -127,8 +127,9 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
         }
     }
     let mut len = content_length;
-    for b in length_bytes.iter_mut().rev() {
-        *b |= (len & 0xFF) as u8;
+    let l = length_bytes.len();
+    for i in 0..l {
+        length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
         len >>= 8;
     }
 
@@ -283,7 +284,7 @@ macro_rules! impl_vl_bytes_generic {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[cfg_attr(feature = "std", derive(Zeroize))]
+#[cfg_attr(all(feature = "std", not(hax)), derive(Zeroize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     vec: Vec<u8>,
@@ -589,7 +590,7 @@ mod rw_bytes {
             let mut result = Self {
                 vec: vec![0u8; length],
             };
-            bytes.read_exact(result.vec.as_mut_slice())?;
+            bytes.read_exact(&mut result.vec)?;
             Ok(result)
         }
     }
@@ -616,7 +617,8 @@ mod secret_bytes {
     /// behaves just like [`VLBytes`], except that it doesn't allow conversion into
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+    #[cfg_attr(not(hax), derive(Zeroize, ZeroizeOnDrop))]
     pub struct SecretVLBytes(VLBytes);
 
     impl SecretVLBytes {
