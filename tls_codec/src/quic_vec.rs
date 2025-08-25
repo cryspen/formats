@@ -630,7 +630,6 @@ mod secret_bytes {
             &self.0.vec
         }
 
-        
         /// Add an element to this.
         #[inline]
         fn push(&mut self, v: u8) {

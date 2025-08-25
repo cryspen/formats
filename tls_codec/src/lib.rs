@@ -131,6 +131,39 @@ pub trait Serialize: Size {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
 
     /// Serialize `self` and return it as a byte vector.
+    #[cfg(all(feature = "std", not(hax)))]
+    fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
+        let mut buffer = Vec::with_capacity(self.tls_serialized_len());
+        let written = self.tls_serialize(&mut buffer)?;
+        debug_assert_eq!(
+            written,
+            buffer.len(),
+            "Expected that {} bytes were written but the output holds {} bytes",
+            written,
+            buffer.len()
+        );
+        if written != buffer.len() {
+            Err(Error::EncodingError(format!(
+                "Expected that {} bytes were written but the output holds {} bytes",
+                written,
+                buffer.len()
+            )))
+        } else {
+            Ok(buffer)
+        }
+    }
+}
+
+#[cfg(hax)]
+pub trait SerializeDetached {
+    /// Serialize `self` and return it as a byte vector.
+    #[cfg(feature = "std")]
+    fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error>;
+}
+
+#[cfg(hax)]
+impl<T: Serialize> SerializeDetached for T {
+    /// Serialize `self` and return it as a byte vector.
     #[cfg(feature = "std")]
     fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
         let mut buffer = Vec::with_capacity(self.tls_serialized_len());
@@ -182,6 +215,29 @@ pub trait Deserialize: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
+    #[cfg(all(feature = "std", not(hax)))]
+    fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let mut bytes = bytes.as_ref();
+        let out = Self::tls_deserialize(&mut bytes)?;
+
+        if !bytes.is_empty() {
+            return Err(Error::TrailingData);
+        }
+
+        Ok(out)
+    }
+}
+
+#[cfg(hax)]
+pub trait DeserializeExact {
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
     #[cfg(feature = "std")]
     fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
@@ -194,6 +250,28 @@ pub trait Deserialize: Size {
             return Err(Error::TrailingData);
         }
 
+        Ok(out)
+    }
+}
+
+#[cfg(hax)]
+impl<T: Deserialize> DeserializeExact for T {
+    /// This function deserializes the provided `bytes` and returns the populated
+    /// struct. All bytes must be consumed.
+    ///
+    /// Returns an error if not all bytes are read from the input, or if an error
+    /// occurs during deserialization.
+    #[cfg(feature = "std")]
+    fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let mut bytes = bytes.as_ref();
+        let out = Self::tls_deserialize(&mut bytes)?;
+
+        if !bytes.is_empty() {
+            return Err(Error::TrailingData);
+        }
         Ok(out)
     }
 }
