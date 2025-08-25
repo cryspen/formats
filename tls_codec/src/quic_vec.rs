@@ -251,18 +251,6 @@ macro_rules! impl_vl_bytes_generic {
             pub fn as_slice(&self) -> &[u8] {
                 self.vec().as_ref()
             }
-
-            /// Add an element to this.
-            #[inline]
-            pub fn push(&mut self, value: u8) {
-                self.vec_mut().push(value);
-            }
-
-            /// Remove the last element.
-            #[inline]
-            pub fn pop(&mut self) -> Option<u8> {
-                self.vec_mut().pop()
-            }
         }
 
         impl From<Vec<u8>> for $name {
@@ -311,8 +299,16 @@ impl VLBytes {
         &self.vec
     }
 
-    fn vec_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.vec
+    /// Add an element to this.
+    #[inline]
+    fn push(&mut self, v: u8) {
+        self.vec.push(v)
+    }
+
+    /// Remove the last element.
+    #[inline]
+    pub fn pop(&mut self) -> Option<u8> {
+        self.vec.pop()
     }
 }
 
@@ -634,8 +630,17 @@ mod secret_bytes {
             &self.0.vec
         }
 
-        fn vec_mut(&mut self) -> &mut Vec<u8> {
-            &mut self.0.vec
+        
+        /// Add an element to this.
+        #[inline]
+        fn push(&mut self, v: u8) {
+            self.0.vec.push(v)
+        }
+
+        /// Remove the last element.
+        #[inline]
+        pub fn pop(&mut self) -> Option<u8> {
+            self.0.vec.pop()
         }
     }
 
