@@ -30,7 +30,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::{string::String, vec::Vec};
+use alloc::vec::Vec;
 use core::fmt::{self, Display};
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
@@ -59,38 +59,60 @@ pub use tls_codec_derive::{
 #[cfg(feature = "conditional_deserialization")]
 pub use tls_codec_derive::conditionally_deserializable;
 
-/// Errors that are thrown by this crate.
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Error {
-    /// An error occurred during encoding.
-    EncodingError(String),
+mod serialize_bytes {
+    use alloc::{string::String, vec::Vec};
 
-    /// The length of a vector is invalid.
-    InvalidVectorLength,
+    /// Errors that are thrown by this crate.
+    #[derive(Debug, Eq, PartialEq, Clone)]
+    pub enum Error {
+        /// An error occurred during encoding.
+        EncodingError(String),
 
-    /// Error writing everything out.
-    InvalidWriteLength(String),
+        /// The length of a vector is invalid.
+        InvalidVectorLength,
 
-    /// Invalid input when trying to decode a primitive integer.
-    InvalidInput,
+        /// Error writing everything out.
+        InvalidWriteLength(String),
 
-    /// An error occurred during decoding.
-    DecodingError(String),
+        /// Invalid input when trying to decode a primitive integer.
+        InvalidInput,
 
-    /// Reached the end of a byte stream.
-    EndOfStream,
+        /// An error occurred during decoding.
+        DecodingError(String),
 
-    /// Found unexpected data after deserializing.
-    TrailingData,
+        /// Reached the end of a byte stream.
+        EndOfStream,
 
-    /// An unknown value in an enum.
-    /// The application might not want to treat this as an error because it is
-    /// only an unknown value, not an invalid value.
-    UnknownValue(u64),
+        /// Found unexpected data after deserializing.
+        TrailingData,
 
-    /// An internal library error that indicates a bug.
-    LibraryError,
+        /// An unknown value in an enum.
+        /// The application might not want to treat this as an error because it is
+        /// only an unknown value, not an invalid value.
+        UnknownValue(u64),
+
+        /// An internal library error that indicates a bug.
+        LibraryError,
+    }
+
+    /// The `Size` trait needs to be implemented by any struct that should be
+    /// efficiently serialized.
+    /// This allows to collect the length of a serialized structure before allocating
+    /// memory.
+    pub trait Size {
+        fn tls_serialized_len(&self) -> usize;
+    }
+
+    /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
+    ///
+    /// The trait provides one function:
+    /// * `tls_serialize` that returns a byte vector
+    pub trait SerializeBytes: Size {
+        /// Serialize `self` and return it as a byte vector.
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+    }
 }
+pub use serialize_bytes::*;
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
@@ -109,14 +131,6 @@ impl From<std::io::Error> for Error {
             _ => Self::DecodingError(format!("io error: {e:?}")),
         }
     }
-}
-
-/// The `Size` trait needs to be implemented by any struct that should be
-/// efficiently serialized.
-/// This allows to collect the length of a serialized structure before allocating
-/// memory.
-pub trait Size {
-    fn tls_serialized_len(&self) -> usize;
 }
 
 /// The `Serialize` trait provides functions to serialize a struct or enum.
@@ -186,19 +200,6 @@ impl<T: Serialize> SerializeDetached for T {
         }
     }
 }
-
-mod serialize_bytes {
-    use super::*;
-    /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
-    ///
-    /// The trait provides one function:
-    /// * `tls_serialize` that returns a byte vector
-    pub trait SerializeBytes: Size {
-        /// Serialize `self` and return it as a byte vector.
-        fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
-    }
-}
-pub use serialize_bytes::SerializeBytes;
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
