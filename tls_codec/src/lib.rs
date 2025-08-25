@@ -187,14 +187,18 @@ impl<T: Serialize> SerializeDetached for T {
     }
 }
 
-/// The `SerializeBytes` trait provides a function to serialize a struct or enum.
-///
-/// The trait provides one function:
-/// * `tls_serialize` that returns a byte vector
-pub trait SerializeBytes: Size {
-    /// Serialize `self` and return it as a byte vector.
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+mod serialize_bytes {
+    use super::*;
+    /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
+    ///
+    /// The trait provides one function:
+    /// * `tls_serialize` that returns a byte vector
+    pub trait SerializeBytes: Size {
+        /// Serialize `self` and return it as a byte vector.
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+    }
 }
+pub use serialize_bytes::SerializeBytes;
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
@@ -232,7 +236,7 @@ pub trait Deserialize: Size {
 }
 
 #[cfg(hax)]
-pub trait DeserializeExact {
+pub trait DeserializeExact: Deserialize {
     /// This function deserializes the provided `bytes` and returns the populated
     /// struct. All bytes must be consumed.
     ///
