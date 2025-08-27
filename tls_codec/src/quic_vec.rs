@@ -129,6 +129,7 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let mut len = content_length;
     let l = length_bytes.len();
     for i in 0..l {
+        // Not using |= is a workaround for https://github.com/cryspen/hax/issues/1512
         length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
         len >>= 8;
     }
@@ -187,6 +188,8 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
         // Serialize the elements
         for e in self.iter() {
+            // Not inlining serialized_e is a workaround for
+            // https://github.com/cryspen/hax/issues/1584
             let mut serialized_e = e.tls_serialize()?;
             out.append(&mut serialized_e);
         }

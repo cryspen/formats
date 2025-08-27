@@ -51,6 +51,8 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
             Some(e) => {
                 let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
                 out.push(1);
+                // Not inlining serialized_e is a workaround for
+                // https://github.com/cryspen/hax/issues/1584
                 let mut serialized_e = e.tls_serialize()?;
                 out.append(&mut serialized_e);
                 Ok(out)

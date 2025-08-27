@@ -27,3 +27,7 @@ trybuild = "1"
 default = ["std"]
 conditional_deserialization = ["syn/full"]
 std = []
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(hax)']
