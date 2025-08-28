@@ -43,6 +43,9 @@ mod primitives;
 mod quic_vec;
 mod tls_vec;
 
+#[cfg(all(feature = "std", hax))]
+pub use hax::*;
+
 pub use tls_vec::{
     SecretTlsVecU8, SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, TlsByteSliceU8,
     TlsByteSliceU16, TlsByteSliceU24, TlsByteSliceU32, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24,
