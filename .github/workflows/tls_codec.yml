@@ -87,7 +87,6 @@ jobs:
         with:
           fstar: v2025.08.07
       - name: 🏃 Extract F*
-        working-directory: tls_codec
         run: cargo hax into fstar
       - name: 🏃 Lax-check extracted F*
-        run: OTHERFLAGS="--admit_smt_queries true" make -C tls_codec/proofs/fstar/extraction/
+        run: OTHERFLAGS="--admit_smt_queries true" make -C proofs/fstar/extraction/
