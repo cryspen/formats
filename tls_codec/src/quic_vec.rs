@@ -14,7 +14,7 @@
 use super::alloc::vec::Vec;
 use core::fmt;
 
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(hax)))]
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[cfg(feature = "arbitrary")]
