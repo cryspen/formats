@@ -30,13 +30,14 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+#[cfg(feature = "std")]
 use alloc::vec::Vec;
 use core::fmt::{self, Display};
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
 mod arrays;
-#[cfg(hax)]
+#[cfg(all(feature = "std", hax))]
 mod hax;
 mod primitives;
 mod quic_vec;
@@ -156,6 +157,7 @@ pub trait Serialize: Size {
 }
 
 /// This is the default implementation for [`Serialize::tls_serialize_detached`]
+#[cfg(feature = "std")]
 fn tls_serialize_detached_default<T: ?Sized + Serialize>(s: &T) -> Result<Vec<u8>, Error> {
     let mut buffer = Vec::with_capacity(s.tls_serialized_len());
     let written = s.tls_serialize(&mut buffer)?;
@@ -206,6 +208,7 @@ pub trait Deserialize: Size {
 }
 
 /// This is the default implementation for [`Deserialize::tls_deserialize_exact`]
+#[cfg(feature = "std")]
 fn tls_deserialize_exact_default<T: Deserialize>(bytes: impl AsRef<[u8]>) -> Result<T, Error> {
     let mut bytes = bytes.as_ref();
     let out = T::tls_deserialize(&mut bytes)?;
