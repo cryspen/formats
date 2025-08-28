@@ -105,6 +105,7 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
 }
 
 #[inline(always)]
+#[allow(clippy::assign_op_pattern)]
 pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
@@ -307,7 +308,7 @@ impl VLBytes {
 
     /// Add an element to this.
     #[inline]
-    fn push(&mut self, v: u8) {
+    pub fn push(&mut self, v: u8) {
         self.vec.push(v)
     }
 
@@ -640,7 +641,7 @@ mod secret_bytes {
 
         /// Add an element to this.
         #[inline]
-        fn push(&mut self, v: u8) {
+        pub fn push(&mut self, v: u8) {
             self.0.vec.push(v)
         }
 

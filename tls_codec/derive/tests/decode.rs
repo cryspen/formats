@@ -4,7 +4,7 @@ use tls_codec::{
     TlsVecU32, VLBytes,
 };
 #[cfg(hax)]
-use tls_codec::{SerializeDetached, DeserializeExact};
+use tls_codec::{DeserializeExact, SerializeDetached};
 use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
 
 #[derive(
