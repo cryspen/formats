@@ -3,6 +3,8 @@ use tls_codec::{
     Deserialize, DeserializeBytes, Error, Serialize, Size, TlsSliceU16, TlsVecU8, TlsVecU16,
     TlsVecU32, VLBytes,
 };
+#[cfg(hax)]
+use tls_codec::{DeserializeExact, SerializeDetached};
 use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
 
 #[derive(

@@ -16,6 +16,7 @@ zeroize = { version = "1.8", default-features = false, features = [
     "alloc",
     "zeroize_derive",
 ] }
+hax-lib = {git = "https://github.com/cryspen/hax", branch = "tls-codec-lib"}
 
 # optional dependencies
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
@@ -51,4 +52,4 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
-check-cfg = ['cfg(fuzzing)']
+check-cfg = ['cfg(fuzzing)', 'cfg(hax)']
