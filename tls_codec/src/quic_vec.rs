@@ -25,6 +25,7 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use crate::{DeserializeBytes, Error, SerializeBytes, Size};
 
 #[cfg(not(feature = "mls"))]
+#[hax_lib::fstar::verification_status(lax)] // Need lemma for (1 << 62) >= 1
 const MAX_LEN: u64 = (1 << 62) - 1;
 #[cfg(not(feature = "mls"))]
 const MAX_LEN_LEN_LOG: usize = 3;
@@ -50,6 +51,7 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
     let length: usize = (len_len_byte & 0x3F).into();
     let len_len_log = (len_len_byte >> 6).into();
     if !cfg!(fuzzing) {
+        #[cfg(not(hax))]
         debug_assert!(len_len_log <= MAX_LEN_LEN_LOG);
     }
     if len_len_log > MAX_LEN_LEN_LOG {
@@ -87,6 +89,7 @@ fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), E
 #[inline(always)]
 fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
     if !cfg!(fuzzing) {
+        #[cfg(not(hax))]
         debug_assert!(length <= MAX_LEN);
     }
     if length > MAX_LEN {
@@ -129,6 +132,7 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     }
     let mut len = content_length;
     let l = length_bytes.len();
+    hax_lib::fstar!("admit ()"); // underflows
     for i in 0..l {
         // Not using |= is a workaround for https://github.com/cryspen/hax/issues/1512
         length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
@@ -165,8 +169,10 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
         let mut result = Vec::new();
         let mut read = len_len;
         while (read - len_len) < length {
+            hax_lib::loop_invariant!(read >= len_len);
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
+            hax_lib::assume!(read < 1000 && element.tls_serialized_len() < 1000); // overflow
             read += element.tls_serialized_len();
             result.push(element);
         }
@@ -180,6 +186,8 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         // We need to pre-compute the length of the content.
         // This requires more computations but the other option would be to buffer
         // the entire content, which can end up requiring a lot of memory.
+
+        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
         let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
         let mut length = write_variable_length(content_length)?;
         let len_len = length.len();
@@ -219,6 +227,7 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
 impl<T: Size> Size for &[T] {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
         let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
         let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
             // We can't do anything about the error unless we change the trait.
@@ -334,6 +343,7 @@ fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
         // We can't do anything about the error. Let's say there's no content.
         0
     });
+    hax_lib::fstar!("admit ()"); // overflow
     content_length + len_len
 }
 
@@ -347,6 +357,7 @@ impl Size for VLBytes {
 impl DeserializeBytes for VLBytes {
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        hax_lib::fstar!("admit ()");
         let ((length, _), remainder) = read_variable_length_bytes(bytes)?;
         if length == 0 {
             return Ok((Self::new(vec![]), remainder));
@@ -469,6 +480,7 @@ pub mod rw {
 
             let mut result = Vec::new();
             let mut read = len_len;
+            hax_lib::fstar!("admit ()"); // underflow
             while (read - len_len) < length {
                 let element = T::tls_deserialize(bytes)?;
                 read += element.tls_serialized_len();
@@ -502,6 +514,7 @@ pub mod rw {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
+            hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
             let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
             let len_len = write_length(writer, content_length)?;
 
@@ -542,6 +555,8 @@ mod rw_bytes {
         // large and write it out.
         let content_length = bytes.len();
 
+        hax_lib::fstar!("admit ()");
+
         if !cfg!(fuzzing) {
             debug_assert!(
                 content_length as u64 <= MAX_LEN,
@@ -578,6 +593,7 @@ mod rw_bytes {
 
     impl Deserialize for VLBytes {
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
+            hax_lib::fstar!("admit ()");
             let (length, _) = rw::read_length(bytes)?;
             if length == 0 {
                 return Ok(Self::new(vec![]));

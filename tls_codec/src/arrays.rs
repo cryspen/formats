@@ -35,12 +35,8 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
 impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        let out = bytes
-            .get(..LEN)
-            .ok_or(Error::EndOfStream)?
-            .try_into()
-            .map_err(|_| Error::EndOfStream)?;
-        Ok((out, &bytes[LEN..]))
+        let (out, remainder) = bytes.split_at_checked(LEN).ok_or(Error::EndOfStream)?;
+        Ok((out.try_into().map_err(|_| Error::EndOfStream)?, remainder))
     }
 }
 
