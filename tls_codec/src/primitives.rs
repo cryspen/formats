@@ -13,6 +13,7 @@ use std::io::{Read, Write};
 impl<T: Size> Size for Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::fstar!("admit ()"); // overflow
         1 + match self {
             Some(v) => v.tls_serialized_len(),
             None => 0,
@@ -33,8 +34,12 @@ impl<T: Serialize> Serialize for Option<T> {
         match self {
             Some(e) => {
                 let written = writer.write(&[1])?;
+                #[cfg(not(hax))]
                 debug_assert_eq!(written, 1);
-                e.tls_serialize(writer).map(|l| l + 1)
+                e.tls_serialize(writer).map(|l| {
+                    hax_lib::assume!(l <= 1000);
+                    l + 1
+                })
             }
             None => {
                 writer.write_all(&[0])?;
@@ -49,6 +54,7 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
+                hax_lib::assume!(e.tls_serialized_len() <= 1000);
                 let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
                 out.push(1);
                 // Not inlining serialized_e is a workaround for
@@ -160,6 +166,7 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 let written = writer.write(&self.to_be_bytes())?;
+                #[cfg(not(hax))]
                 debug_assert_eq!(written, $bytes);
                 Ok(written)
             }
@@ -236,7 +243,10 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
-        self.1.tls_serialize(writer).map(|l| l + written)
+        self.1.tls_serialize(writer).map(|l| {
+            hax_lib::assume!(l < 1000 && written < 1000);
+            l + written
+        })
     }
 }
 
@@ -247,6 +257,7 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(self.0.tls_serialized_len() < 1000 && self.1.tls_serialized_len() < 1000);
         self.0.tls_serialized_len() + self.1.tls_serialized_len()
     }
 }
@@ -293,8 +304,12 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let mut written = self.0.tls_serialize(writer)?;
+        hax_lib::fstar!("admit ()"); // overflow
         written += self.1.tls_serialize(writer)?;
-        self.2.tls_serialize(writer).map(|l| l + written)
+        self.2.tls_serialize(writer).map(|l| {
+            hax_lib::assume!(l < 1000 && written < 1000);
+            l + written
+        })
     }
 }
 
@@ -306,6 +321,11 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(
+            self.0.tls_serialized_len() < 1000
+                && self.1.tls_serialized_len() < 1000
+                && self.2.tls_serialized_len() < 1000
+        );
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
