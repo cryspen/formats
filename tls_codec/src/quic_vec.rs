@@ -482,10 +482,12 @@ pub mod rw {
 
             let mut result = Vec::new();
             let mut read = len_len;
-            hax_lib::fstar!("admit ()"); // underflow
             while (read - len_len) < length {
+                hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                read += element.tls_serialized_len();
+                read = read
+                    .checked_add(element.tls_serialized_len())
+                    .ok_or(Error::LibraryError)?;
                 result.push(element);
             }
             Ok(result)
