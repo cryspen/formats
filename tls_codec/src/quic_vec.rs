@@ -132,8 +132,8 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     }
     let mut len = content_length;
     let l = length_bytes.len();
-    hax_lib::fstar!("admit ()"); // underflows
     for i in 0..l {
+        hax_lib::loop_invariant!(|_: usize| length_bytes.len() == l);
         // Not using |= is a workaround for https://github.com/cryspen/hax/issues/1512
         length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
         len >>= 8;
@@ -172,8 +172,9 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
             hax_lib::loop_invariant!(read >= len_len);
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
-            hax_lib::fstar!("admit ()"); // overflow
-            read += element.tls_serialized_len();
+            read = read
+                .checked_add(element.tls_serialized_len())
+                .ok_or(Error::LibraryError)?;
             result.push(element);
         }
         Ok((result, remainder))
@@ -574,9 +575,9 @@ mod rw_bytes {
         // Now serialize the elements
         writer.write_all(bytes)?;
 
-        hax_lib::fstar!("admit ()"); // overflow
-
-        Ok(content_length + len_len)
+        content_length
+            .checked_add(len_len)
+            .ok_or(Error::LibraryError)
     }
 
     impl Serialize for VLBytes {

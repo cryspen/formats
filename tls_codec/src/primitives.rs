@@ -36,10 +36,9 @@ impl<T: Serialize> Serialize for Option<T> {
                 let written = writer.write(&[1])?;
                 hax_lib::assume!(written == 1);
                 debug_assert_eq!(written, 1);
-                e.tls_serialize(writer).map(|l| {
-                    hax_lib::fstar!("admit ()"); // overflow
-                    l + 1
-                })
+                e.tls_serialize(writer)?
+                    .checked_add(1)
+                    .ok_or(Error::LibraryError)
             }
             None => {
                 writer.write_all(&[0])?;
@@ -54,8 +53,11 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
-                hax_lib::fstar!("admit ()"); // overflow
-                let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
+                let mut out = Vec::with_capacity(
+                    e.tls_serialized_len()
+                        .checked_add(1)
+                        .ok_or(Error::LibraryError)?,
+                );
                 out.push(1);
                 // Not inlining serialized_e is a workaround for
                 // https://github.com/cryspen/hax/issues/1584
@@ -243,10 +245,10 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
-        self.1.tls_serialize(writer).map(|l| {
-            hax_lib::fstar!("admit ()"); // overflow
-            l + written
-        })
+        self.1
+            .tls_serialize(writer)?
+            .checked_add(written)
+            .ok_or(Error::LibraryError)
     }
 }
 
@@ -303,10 +305,14 @@ where
     #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        let mut written = self.0.tls_serialize(writer)?;
-        hax_lib::fstar!("admit ()"); // overflow
-        written += self.1.tls_serialize(writer)?;
-        self.2.tls_serialize(writer).map(|l| l + written)
+        let written = self.0.tls_serialize(writer)?;
+        let written = written
+            .checked_add(self.1.tls_serialize(writer)?)
+            .ok_or(Error::LibraryError)?;
+        self.2
+            .tls_serialize(writer)?
+            .checked_add(written)
+            .ok_or(Error::LibraryError)
     }
 }
 
