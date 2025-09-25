@@ -447,12 +447,13 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[hax_lib::attributes]
         impl<T: $($bounds + )*> core::ops::Index<usize> for $name<T> {
             type Output = T;
 
             #[inline]
+            #[hax_lib::requires(i < self.vec.len())]
             fn index(&self, i: usize) -> &T {
-                hax_lib::fstar!("admit ()"); // index precondition
                 self.vec.index(i)
             }
         }
@@ -648,12 +649,13 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[hax_lib::attributes]
         impl core::ops::Index<usize> for $name {
             type Output = u8;
 
             #[inline]
+            #[hax_lib::requires(i < self.vec.len())]
             fn index(&self, i: usize) -> &u8 {
-                hax_lib::fstar!("admit ()"); // index precondition
                 self.vec.index(i)
             }
         }
