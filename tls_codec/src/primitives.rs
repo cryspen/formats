@@ -37,7 +37,7 @@ impl<T: Serialize> Serialize for Option<T> {
                 #[cfg(not(hax))]
                 debug_assert_eq!(written, 1);
                 e.tls_serialize(writer).map(|l| {
-                    hax_lib::assume!(l <= 1000);
+                    hax_lib::fstar!("admit ()"); // overflow
                     l + 1
                 })
             }
@@ -54,7 +54,7 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
-                hax_lib::assume!(e.tls_serialized_len() <= 1000);
+                hax_lib::fstar!("admit ()"); // overflow
                 let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
                 out.push(1);
                 // Not inlining serialized_e is a workaround for
@@ -244,7 +244,7 @@ where
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
         self.1.tls_serialize(writer).map(|l| {
-            hax_lib::assume!(l < 1000 && written < 1000);
+            hax_lib::fstar!("admit ()"); // overflow
             l + written
         })
     }
@@ -257,7 +257,7 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        hax_lib::assume!(self.0.tls_serialized_len() < 1000 && self.1.tls_serialized_len() < 1000);
+        hax_lib::fstar!("admit ()"); // overflow
         self.0.tls_serialized_len() + self.1.tls_serialized_len()
     }
 }
@@ -306,10 +306,7 @@ where
         let mut written = self.0.tls_serialize(writer)?;
         hax_lib::fstar!("admit ()"); // overflow
         written += self.1.tls_serialize(writer)?;
-        self.2.tls_serialize(writer).map(|l| {
-            hax_lib::assume!(l < 1000 && written < 1000);
-            l + written
-        })
+        self.2.tls_serialize(writer).map(|l| l + written)
     }
 }
 
@@ -321,11 +318,7 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        hax_lib::assume!(
-            self.0.tls_serialized_len() < 1000
-                && self.1.tls_serialized_len() < 1000
-                && self.2.tls_serialized_len() < 1000
-        );
+        hax_lib::fstar!("admit ()"); // overflow
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }

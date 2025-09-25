@@ -172,7 +172,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
             hax_lib::loop_invariant!(read >= len_len);
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
-            hax_lib::assume!(read < 1000 && element.tls_serialized_len() < 1000); // overflow
+            hax_lib::fstar!("admit ()"); // overflow
             read += element.tls_serialized_len();
             result.push(element);
         }
@@ -357,13 +357,13 @@ impl Size for VLBytes {
 impl DeserializeBytes for VLBytes {
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-        hax_lib::fstar!("admit ()");
         let ((length, _), remainder) = read_variable_length_bytes(bytes)?;
         if length == 0 {
             return Ok((Self::new(vec![]), remainder));
         }
 
         if !cfg!(fuzzing) {
+            #[cfg(not(hax))]
             debug_assert!(
                 length <= MAX_LEN as usize,
                 "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
@@ -374,11 +374,12 @@ impl DeserializeBytes for VLBytes {
                 "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             )));
         }
-        match remainder.get(..length).ok_or(Error::EndOfStream) {
-            Ok(vec) => Ok((Self { vec: vec.to_vec() }, &remainder[length..])),
+        match remainder.split_at_checked(length).ok_or(Error::EndOfStream) {
+            Ok((vec, remainder)) => Ok((Self { vec: vec.to_vec() }, remainder)),
             Err(_e) => {
                 let remaining_len = remainder.len();
                 if !cfg!(fuzzing) {
+                    #[cfg(not(hax))]
                     debug_assert_eq!(
                         remaining_len, length,
                         "Expected to read {length} bytes but {remaining_len} were read.",
@@ -555,9 +556,8 @@ mod rw_bytes {
         // large and write it out.
         let content_length = bytes.len();
 
-        hax_lib::fstar!("admit ()");
-
         if !cfg!(fuzzing) {
+            #[cfg(not(hax))]
             debug_assert!(
                 content_length as u64 <= MAX_LEN,
                 "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
@@ -573,6 +573,8 @@ mod rw_bytes {
 
         // Now serialize the elements
         writer.write_all(bytes)?;
+
+        hax_lib::fstar!("admit ()"); // overflow
 
         Ok(content_length + len_len)
     }
@@ -593,13 +595,13 @@ mod rw_bytes {
 
     impl Deserialize for VLBytes {
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            hax_lib::fstar!("admit ()");
             let (length, _) = rw::read_length(bytes)?;
             if length == 0 {
                 return Ok(Self::new(vec![]));
             }
 
             if !cfg!(fuzzing) {
+                #[cfg(not(hax))]
                 debug_assert!(
                     length <= MAX_LEN as usize,
                     "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",

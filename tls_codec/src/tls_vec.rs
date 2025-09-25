@@ -98,7 +98,7 @@ macro_rules! impl_deserialize {
             while (read - len_len) < len.try_into().unwrap() {
                 hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                hax_lib::assume!(read < 1000 && element.tls_serialized_len() < 1000); // overflow
+                hax_lib::fstar!("admit ()"); // overflow
                 read += element.tls_serialized_len();
                 result.push(element);
             }
@@ -119,7 +119,7 @@ macro_rules! impl_deserialize_bytes {
                 hax_lib::loop_invariant!(read >= len_len);
                 let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
                 remainder = next_remainder;
-                hax_lib::assume!(read < 1000 && element.tls_serialized_len() < 1000); // overflow
+                hax_lib::fstar!("admit ()"); // overflow
                 read += element.tls_serialized_len();
                 result.push(element);
             }
@@ -180,7 +180,7 @@ macro_rules! impl_serialize_common {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
             let tls_serialized_len = $self.tls_serialized_len();
-            hax_lib::assume!(tls_serialized_len > $len_len);
+            hax_lib::assume!(tls_serialized_len > $len_len); // underflow
             let byte_length = tls_serialized_len - $len_len;
             let max_len = <$size>::MAX.try_into().unwrap();
             #[cfg(not(hax))]
@@ -449,19 +449,19 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        #[hax_lib::opaque] // index precondition
         impl<T: $($bounds + )*> core::ops::Index<usize> for $name<T> {
             type Output = T;
 
             #[inline]
             fn index(&self, i: usize) -> &T {
+                hax_lib::fstar!("admit ()"); // index precondition
                 self.vec.index(i)
             }
         }
 
-        #[hax_lib::opaque] // translation uses =., why?
         impl<T: $($bounds + )* core::cmp::PartialEq> core::cmp::PartialEq for $name<T> {
             fn eq(&self, other: &Self) -> bool {
+                hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1704
                 self.vec.eq(&other.vec)
             }
         }

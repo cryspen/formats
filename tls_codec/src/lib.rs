@@ -287,7 +287,6 @@ impl U24 {
     }
 }
 
-#[hax_lib::fstar::options("--z3rlimit 00")]
 impl From<U24> for usize {
     fn from(value: U24) -> usize {
         const LEN: usize = core::mem::size_of::<usize>();
@@ -308,7 +307,7 @@ impl TryFrom<usize> for U24 {
         if value > (1 << 24) - 1 {
             Err(Error::LibraryError)
         } else {
-            hax_lib::assume!(LEN == 8);  // https://github.com/cryspen/hax/issues/1702
+            hax_lib::assume!(LEN == 8); // https://github.com/cryspen/hax/issues/1702
             Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
         }
     }
