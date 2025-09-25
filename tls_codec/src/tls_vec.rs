@@ -65,7 +65,7 @@ macro_rules! impl_byte_deserialize {
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let len = type_len.try_into().unwrap();
+            let len: usize = type_len.try_into().unwrap();
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -76,10 +76,8 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            hax_lib::fstar!("admit ()"); // overflow
-            let vec = bytes
-                .get($len_len..len + $len_len)
-                .ok_or(Error::EndOfStream)?;
+            let end = len.checked_add($len_len).ok_or(Error::LibraryError)?;
+            let vec = bytes.get($len_len..end).ok_or(Error::EndOfStream)?;
             let result = Self { vec: vec.to_vec() };
             Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
@@ -98,8 +96,9 @@ macro_rules! impl_deserialize {
             while (read - len_len) < len.try_into().unwrap() {
                 hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                hax_lib::fstar!("admit ()"); // overflow
-                read += element.tls_serialized_len();
+                read = read
+                    .checked_add(element.tls_serialized_len())
+                    .ok_or(Error::LibraryError)?;
                 result.push(element);
             }
             Ok(result)
@@ -119,8 +118,9 @@ macro_rules! impl_deserialize_bytes {
                 hax_lib::loop_invariant!(read >= len_len);
                 let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
                 remainder = next_remainder;
-                hax_lib::fstar!("admit ()"); // overflow
-                read += element.tls_serialized_len();
+                read = read
+                    .checked_add(element.tls_serialized_len())
+                    .ok_or(Error::LibraryError)?;
                 result.push(element);
             }
             Ok((result, remainder))
@@ -165,9 +165,8 @@ macro_rules! impl_byte_serialize {
             hax_lib::fstar!("admit ()"); // Need to prove unwrap for usize to U24
             let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
-            hax_lib::fstar!("admit ()"); // overflow
             // Now serialize the elements
-            written += writer.write($self.as_slice())?;
+            written = written.checked_add(writer.write($self.as_slice())?).ok_or(Error::LibraryError)?;
 
             $self.assert_written_bytes(tls_serialized_len, written)?;
             Ok(written)
@@ -180,8 +179,7 @@ macro_rules! impl_serialize_common {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
             let tls_serialized_len = $self.tls_serialized_len();
-            hax_lib::assume!(tls_serialized_len > $len_len); // underflow
-            let byte_length = tls_serialized_len - $len_len;
+            let byte_length = tls_serialized_len.checked_sub($len_len).ok_or(Error::InvalidVectorLength)?;
             let max_len = <$size>::MAX.try_into().unwrap();
             #[cfg(not(hax))]
             debug_assert!(
