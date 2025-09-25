@@ -34,7 +34,7 @@ impl<T: Serialize> Serialize for Option<T> {
         match self {
             Some(e) => {
                 let written = writer.write(&[1])?;
-                #[cfg(not(hax))]
+                hax_lib::assume!(written == 1);
                 debug_assert_eq!(written, 1);
                 e.tls_serialize(writer).map(|l| {
                     hax_lib::fstar!("admit ()"); // overflow
