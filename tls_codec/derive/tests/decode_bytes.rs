@@ -90,6 +90,10 @@ mod custom {
         v.tls_serialized_len()
     }
 
+    pub fn tls_serialized_len_checked(v: &[u8]) -> Option<usize> {
+        v.tls_serialized_len_checked()
+    }
+
     pub fn tls_serialize(v: &[u8]) -> Result<Vec<u8>, tls_codec::Error> {
         v.tls_serialize()
     }

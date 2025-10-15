@@ -147,12 +147,20 @@ impl<T: Size> Size for Vec<T> {
     fn tls_serialized_len(&self) -> usize {
         self.as_slice().tls_serialized_len()
     }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.as_slice().tls_serialized_len_checked()
+    }
 }
 
 impl<T: Size> Size for &Vec<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
     }
 }
 
@@ -225,17 +233,23 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
     }
 }
 
+fn serialized_len_checked_slice<T: Size>(s: &[T]) -> Option<usize> {
+    hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
+    let content_length = s.iter().fold(Some(0usize), |acc, e| {
+        acc?.checked_add(e.tls_serialized_len_checked()?)
+    })?;
+    let len_len = length_encoding_bytes(content_length as u64).ok()?;
+    content_length.checked_add(len_len)
+}
+
 impl<T: Size> Size for &[T] {
     #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        serialized_len_checked_slice(self)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
-        let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
-            // We can't do anything about the error unless we change the trait.
-            // Let's say there's no content for now.
-            0
-        });
-        content_length + len_len
+        serialized_len_checked_slice(self).unwrap_or(0)
     }
 }
 
@@ -338,19 +352,19 @@ impl From<VLBytes> for Vec<u8> {
 }
 
 #[inline(always)]
-fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
+fn tls_serialize_bytes_len(bytes: &[u8]) -> Option<usize> {
     let content_length = bytes.len();
-    let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
-        // We can't do anything about the error. Let's say there's no content.
-        0
-    });
-    hax_lib::fstar!("admit ()"); // overflow
-    content_length + len_len
+    let len_len = length_encoding_bytes(content_length as u64).ok()?;
+    content_length.checked_add(len_len)
 }
 
 impl Size for VLBytes {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        tls_serialize_bytes_len(self.as_slice()).unwrap_or(0)
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
         tls_serialize_bytes_len(self.as_slice())
     }
 }
@@ -399,6 +413,10 @@ impl Size for &VLBytes {
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
     }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
+    }
 }
 
 pub struct VLByteSlice<'a>(pub &'a [u8]);
@@ -423,14 +441,22 @@ impl VLByteSlice<'_> {
 impl Size for &VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
+        tls_serialize_bytes_len(self.0).unwrap_or(0)
+    }
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
         tls_serialize_bytes_len(self.0)
     }
 }
 
 impl Size for VLByteSlice<'_> {
     #[inline]
-    fn tls_serialized_len(&self) -> usize {
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
         tls_serialize_bytes_len(self.0)
+    }
+    #[inline]
+    fn tls_serialized_len(&self) -> usize {
+        tls_serialize_bytes_len(self.0).unwrap_or(0)
     }
 }
 
@@ -678,6 +704,9 @@ mod secret_bytes {
     impl Size for SecretVLBytes {
         fn tls_serialized_len(&self) -> usize {
             self.0.tls_serialized_len()
+        }
+        fn tls_serialized_len_checked(&self) -> Option<usize> {
+            self.0.tls_serialized_len_checked()
         }
     }
 

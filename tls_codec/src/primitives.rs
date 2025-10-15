@@ -12,12 +12,20 @@ use std::io::{Read, Write};
 
 impl<T: Size> Size for Option<T> {
     #[inline]
-    fn tls_serialized_len(&self) -> usize {
-        hax_lib::fstar!("admit ()"); // overflow
-        1 + match self {
-            Some(v) => v.tls_serialized_len(),
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        1usize.checked_add(match self {
+            Some(v) => v.tls_serialized_len_checked()?,
             None => 0,
-        }
+        })
+    }
+    #[inline]
+    fn tls_serialized_len(&self) -> usize {
+        1usize
+            .checked_add(match self {
+                Some(v) => v.tls_serialized_len(),
+                None => 0,
+            })
+            .unwrap_or(0)
     }
 }
 
@@ -25,6 +33,10 @@ impl<T: Size> Size for &Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
+    }
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
     }
 }
 
@@ -187,12 +199,20 @@ macro_rules! impl_unsigned {
             fn tls_serialized_len(&self) -> usize {
                 $bytes
             }
+            #[inline]
+            fn tls_serialized_len_checked(&self) -> Option<usize> {
+                Some($bytes)
+            }
         }
 
         impl Size for &$t {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 (*self).tls_serialized_len()
+            }
+            #[inline]
+            fn tls_serialized_len_checked(&self) -> Option<usize> {
+                (*self).tls_serialized_len_checked()
             }
         }
     };
@@ -258,9 +278,17 @@ where
     U: Size,
 {
     #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.0
+            .tls_serialized_len_checked()?
+            .checked_add(self.1.tls_serialized_len_checked()?)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        hax_lib::fstar!("admit ()"); // overflow
-        self.0.tls_serialized_len() + self.1.tls_serialized_len()
+        self.0
+            .tls_serialized_len()
+            .checked_add(self.1.tls_serialized_len())
+            .unwrap_or(0)
     }
 }
 
@@ -323,9 +351,20 @@ where
     V: Size,
 {
     #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.0
+            .tls_serialized_len_checked()?
+            .checked_add(self.1.tls_serialized_len_checked()?)?
+            .checked_add(self.2.tls_serialized_len_checked()?)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        hax_lib::fstar!("admit ()"); // overflow
-        self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
+        self.0
+            .tls_serialized_len()
+            .checked_add(self.1.tls_serialized_len())
+            .unwrap_or(0)
+            .checked_add(self.2.tls_serialized_len())
+            .unwrap_or(0)
     }
 }
 
@@ -333,6 +372,10 @@ impl Size for () {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        Some(0)
     }
 }
 
@@ -362,6 +405,10 @@ impl<T> Size for PhantomData<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        Some(0)
     }
 }
 
@@ -399,6 +446,10 @@ impl<T: Size> Size for Box<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.as_ref().tls_serialized_len()
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.as_ref().tls_serialized_len_checked()
     }
 }
 
