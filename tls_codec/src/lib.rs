@@ -291,7 +291,7 @@ impl From<U24> for usize {
     fn from(value: U24) -> usize {
         const LEN: usize = core::mem::size_of::<usize>();
         let mut usize_bytes = [0u8; LEN];
-        hax_lib::assume!(LEN == 8); // https://github.com/cryspen/hax/issues/1702
+        hax_lib::assume!(usize_bytes.len() == LEN); // https://github.com/cryspen/hax/issues/1702
         usize_bytes[LEN - 3..].copy_from_slice(&value.0);
         usize::from_be_bytes(usize_bytes)
     }
@@ -307,7 +307,7 @@ impl TryFrom<usize> for U24 {
         if value > (1 << 24) - 1 {
             Err(Error::LibraryError)
         } else {
-            hax_lib::assume!(LEN == 8); // https://github.com/cryspen/hax/issues/1702
+            hax_lib::assume!(value.to_be_bytes().len() == LEN); // https://github.com/cryspen/hax/issues/1702
             Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
         }
     }
