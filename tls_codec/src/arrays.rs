@@ -51,4 +51,8 @@ impl<const LEN: usize> Size for [u8; LEN] {
     fn tls_serialized_len(&self) -> usize {
         LEN
     }
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        Some(LEN)
+    }
 }

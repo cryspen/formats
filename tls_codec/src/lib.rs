@@ -110,6 +110,8 @@ mod serialize_bytes {
     #[hax_lib::attributes]
     pub trait Size {
         #[hax_lib::requires(true)]
+        fn tls_serialized_len_checked(&self) -> Option<usize>;
+        #[hax_lib::requires(true)]
         fn tls_serialized_len(&self) -> usize;
     }
 
