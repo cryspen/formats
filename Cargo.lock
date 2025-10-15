@@ -763,8 +763,8 @@ checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 
 [[package]]
 name = "hax-lib"
-version = "0.3.4"
-source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#a06153e29dd8eaab49ccda66a6b9e482980360e0"
+version = "0.3.5"
+source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#445f3a0ba8863b43287d10c0e8ed30052d3db747"
 dependencies = [
  "hax-lib-macros",
  "num-bigint",
@@ -773,8 +773,8 @@ dependencies = [
 
 [[package]]
 name = "hax-lib-macros"
-version = "0.3.4"
-source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#a06153e29dd8eaab49ccda66a6b9e482980360e0"
+version = "0.3.5"
+source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#445f3a0ba8863b43287d10c0e8ed30052d3db747"
 dependencies = [
  "hax-lib-macros-types",
  "proc-macro-error2",
@@ -785,8 +785,8 @@ dependencies = [
 
 [[package]]
 name = "hax-lib-macros-types"
-version = "0.3.4"
-source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#a06153e29dd8eaab49ccda66a6b9e482980360e0"
+version = "0.3.5"
+source = "git+https://github.com/cryspen/hax?branch=tls-codec-panic-freedom#445f3a0ba8863b43287d10c0e8ed30052d3db747"
 dependencies = [
  "proc-macro2",
  "quote",
