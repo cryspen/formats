@@ -792,6 +792,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         0
                     }
                     #[inline]
+                    #[allow(clippy::needless_question_mark)]
                     fn tls_serialized_len_checked(&self) -> Option<usize> {
                         Some(0usize#(.checked_add(#prefixes::tls_serialized_len_checked(&self.#members)?)?)*)
                     }
