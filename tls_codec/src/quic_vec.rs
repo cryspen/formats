@@ -235,8 +235,8 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
 
 fn serialized_len_checked_slice<T: Size>(s: &[T]) -> Option<usize> {
     hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-    let content_length = s.iter().fold(Some(0usize), |acc, e| {
-        acc?.checked_add(e.tls_serialized_len_checked()?)
+    let content_length = s.iter().try_fold(0usize, |acc, e| {
+        acc.checked_add(e.tls_serialized_len_checked()?)
     })?;
     let len_len = length_encoding_bytes(content_length as u64).ok()?;
     content_length.checked_add(len_len)
