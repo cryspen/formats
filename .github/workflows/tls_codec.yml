@@ -89,5 +89,5 @@ jobs:
           hax_reference: tls-codec-panic-freedom
       - name: 🏃 Extract F*
         run: cargo hax into fstar
-      - name: 🏃 Lax-check extracted F*
+      - name: 🏃 Type-check extracted F*
         run: make -C proofs/fstar/extraction/
