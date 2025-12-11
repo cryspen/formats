@@ -23,17 +23,17 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.87.0
+          toolchain: 1.90.0
           components: clippy
       - run: cargo clippy --all --all-features --tests
 
   doc:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -43,7 +43,7 @@ jobs:
   rustfmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -53,5 +53,5 @@ jobs:
   typos:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: crate-ci/typos@v1.35.4
+      - uses: actions/checkout@v6
+      - uses: crate-ci/typos@v1.40.0

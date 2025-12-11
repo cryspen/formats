@@ -219,10 +219,12 @@ where
     /// Extensions need to implement [`AsExtension`], examples may be found in
     /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
     /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+    pub fn add_extension<E: AsExtension>(
+        &mut self,
+        extension: &E,
+    ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);
-
         Ok(())
     }
 }
@@ -271,7 +273,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -322,7 +324,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -455,7 +457,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -509,7 +511,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::random(&mut rng);
+    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,

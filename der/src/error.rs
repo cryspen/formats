@@ -11,10 +11,28 @@ use crate::asn1::ObjectIdentifier;
 #[cfg(feature = "pem")]
 use crate::pem;
 
+#[cfg(doc)]
+use crate::{Reader, Writer};
+
 /// Result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error type.
+///
+/// ## Example
+/// ```
+/// use der::{Decode, ErrorKind, Reader};
+///
+/// struct MyDecodable;
+///
+/// impl<'a> Decode<'a> for MyDecodable {
+///     type Error = der::Error;
+///
+///     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Self, der::Error> {
+///         Err(reader.error(ErrorKind::OidMalformed))
+///     }
+/// }
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Error {
     /// Kind of error.
@@ -162,6 +180,15 @@ impl From<time::error::ComponentRange> for Error {
 }
 
 /// Error type.
+///
+/// # Example
+/// ```
+/// use der::{asn1::OctetStringRef, Decode, ErrorKind};
+///
+/// let err = <&OctetStringRef>::from_der(&[0x04, 0x80, 0x00]).unwrap_err();
+///
+/// assert_eq!(err.kind(), ErrorKind::IndefiniteLength);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ErrorKind {
@@ -172,7 +199,7 @@ pub enum ErrorKind {
     EncodingRules,
 
     /// This error indicates a previous DER parsing operation resulted in
-    /// an error and tainted the state of a `Decoder` or `Encoder`.
+    /// an error and tainted the state of a [`Reader`] or [`Writer`].
     ///
     /// Once this occurs, the overall operation has failed and cannot be
     /// subsequently resumed.

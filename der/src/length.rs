@@ -18,6 +18,33 @@ use core::{
 };
 
 /// ASN.1-encoded length.
+///
+/// ## Examples
+/// ```
+/// use der::{Decode, Length, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x82, 0xAA, 0xBB]).unwrap();
+/// let length = Length::decode(&mut reader).expect("valid length");
+///
+/// assert_eq!(length, Length::new(0xAABB));
+/// ```
+///
+/// 5-byte lengths are supported:
+/// ```
+/// use der::{Encode, Length};
+/// let length = Length::new(0x10000000);
+///
+/// assert_eq!(length.encoded_len(), Ok(Length::new(5)));
+/// ```
+///
+/// Invalid lengths produce an error:
+/// ```
+/// use der::{Decode, Length, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x81, 0x7F]).unwrap();
+///
+/// Length::decode(&mut reader).expect_err("non-canonical length should be rejected");
+/// ```
 #[derive(Copy, Clone, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Length {
     /// Inner length as a `u32`. Note that the decoder and encoder also support a maximum length
@@ -44,10 +71,6 @@ impl Length {
     /// Length of end-of-content octets (i.e. `00 00`).
     #[cfg(feature = "ber")]
     pub(crate) const EOC_LEN: Self = Self::new(2);
-
-    /// Maximum number of octets in a DER encoding of a [`Length`] using the
-    /// rules implemented by this crate.
-    pub(crate) const MAX_SIZE: usize = 5;
 
     /// Create a new [`Length`] for any value which fits inside of a [`u16`].
     ///
@@ -336,13 +359,8 @@ impl Encode for Length {
 
 impl DerOrd for Length {
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; Self::MAX_SIZE];
-        let mut buf2 = [0u8; Self::MAX_SIZE];
-
-        let buf1 = self.encode_to_slice(&mut buf1)?;
-        let buf2 = other.encode_to_slice(&mut buf2)?;
-
-        Ok(buf1.cmp(buf2))
+        // The DER encoding has the same ordering as the integer value
+        Ok(self.inner.cmp(&other.inner))
     }
 }
 

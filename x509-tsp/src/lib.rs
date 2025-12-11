@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -8,11 +8,13 @@
 
 extern crate alloc;
 
+mod generalized_time_nanos;
+
 use cmpv2::status::PkiStatusInfo;
 use cms::content_info::ContentInfo;
 use der::{
     Any, Enumerated, Sequence,
-    asn1::{GeneralizedTime, Int, OctetString},
+    asn1::{Int, OctetString},
     oid::ObjectIdentifier,
 };
 use x509_cert::{
@@ -21,6 +23,8 @@ use x509_cert::{
 };
 
 pub use cmpv2;
+
+pub use generalized_time_nanos::GeneralizedTimeNanos;
 
 #[derive(Clone, Copy, Debug, Enumerated, Eq, PartialEq, PartialOrd, Ord)]
 #[asn1(type = "INTEGER")]
@@ -111,7 +115,7 @@ pub struct TstInfo {
     pub policy: TsaPolicyId,
     pub message_imprint: MessageImprint,
     pub serial_number: Int,
-    pub gen_time: GeneralizedTime,
+    pub gen_time: GeneralizedTimeNanos,
     #[asn1(optional = "true")]
     pub accuracy: Option<Accuracy>,
     #[asn1(default = "Default::default")]

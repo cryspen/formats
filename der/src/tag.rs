@@ -10,16 +10,57 @@ pub use self::{class::Class, mode::TagMode, number::TagNumber};
 use crate::{Decode, DerOrd, Encode, Error, ErrorKind, Length, Reader, Result, Writer};
 use core::{cmp::Ordering, fmt};
 
+#[cfg(feature = "alloc")]
+use alloc::borrow::{Cow, ToOwned};
+
 /// Indicator bit for constructed form encoding (i.e. vs primitive form)
 const CONSTRUCTED_FLAG: u8 = 0b100000;
 
 /// Types which have a constant ASN.1 [`Tag`].
+///
+/// ## Example
+/// ```
+/// use der::{FixedTag, Tag};
+///
+/// struct MyOctetString;
+///
+/// impl FixedTag for MyOctetString {
+///     const TAG: Tag = Tag::OctetString;
+/// }
+/// ```
 pub trait FixedTag {
     /// ASN.1 tag
     const TAG: Tag;
 }
 
+#[cfg(feature = "alloc")]
+impl<'a, T> FixedTag for Cow<'a, T>
+where
+    T: ToOwned + ?Sized,
+    &'a T: FixedTag,
+{
+    const TAG: Tag = <&'a T>::TAG;
+}
+
 /// Types which have an ASN.1 [`Tag`].
+///
+/// ## Example
+/// ```
+/// use der::{Tag, Tagged};
+///
+/// /// Struct, which Tag depends on data
+/// struct MyOctetOrBitString(bool);
+///
+/// impl Tagged for MyOctetOrBitString {
+///     fn tag(&self) -> Tag {
+///         if self.0 {
+///             Tag::OctetString
+///         } else {
+///             Tag::BitString
+///         }
+///     }
+/// }
+/// ```
 #[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait Tagged {
     /// Get the ASN.1 tag that this type is encoded with.
@@ -36,6 +77,38 @@ impl<T: FixedTag + ?Sized> Tagged for T {
 /// Types which have a constant ASN.1 constructed bit.
 ///
 /// Auto-implemented on all types that implement [`FixedTag`].
+///
+/// ## Example
+/// ```
+/// use der::{asn1::ContextSpecific, DecodeValue, ErrorKind, Header, IsConstructed, Length, Reader, Result, SliceReader, TagNumber};
+///
+/// /// Type, which can be decoded for example as `CONTEXT-SPECIFIC [0] (primitive)`
+/// struct MyPrimitiveYear(u16);
+///
+/// impl IsConstructed for MyPrimitiveYear {
+///     const CONSTRUCTED: bool = false;
+/// }
+///
+/// impl<'a> DecodeValue<'a> for MyPrimitiveYear {
+///     type Error = der::Error;
+///
+///     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
+///         let slice = reader.read_slice(Length::new(4))?;
+///         let year = std::str::from_utf8(slice).ok().and_then(|s| s.parse::<u16>().ok());
+///         if let Some(year) = year {
+///             Ok(Self(year))
+///         } else {
+///             Err(reader.error(ErrorKind::DateTime))
+///         }
+///     }
+/// }
+///
+/// let mut reader = SliceReader::new(b"\x80\x041670".as_slice()).unwrap();
+///
+/// let decoded = ContextSpecific::<MyPrimitiveYear>::decode_implicit(&mut reader, TagNumber(0)).unwrap().unwrap();
+///
+/// assert_eq!(decoded.value.0, 1670);
+/// ```
 #[diagnostic::on_unimplemented(note = "Consider adding impl of `FixedTag` to `{Self}`")]
 pub trait IsConstructed {
     /// ASN.1 constructed bit
@@ -62,6 +135,34 @@ impl<T: FixedTag + ?Sized> IsConstructed for T {
 /// - Bits 8/7: [`Class`]
 /// - Bit 6: primitive (0) or constructed (1)
 /// - Bits 5-1: tag number
+///
+/// ## Examples
+/// ```
+/// use der::{Decode, Tag, SliceReader};
+///
+/// let mut reader = SliceReader::new(&[0x30]).unwrap();
+/// let tag = Tag::decode(&mut reader).expect("valid tag");
+///
+/// assert_eq!(tag, Tag::Sequence);
+/// ```
+///
+/// Invalid tags produce an error:
+/// ```
+/// use der::{Decode, Tag};
+///
+/// // 0x21 is an invalid CONSTRUCTED BOOLEAN
+/// Tag::from_der(&[0x21]).expect_err("invalid tag");
+/// ```
+///
+/// `APPLICATION`, `CONTEXT-SPECIFIC` and `PRIVATE` tags are supported:
+/// ```
+/// use der::{Decode, Tag, TagNumber};
+///
+/// // `APPLICATION [33] (constructed)`
+/// let tag = Tag::from_der(&[0x7F, 0x21]).expect("valid tag");
+///
+/// assert_eq!(tag, Tag::Application { constructed: true, number: TagNumber(33) });
+/// ```
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[non_exhaustive]

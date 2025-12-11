@@ -10,22 +10,34 @@ use crate::{
 /// Octet strings represent contiguous sequences of octets, a.k.a. bytes.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct OctetStringRef<'a> {
+#[derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct OctetStringRef {
     /// Inner value
-    inner: &'a BytesRef,
+    inner: BytesRef,
 }
 
-impl<'a> OctetStringRef<'a> {
+impl OctetStringRef {
     /// Create a new ASN.1 `OCTET STRING` from a byte slice.
-    pub fn new(slice: &'a [u8]) -> Result<Self, Error> {
+    pub fn new(slice: &[u8]) -> Result<&Self, Error> {
         BytesRef::new(slice)
-            .map(|inner| Self { inner })
+            .map(Self::from_bytes_ref)
             .map_err(|_| ErrorKind::Length { tag: Self::TAG }.into())
     }
 
+    /// Create an [`OctetStringRef`] from a [`BytesRef`].
+    ///
+    /// Implemented as an inherent method to keep [`BytesRef`] out of the public API.
+    fn from_bytes_ref(bytes_ref: &BytesRef) -> &Self {
+        // SAFETY: `Self` is a `repr(transparent)` newtype for `BytesRef`
+        #[allow(unsafe_code)]
+        unsafe {
+            &*(bytes_ref.as_ptr() as *const Self)
+        }
+    }
+
     /// Borrow the inner byte slice.
-    pub fn as_bytes(&self) -> &'a [u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         self.inner.as_slice()
     }
 
@@ -40,29 +52,28 @@ impl<'a> OctetStringRef<'a> {
     }
 
     /// Parse `T` from this `OCTET STRING`'s contents.
-    pub fn decode_into<T: Decode<'a>>(&self) -> Result<T, T::Error> {
+    pub fn decode_into<'a, T: Decode<'a>>(&'a self) -> Result<T, T::Error> {
         Decode::from_der(self.as_bytes())
     }
 }
 
-impl_any_conversions!(OctetStringRef<'a>, 'a);
+impl_any_conversions!(&'a OctetStringRef, 'a);
 
-impl AsRef<[u8]> for OctetStringRef<'_> {
+impl AsRef<[u8]> for OctetStringRef {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<'a> DecodeValue<'a> for OctetStringRef<'a> {
+impl<'a> DecodeValue<'a> for &'a OctetStringRef {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-        let inner = <&'a BytesRef>::decode_value(reader, header)?;
-        Ok(Self { inner })
+        <&'a BytesRef>::decode_value(reader, header).map(OctetStringRef::from_bytes_ref)
     }
 }
 
-impl EncodeValue for OctetStringRef<'_> {
+impl EncodeValue for &OctetStringRef {
     fn value_len(&self) -> Result<Length, Error> {
         self.inner.value_len()
     }
@@ -72,31 +83,28 @@ impl EncodeValue for OctetStringRef<'_> {
     }
 }
 
-impl FixedTag for OctetStringRef<'_> {
+impl FixedTag for OctetStringRef {
+    const TAG: Tag = Tag::OctetString;
+}
+impl FixedTag for &OctetStringRef {
     const TAG: Tag = Tag::OctetString;
 }
 
-impl OrdIsValueOrd for OctetStringRef<'_> {}
+impl OrdIsValueOrd for &OctetStringRef {}
 
-impl<'a> From<&OctetStringRef<'a>> for OctetStringRef<'a> {
-    fn from(value: &OctetStringRef<'a>) -> OctetStringRef<'a> {
-        *value
+impl<'a> From<&'a OctetStringRef> for AnyRef<'a> {
+    fn from(octet_string: &'a OctetStringRef) -> AnyRef<'a> {
+        AnyRef::from_tag_and_value(Tag::OctetString, &octet_string.inner)
     }
 }
 
-impl<'a> From<OctetStringRef<'a>> for AnyRef<'a> {
-    fn from(octet_string: OctetStringRef<'a>) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::OctetString, octet_string.inner)
-    }
-}
-
-impl<'a> From<OctetStringRef<'a>> for &'a [u8] {
-    fn from(octet_string: OctetStringRef<'a>) -> &'a [u8] {
+impl<'a> From<&'a OctetStringRef> for &'a [u8] {
+    fn from(octet_string: &'a OctetStringRef) -> &'a [u8] {
         octet_string.as_bytes()
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for OctetStringRef<'a> {
+impl<'a> TryFrom<&'a [u8]> for &'a OctetStringRef {
     type Error = Error;
 
     fn try_from(byte_slice: &'a [u8]) -> Result<Self, Error> {
@@ -105,7 +113,7 @@ impl<'a> TryFrom<&'a [u8]> for OctetStringRef<'a> {
 }
 
 /// Hack for simplifying the custom derive use case.
-impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
+impl<'a> TryFrom<&&'a [u8]> for &'a OctetStringRef {
     type Error = Error;
 
     fn try_from(byte_slice: &&'a [u8]) -> Result<Self, Error> {
@@ -113,7 +121,7 @@ impl<'a> TryFrom<&&'a [u8]> for OctetStringRef<'a> {
     }
 }
 
-impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
+impl<'a, const N: usize> TryFrom<&'a [u8; N]> for &'a OctetStringRef {
     type Error = Error;
 
     fn try_from(byte_slice: &'a [u8; N]) -> Result<Self, Error> {
@@ -121,10 +129,10 @@ impl<'a, const N: usize> TryFrom<&'a [u8; N]> for OctetStringRef<'a> {
     }
 }
 
-impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
+impl<'a, const N: usize> TryFrom<&'a OctetStringRef> for [u8; N] {
     type Error = Error;
 
-    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+    fn try_from(octet_string: &'a OctetStringRef) -> Result<Self, Self::Error> {
         octet_string
             .as_bytes()
             .try_into()
@@ -133,10 +141,10 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for [u8; N] {
 }
 
 #[cfg(feature = "heapless")]
-impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for heapless::Vec<u8, N> {
+impl<const N: usize> TryFrom<&OctetStringRef> for heapless::Vec<u8, N> {
     type Error = Error;
 
-    fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+    fn try_from(octet_string: &OctetStringRef) -> Result<Self, Self::Error> {
         octet_string
             .as_bytes()
             .try_into()
@@ -145,7 +153,7 @@ impl<'a, const N: usize> TryFrom<OctetStringRef<'a>> for heapless::Vec<u8, N> {
 }
 
 #[cfg(feature = "heapless")]
-impl<'a, const N: usize> TryFrom<&'a heapless::Vec<u8, N>> for OctetStringRef<'a> {
+impl<'a, const N: usize> TryFrom<&'a heapless::Vec<u8, N>> for &'a OctetStringRef {
     type Error = Error;
 
     fn try_from(byte_vec: &'a heapless::Vec<u8, N>) -> Result<Self, Error> {
@@ -159,8 +167,12 @@ pub use self::allocating::OctetString;
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
-    use crate::{BytesOwned, referenced::*};
-    use alloc::{borrow::Cow, boxed::Box, vec::Vec};
+    use crate::BytesOwned;
+    use alloc::{
+        borrow::{Borrow, Cow, ToOwned},
+        boxed::Box,
+        vec::Vec,
+    };
 
     /// ASN.1 `OCTET STRING` type: owned form.
     ///
@@ -214,6 +226,12 @@ mod allocating {
         }
     }
 
+    impl Borrow<OctetStringRef> for OctetString {
+        fn borrow(&self) -> &OctetStringRef {
+            OctetStringRef::from_bytes_ref(self.inner.as_ref())
+        }
+    }
+
     impl<'a> DecodeValue<'a> for OctetString {
         type Error = Error;
 
@@ -237,40 +255,30 @@ mod allocating {
         const TAG: Tag = Tag::OctetString;
     }
 
-    impl<'a> From<&'a OctetString> for OctetStringRef<'a> {
-        fn from(octet_string: &'a OctetString) -> OctetStringRef<'a> {
-            OctetStringRef {
-                inner: octet_string.inner.as_ref(),
-            }
-        }
-    }
-
     impl OrdIsValueOrd for OctetString {}
 
-    impl<'a> RefToOwned<'a> for OctetStringRef<'a> {
-        type Owned = OctetString;
-        fn ref_to_owned(&self) -> Self::Owned {
-            OctetString {
-                inner: self.inner.into(),
+    impl<'a> From<&'a OctetString> for &'a OctetStringRef {
+        fn from(octet_string: &'a OctetString) -> &'a OctetStringRef {
+            OctetStringRef::from_bytes_ref(octet_string.inner.as_ref())
+        }
+    }
+
+    impl From<&OctetStringRef> for OctetString {
+        fn from(octet_string_ref: &OctetStringRef) -> OctetString {
+            Self {
+                inner: octet_string_ref.inner.to_owned(),
             }
         }
     }
 
-    impl OwnedToRef for OctetString {
-        type Borrowed<'a> = OctetStringRef<'a>;
-        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            self.into()
-        }
-    }
-
-    impl From<OctetStringRef<'_>> for Vec<u8> {
-        fn from(octet_string: OctetStringRef<'_>) -> Vec<u8> {
+    impl From<&OctetStringRef> for Vec<u8> {
+        fn from(octet_string: &OctetStringRef) -> Vec<u8> {
             Vec::from(octet_string.as_bytes())
         }
     }
 
     /// Hack for simplifying the custom derive use case.
-    impl<'a> TryFrom<&'a Vec<u8>> for OctetStringRef<'a> {
+    impl<'a> TryFrom<&'a Vec<u8>> for &'a OctetStringRef {
         type Error = Error;
 
         fn try_from(byte_vec: &'a Vec<u8>) -> Result<Self, Error> {
@@ -284,7 +292,15 @@ mod allocating {
         }
     }
 
-    impl<'a> TryFrom<&'a Cow<'a, [u8]>> for OctetStringRef<'a> {
+    impl ToOwned for OctetStringRef {
+        type Owned = OctetString;
+
+        fn to_owned(&self) -> OctetString {
+            self.into()
+        }
+    }
+
+    impl<'a> TryFrom<&'a Cow<'a, [u8]>> for &'a OctetStringRef {
         type Error = Error;
 
         fn try_from(byte_slice: &'a Cow<'a, [u8]>) -> Result<Self, Error> {
@@ -292,10 +308,10 @@ mod allocating {
         }
     }
 
-    impl<'a> TryFrom<OctetStringRef<'a>> for Cow<'a, [u8]> {
+    impl<'a> TryFrom<&'a OctetStringRef> for Cow<'a, [u8]> {
         type Error = Error;
 
-        fn try_from(octet_string: OctetStringRef<'a>) -> Result<Self, Self::Error> {
+        fn try_from(octet_string: &'a OctetStringRef) -> Result<Self, Self::Error> {
             Ok(Cow::Borrowed(octet_string.as_bytes()))
         }
     }
@@ -345,8 +361,8 @@ mod bytes {
         const TAG: Tag = Tag::OctetString;
     }
 
-    impl From<OctetStringRef<'_>> for Bytes {
-        fn from(octet_string: OctetStringRef<'_>) -> Bytes {
+    impl From<&OctetStringRef> for Bytes {
+        fn from(octet_string: &OctetStringRef) -> Bytes {
             Vec::from(octet_string).into()
         }
     }
@@ -361,7 +377,26 @@ mod bytes {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use crate::asn1::{OctetStringRef, PrintableStringRef};
+    use crate::{
+        Decode,
+        asn1::{OctetStringRef, PrintableStringRef},
+    };
+    use hex_literal::hex;
+
+    #[cfg(feature = "alloc")]
+    use {crate::Encode, alloc::borrow::Cow};
+
+    #[test]
+    fn octet_string_decode() {
+        // PrintableString "hi"
+        const EXAMPLE: &[u8] = &hex!(
+            "040c" // primitive definite length OCTET STRING
+            "48656c6c6f2c20776f726c64" // "Hello, world"
+        );
+
+        let decoded = <&OctetStringRef>::from_der(EXAMPLE).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+    }
 
     #[test]
     fn octet_string_decode_into() {
@@ -371,6 +406,22 @@ mod tests {
 
         let res = oct.decode_into::<PrintableStringRef<'_>>().unwrap();
         assert_eq!(AsRef::<str>::as_ref(&res), "hi");
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn cow_octet_string_decode_and_encode() {
+        // PrintableString "hi"
+        const EXAMPLE: &[u8] = &hex!(
+            "040c" // primitive definite length OCTET STRING
+            "48656c6c6f2c20776f726c64" // "Hello, world"
+        );
+
+        let decoded = Cow::<OctetStringRef>::from_der(EXAMPLE).unwrap();
+        assert_eq!(decoded.as_bytes(), b"Hello, world");
+
+        let encoded = decoded.to_der().unwrap();
+        assert_eq!(EXAMPLE, encoded);
     }
 
     #[test]
