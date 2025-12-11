@@ -74,6 +74,7 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
                 // Not inlining serialized_e is a workaround for
                 // https://github.com/cryspen/hax/issues/1584
                 let mut serialized_e = e.tls_serialize()?;
+                hax_lib::assume!(serialized_e.len() == e.tls_serialized_len());
                 out.append(&mut serialized_e);
                 Ok(out)
             }
@@ -145,10 +146,19 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[hax_lib::attributes]
         impl DeserializeBytes for $t {
             #[inline]
+            #[hax_lib::ensures(|res| {
+                let len = core::mem::size_of::<$t>();
+                hax_lib::assume!(core::mem::size_of::<U24>() == 3);
+                hax_lib::implies(
+                    bytes.len() >= len,
+                    res == Ok((<$t>::from_be_bytes(bytes[..len].try_into().unwrap()), &bytes[len..]))
+            )})]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
+                hax_lib::assume!(core::mem::size_of::<U24>() == 3);
                 let out = bytes
                     .get(..len)
                     .ok_or(Error::EndOfStream)?
@@ -161,15 +171,34 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[hax_lib::attributes]
         impl SerializeBytes for &$t {
             #[inline]
+            #[hax_lib::ensures(|res| {
+                if let Ok(serialized) = res {
+                    if let Ok((deserialized, stream)) = $t::tls_deserialize_bytes(&serialized) {
+                        return **self == deserialized && stream.is_empty()
+                    }
+                }
+                false
+            })]
             fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+                hax_lib::assume!(core::mem::size_of::<U24>() == 3);
                 Ok(self.to_be_bytes().to_vec())
             }
         }
 
+        #[hax_lib::attributes]
         impl SerializeBytes for $t {
             #[inline]
+            #[hax_lib::ensures(|res| {
+                if let Ok(serialized) = res {
+                    if let Ok((deserialized, stream)) = $t::tls_deserialize_bytes(&serialized) {
+                        return *self == deserialized && stream.is_empty()
+                    }
+                }
+                false
+            })]
             fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
                 <&Self as SerializeBytes>::tls_serialize(&self)
             }

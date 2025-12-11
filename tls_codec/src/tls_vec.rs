@@ -403,6 +403,7 @@ macro_rules! impl_vec_members {
         /// Remove the element at `index`.
         #[inline]
         pub fn remove(&mut self, index: usize) -> $element_type {
+            hax_lib::assume!(self.vec.len() > index);
             self.vec.remove(index)
         }
 

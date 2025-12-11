@@ -276,18 +276,25 @@ pub trait DeserializeBytes: Size {
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct U24([u8; 3]);
 
+#[hax_lib::attributes]
 impl U24 {
     pub const MAX: Self = Self([255u8; 3]);
     pub const MIN: Self = Self([0u8; 3]);
 
+    #[hax_lib::ensures(|res| res == U24(bytes))]
     pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
         U24(bytes)
     }
 
+    #[hax_lib::ensures(|res| self.0 == res)]
     pub fn to_be_bytes(self) -> [u8; 3] {
         self.0
     }
 }
+
+#[hax_lib::lemma]
+#[hax_lib::opaque]
+fn size_of_u24_lemma() -> Proof<{core::mem::size_of::<U24>() == 3}> {}
 
 impl From<U24> for usize {
     fn from(value: U24) -> usize {
