@@ -20,12 +20,10 @@ impl<T: Size> Size for Option<T> {
     }
     #[inline]
     fn tls_serialized_len(&self) -> usize {
-        1usize
-            .checked_add(match self {
-                Some(v) => v.tls_serialized_len(),
-                None => 0,
-            })
-            .unwrap_or(0)
+        1 + match self {
+            Some(v) => v.tls_serialized_len(),
+            None => 0,
+        }
     }
 }
 
@@ -285,10 +283,7 @@ where
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0
-            .tls_serialized_len()
-            .checked_add(self.1.tls_serialized_len())
-            .unwrap_or(0)
+        self.0.tls_serialized_len() + self.1.tls_serialized_len()
     }
 }
 
@@ -359,12 +354,7 @@ where
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0
-            .tls_serialized_len()
-            .checked_add(self.1.tls_serialized_len())
-            .unwrap_or(0)
-            .checked_add(self.2.tls_serialized_len())
-            .unwrap_or(0)
+        self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
 

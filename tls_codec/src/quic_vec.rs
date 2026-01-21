@@ -233,24 +233,26 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
     }
 }
 
-#[allow(clippy::manual_try_fold)]
-fn serialized_len_checked_slice<T: Size>(s: &[T]) -> Option<usize> {
-    hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-    let content_length = s.iter().fold(Some(0usize), |acc, e| {
-        acc?.checked_add(e.tls_serialized_len_checked()?)
-    })?;
-    let len_len = length_encoding_bytes(content_length as u64).ok()?;
-    content_length.checked_add(len_len)
-}
-
 impl<T: Size> Size for &[T] {
     #[inline(always)]
+    #[allow(clippy::manual_try_fold)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
-        serialized_len_checked_slice(self)
+        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
+        let content_length = self.iter().fold(Some(0usize), |acc, e| {
+            acc?.checked_add(e.tls_serialized_len_checked()?)
+        })?;
+        let len_len = length_encoding_bytes(content_length as u64).ok()?;
+        content_length.checked_add(len_len)
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        serialized_len_checked_slice(self).unwrap_or(0)
+        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
+            // We can't do anything about the error unless we change the trait.
+            // Let's say there's no content for now.
+            0
+        });
+        content_length + len_len
     }
 }
 
