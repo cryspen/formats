@@ -1,6 +1,6 @@
 [package]
 name = "pkcs8"
-version = "0.11.0-rc.8"
+version = "0.11.0-rc.9"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #8:
 Private-Key Information Syntax Specification (RFC 5208), with additional
@@ -21,8 +21,8 @@ der = { version = "0.8.0-rc.10", features = ["oid"] }
 spki = "0.8.0-rc.4"
 
 # optional dependencies
-rand_core = { version = "0.10.0-rc-2", optional = true, default-features = false }
-pkcs5 = { version = "0.8.0-rc.10", optional = true, features = ["rand_core"] }
+rand_core = { version = "0.10.0-rc-3", optional = true, default-features = false }
+pkcs5 = { version = "0.8.0-rc.12", optional = true, features = ["rand_core"] }
 subtle = { version = "2", optional = true, default-features = false }
 
 [dev-dependencies]

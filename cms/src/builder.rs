@@ -1,34 +1,43 @@
+//! Cryptographic Message Syntax Builder
+
 #![cfg(feature = "builder")]
 
-//! CMS Builder
-
-use crate::cert::CertificateChoices;
-use crate::content_info::{CmsVersion, ContentInfo};
-use crate::enveloped_data::{
-    EncryptedContentInfo, EncryptedKey, EnvelopedData, KekIdentifier, KeyTransRecipientInfo,
-    OriginatorInfo, PasswordRecipientInfo, RecipientIdentifier, RecipientInfo, RecipientInfos,
-    UserKeyingMaterial,
-};
-use crate::revocation::{RevocationInfoChoice, RevocationInfoChoices};
-use crate::signed_data::{
-    CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignatureValue,
-    SignedAttributes, SignedData, SignerIdentifier, SignerInfo, SignerInfos, UnsignedAttributes,
+use crate::{
+    cert::CertificateChoices,
+    content_info::{CmsVersion, ContentInfo},
+    enveloped_data::{
+        EncryptedContentInfo, EncryptedKey, EnvelopedData, KekIdentifier, KeyTransRecipientInfo,
+        OriginatorInfo, PasswordRecipientInfo, RecipientIdentifier, RecipientInfo, RecipientInfos,
+        UserKeyingMaterial,
+    },
+    revocation::{RevocationInfoChoice, RevocationInfoChoices},
+    signed_data::{
+        CertificateSet, DigestAlgorithmIdentifiers, EncapsulatedContentInfo, SignatureValue,
+        SignedAttributes, SignedData, SignerIdentifier, SignerInfo, SignerInfos,
+        UnsignedAttributes,
+    },
 };
 use aes::{Aes128, Aes192, Aes256};
-use alloc::borrow::ToOwned;
-use alloc::boxed::Box;
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+use alloc::{
+    borrow::ToOwned,
+    boxed::Box,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
 use cipher::{
-    BlockModeEncrypt, Key, KeyIvInit, KeySizeUser, block_padding::Pkcs7, rand_core::CryptoRng,
+    BlockModeEncrypt, Iv, Key, KeyIvInit,
+    block_padding::Pkcs7,
+    crypto_common::Generate,
+    rand_core::{CryptoRng, RngCore},
 };
 use const_oid::ObjectIdentifier;
-use core::cmp::Ordering;
-use core::fmt;
-use core::marker::PhantomData;
-use der::asn1::{BitString, Null, OctetString, OctetStringRef, SetOfVec};
-use der::oid::db::DB;
-use der::{Any, AnyRef, Decode, Encode, ErrorKind, Tag};
+use core::{cmp::Ordering, fmt, marker::PhantomData};
+use der::{
+    Any, AnyRef, Decode, Encode, ErrorKind, Tag,
+    asn1::{BitString, Null, OctetString, OctetStringRef, SetOfVec},
+    oid::db::DB,
+};
 use digest::Digest;
 use rsa::Pkcs1v15Encrypt;
 use sha2::digest;
@@ -39,7 +48,6 @@ use spki::{
     AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier, EncodePublicKey,
     SignatureBitStringEncoding,
 };
-use std::vec;
 use x509_cert::{
     attr::{Attribute, AttributeValue, Attributes},
     builder::{self, AsyncBuilder, Builder},
@@ -431,7 +439,7 @@ impl<'s> SignedDataBuilder<'s> {
         S: RandomizedSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let signer_info = signer_info_builder
             .build_with_rng::<S, Signature, R>(signer, rng)
@@ -476,7 +484,7 @@ impl<'s> SignedDataBuilder<'s> {
         S: AsyncRandomizedSigner<Signature>,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let signer_info = signer_info_builder
             .build_with_rng_async::<S, Signature, R>(signer, rng)
@@ -600,7 +608,7 @@ impl<'s> SignedDataBuilder<'s> {
 /// formats. All implementations must implement this trait.
 pub trait RecipientInfoBuilder {
     /// Associated Rng type
-    type Rng: CryptoRng + ?Sized;
+    type Rng: CryptoRng + RngCore + ?Sized;
 
     /// Return the recipient info type
     fn recipient_info_type(&self) -> RecipientInfoType;
@@ -662,9 +670,9 @@ impl<R> KeyTransRecipientInfoBuilder<R> {
     }
 }
 
-impl<R: ?Sized> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<R>
+impl<R> RecipientInfoBuilder for KeyTransRecipientInfoBuilder<R>
 where
-    R: CryptoRng,
+    R: CryptoRng + RngCore + ?Sized,
 {
     type Rng = R;
 
@@ -733,9 +741,9 @@ impl<R> KekRecipientInfoBuilder<R> {
     }
 }
 
-impl<R: ?Sized> RecipientInfoBuilder for KekRecipientInfoBuilder<R>
+impl<R> RecipientInfoBuilder for KekRecipientInfoBuilder<R>
 where
-    R: CryptoRng,
+    R: CryptoRng + RngCore + ?Sized,
 {
     type Rng = R;
 
@@ -776,7 +784,7 @@ pub trait PwriEncryptor {
     /// including eventual parameters (e.g. the used iv).
     fn key_encryption_algorithm(&self) -> Result<AlgorithmIdentifierOwned>;
     /// Encrypt the padded content-encryption key twice following RFC 3211, § 2.3.1
-    fn encrypt_rfc3211<R: CryptoRng + ?Sized>(
+    fn encrypt_rfc3211<R: CryptoRng + RngCore + ?Sized>(
         &mut self,
         padded_content_encryption_key: &[u8],
         rng: &mut R,
@@ -824,10 +832,10 @@ where
     }
 }
 
-impl<P, R: ?Sized> PasswordRecipientInfoBuilder<P, R>
+impl<P, R> PasswordRecipientInfoBuilder<P, R>
 where
     P: PwriEncryptor,
-    R: CryptoRng,
+    R: CryptoRng + RngCore + ?Sized,
 {
     /// Wrap the content-encryption key according to [RFC 3211, §2.3.1]:
     ///     ....
@@ -868,7 +876,7 @@ where
 impl<P, R> RecipientInfoBuilder for PasswordRecipientInfoBuilder<P, R>
 where
     P: PwriEncryptor,
-    R: CryptoRng + ?Sized,
+    R: CryptoRng + RngCore + ?Sized,
 {
     type Rng = R;
 
@@ -927,7 +935,7 @@ impl<R> OtherRecipientInfoBuilder<R> {
 
 impl<R> RecipientInfoBuilder for OtherRecipientInfoBuilder<R>
 where
-    R: CryptoRng + ?Sized,
+    R: CryptoRng + RngCore + ?Sized,
 {
     type Rng = R;
 
@@ -1011,7 +1019,7 @@ impl<'c, R> EnvelopedDataBuilder<'c, R> {
 
 impl<'c, R> EnvelopedDataBuilder<'c, R>
 where
-    R: CryptoRng + ?Sized,
+    R: CryptoRng + RngCore + ?Sized,
 {
     /// Add recipient info. A builder is used, which generates a `RecipientInfo` according to
     /// RFC 5652 § 6.2, when `EnvelopedData` is built.
@@ -1172,18 +1180,16 @@ fn get_hasher(
 macro_rules! encrypt_block_mode {
     ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
         let (key, iv) = match $key {
-            None => $block_mode::$typ::<$alg>::generate_key_iv_with_rng($rng),
+            None => {
+                let key = Key::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
+                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
+                (key, iv)
+            }
             Some(key) => {
-                if key.len() != $alg::key_size() {
-                    return Err(Error::Builder(String::from(
-                        "Invalid key size for chosen algorithm",
-                    )));
-                }
-                (
-                    Key::<$block_mode::$typ<$alg>>::try_from(key)
-                        .expect("size invariants violation"),
-                    $block_mode::$typ::<$alg>::generate_iv_with_rng($rng),
-                )
+                let key = Key::<$block_mode::$typ<$alg>>::try_from(key)
+                    .map_err(|_| Error::Builder("invalid key size for chosen algorithm".into()))?;
+                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
+                (key, iv)
             }
         };
         let encryptor = $block_mode::$typ::<$alg>::new(&key.into(), &iv.into());
@@ -1210,7 +1216,7 @@ fn encrypt_data<R>(
     rng: &mut R,
 ) -> Result<(Vec<u8>, Vec<u8>, AlgorithmIdentifierOwned)>
 where
-    R: CryptoRng + ?Sized,
+    R: CryptoRng + RngCore + ?Sized,
 {
     match encryption_algorithm_identifier {
         ContentEncryptionAlgorithm::Aes128Cbc => encrypt_block_mode!(

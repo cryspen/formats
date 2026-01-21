@@ -89,7 +89,7 @@ mod test_vectors;
 pub use crate::{
     alphabet::{
         bcrypt::Base64Bcrypt,
-        crypt::Base64Crypt,
+        pbkdf2::Base64Pbkdf2,
         shacrypt::Base64ShaCrypt,
         standard::{Base64, Base64Unpadded},
         url::{Base64Url, Base64UrlUnpadded},
@@ -100,6 +100,9 @@ pub use crate::{
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     line_ending::LineEnding,
 };
+
+#[allow(deprecated)]
+pub use crate::alphabet::crypt::Base64Crypt;
 
 /// Minimum supported line width.
 const MIN_LINE_WIDTH: usize = 4;

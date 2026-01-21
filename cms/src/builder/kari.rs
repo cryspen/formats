@@ -8,7 +8,7 @@
 
 // Super imports
 use super::{
-    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result,
+    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result, RngCore,
     UserKeyingMaterial,
     utils::kw::{KeyWrapAlgorithm, WrappedKey},
 };
@@ -45,7 +45,7 @@ use aes::cipher::{
 };
 use digest::{Digest, FixedOutputReset};
 use elliptic_curve::{
-    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, PublicKey,
+    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, Generate, PublicKey,
     ecdh::{EphemeralSecret, SharedSecret},
     point::PointCompression,
     sec1::{FromEncodedPoint, ModulusSize, ToEncodedPoint},
@@ -250,10 +250,9 @@ where
         })
     }
 }
-impl<R: ?Sized, C, KA, KW, Enc> RecipientInfoBuilder
-    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R, C, KA, KW, Enc> RecipientInfoBuilder for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
 where
-    R: CryptoRng,
+    R: CryptoRng + RngCore + ?Sized,
     KA: KeyAgreementAlgorithm + AssociatedOid,
     C: CurveArithmetic + AssociatedOid + PointCompression,
     AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
@@ -305,7 +304,7 @@ where
         ) = match self.eckey_encryption_info {
             EcKeyEncryptionInfo::Ec(recipient_public_key) => {
                 // Generate ephemeral key using ecdh
-                let Ok(ephemeral_secret) = EphemeralSecret::try_from_rng(rng);
+                let ephemeral_secret = EphemeralSecret::generate_from_rng(rng);
                 let ephemeral_public_key_encoded_point =
                     ephemeral_secret.public_key().to_encoded_point(false);
 

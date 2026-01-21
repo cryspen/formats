@@ -2,23 +2,20 @@
 
 use super::{Alphabet, DecodeStep, EncodeStep};
 
-/// Little endian variant of the `crypt(3)` Base64 encoding.
+/// `crypt(3)` Base64 encoding.
 ///
-/// Used by the following schemes:
-/// - md5_crypt
+/// This is the standard Base64 encoding used by password hashes for the following schemes:
+/// - MD5-Crypt
 /// - scrypt
-/// - sha1_crypt
-/// - sha256_crypt
-/// - sha512_crypt
+/// - SHA1-Crypt
+/// - SHA256-Crypt
+/// - SHA512-Crypt
 /// - yescrypt
 ///
 /// ```text
 /// [.-9]      [A-Z]      [a-z]
 /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
 /// ```
-///
-/// This uses the same alphabet as [`Base64Crypt`][`crate::Base64Crypt`], but uses a little endian
-/// variant of Base64.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Base64ShaCrypt;
 

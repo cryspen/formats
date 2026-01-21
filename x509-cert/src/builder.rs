@@ -4,7 +4,8 @@ use alloc::vec;
 use core::fmt;
 use der::{Encode, asn1::BitString, referenced::OwnedToRef};
 use signature::{
-    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, rand_core::CryptoRng,
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer,
+    rand_core::{CryptoRng, RngCore},
 };
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
@@ -15,7 +16,7 @@ use crate::{
     certificate::{self, Certificate, TbsCertificate, Version},
     crl::{CertificateList, RevokedCert, TbsCertList},
     ext::{
-        AsExtension, Extensions,
+        Extensions, ToExtension,
         pkix::{AuthorityKeyIdentifier, CrlNumber, SubjectKeyIdentifier},
     },
     serial_number::SerialNumber,
@@ -216,12 +217,12 @@ where
 
     /// Add an extension to this certificate
     ///
-    /// Extensions need to implement [`AsExtension`], examples may be found in
-    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
-    /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(
+    /// Extensions need to implement [`ToExtension`], examples may be found in
+    /// in [`ToExtension` documentation](../ext/trait.ToExtension.html#examples) or
+    /// [the implementors](../ext/trait.ToExtension.html#implementors).
+    pub fn add_extension<E: ToExtension>(
         &mut self,
-        extension: &E,
+        extension: E,
     ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);
@@ -259,6 +260,7 @@ pub trait Builder: Sized {
     /// This would look like:
     #[cfg_attr(feature = "std", doc = "```no_run")]
     #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
     /// # use rand::rng;
     /// # use std::{
     /// #     str::FromStr,
@@ -273,7 +275,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -310,6 +312,7 @@ pub trait Builder: Sized {
     /// This would look like:
     #[cfg_attr(feature = "std", doc = "```no_run")]
     #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
     /// # use rand::rng;
     /// # use std::{
     /// #     str::FromStr,
@@ -324,7 +327,7 @@ pub trait Builder: Sized {
     /// # };
     /// #
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -345,7 +348,7 @@ pub trait Builder: Sized {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -442,6 +445,7 @@ pub trait AsyncBuilder: Sized {
     /// This would look like:
     #[cfg_attr(feature = "std", doc = "```no_run")]
     #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
     /// # use rand::rng;
     /// # use std::{
     /// #     str::FromStr,
@@ -457,7 +461,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -496,6 +500,7 @@ pub trait AsyncBuilder: Sized {
     /// This would look like:
     #[cfg_attr(feature = "std", doc = "```no_run")]
     #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
     /// # use rand::rng;
     /// # use std::{
     /// #     str::FromStr,
@@ -511,7 +516,7 @@ pub trait AsyncBuilder: Sized {
     /// #
     /// # async fn build() -> builder::Result<()> {
     /// # let mut rng = rng();
-    /// # let signer = p256::ecdsa::SigningKey::try_from_rng(&mut rng).unwrap();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
     /// # let builder = CertificateBuilder::new(
     /// #     builder::profile::cabf::Root::new(
     /// #         false,
@@ -535,7 +540,7 @@ pub trait AsyncBuilder: Sized {
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let blob = self.finalize(signer)?;
 

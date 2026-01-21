@@ -6,12 +6,12 @@ use crate::{
 };
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::CryptoRng;
+use rand_core::{CryptoRng, RngCore};
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
     Certificate,
-    ext::{AsExtension, Extensions},
+    ext::{Extensions, ToExtension},
     name::Name,
 };
 
@@ -53,7 +53,7 @@ use x509_cert::{
 ///     );
 ///
 /// if let Some(nonce) = req.nonce() {
-///     builder = builder.with_extension(nonce).unwrap();
+///     builder = builder.with_extension(&nonce).unwrap();
 /// }
 ///
 /// #[cfg(feature = "std")]
@@ -101,7 +101,7 @@ impl OcspResponseBuilder {
     /// extension encoding fails.
     ///
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension<E: AsExtension>(mut self, ext: E) -> Result<Self, E::Error> {
+    pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.response_extensions {
             Some(ref mut exts) => exts.push(ext),
@@ -168,7 +168,7 @@ impl OcspResponseBuilder {
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
-        R: CryptoRng + ?Sized,
+        R: CryptoRng + RngCore + ?Sized,
     {
         let tbs_response_data = self.into_response_data(produced_at);
         let signature_algorithm = signer.signature_algorithm_identifier()?;
