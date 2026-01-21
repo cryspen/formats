@@ -19,3 +19,5 @@ typ = "typ"
 "cann" = "cann"
 # encrypt-decrypt-encrypt 
 "EDE" = "EDE"
+# The hax tool (https://github.com/cryspen/hax)
+"hax" = "hax"

@@ -30,15 +30,21 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::{string::String, vec::Vec};
+#[cfg(feature = "std")]
+use alloc::vec::Vec;
 use core::fmt::{self, Display};
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
 mod arrays;
+#[cfg(all(feature = "std", hax))]
+mod hax;
 mod primitives;
 mod quic_vec;
 mod tls_vec;
+
+#[cfg(all(feature = "std", hax))]
+pub use hax::*;
 
 pub use tls_vec::{
     SecretTlsVecU8, SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, TlsByteSliceU8,
@@ -59,38 +65,62 @@ pub use tls_codec_derive::{
 #[cfg(feature = "conditional_deserialization")]
 pub use tls_codec_derive::conditionally_deserializable;
 
-/// Errors that are thrown by this crate.
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Error {
-    /// An error occurred during encoding.
-    EncodingError(String),
+mod serialize_bytes {
+    use alloc::{string::String, vec::Vec};
+    // `Size` and `SerializeBytes` need to be in their own module because of
+    // https://github.com/cryspen/hax/issues/1595
 
-    /// The length of a vector is invalid.
-    InvalidVectorLength,
+    /// Errors that are thrown by this crate.
+    #[derive(Debug, Eq, PartialEq, Clone)]
+    pub enum Error {
+        /// An error occurred during encoding.
+        EncodingError(String),
 
-    /// Error writing everything out.
-    InvalidWriteLength(String),
+        /// The length of a vector is invalid.
+        InvalidVectorLength,
 
-    /// Invalid input when trying to decode a primitive integer.
-    InvalidInput,
+        /// Error writing everything out.
+        InvalidWriteLength(String),
 
-    /// An error occurred during decoding.
-    DecodingError(String),
+        /// Invalid input when trying to decode a primitive integer.
+        InvalidInput,
 
-    /// Reached the end of a byte stream.
-    EndOfStream,
+        /// An error occurred during decoding.
+        DecodingError(String),
 
-    /// Found unexpected data after deserializing.
-    TrailingData,
+        /// Reached the end of a byte stream.
+        EndOfStream,
 
-    /// An unknown value in an enum.
-    /// The application might not want to treat this as an error because it is
-    /// only an unknown value, not an invalid value.
-    UnknownValue(u64),
+        /// Found unexpected data after deserializing.
+        TrailingData,
 
-    /// An internal library error that indicates a bug.
-    LibraryError,
+        /// An unknown value in an enum.
+        /// The application might not want to treat this as an error because it is
+        /// only an unknown value, not an invalid value.
+        UnknownValue(u64),
+
+        /// An internal library error that indicates a bug.
+        LibraryError,
+    }
+
+    /// The `Size` trait needs to be implemented by any struct that should be
+    /// efficiently serialized.
+    /// This allows to collect the length of a serialized structure before allocating
+    /// memory.
+    pub trait Size {
+        fn tls_serialized_len(&self) -> usize;
+    }
+
+    /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
+    ///
+    /// The trait provides one function:
+    /// * `tls_serialize` that returns a byte vector
+    pub trait SerializeBytes: Size {
+        /// Serialize `self` and return it as a byte vector.
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+    }
 }
+pub use serialize_bytes::*;
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
@@ -111,14 +141,6 @@ impl From<std::io::Error> for Error {
     }
 }
 
-/// The `Size` trait needs to be implemented by any struct that should be
-/// efficiently serialized.
-/// This allows to collect the length of a serialized structure before allocating
-/// memory.
-pub trait Size {
-    fn tls_serialized_len(&self) -> usize;
-}
-
 /// The `Serialize` trait provides functions to serialize a struct or enum.
 ///
 /// The trait provides two functions:
@@ -131,36 +153,33 @@ pub trait Serialize: Size {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
 
     /// Serialize `self` and return it as a byte vector.
-    #[cfg(feature = "std")]
+    #[cfg(all(feature = "std", not(hax)))]
     fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
-        let mut buffer = Vec::with_capacity(self.tls_serialized_len());
-        let written = self.tls_serialize(&mut buffer)?;
-        debug_assert_eq!(
-            written,
-            buffer.len(),
-            "Expected that {} bytes were written but the output holds {} bytes",
-            written,
-            buffer.len()
-        );
-        if written != buffer.len() {
-            Err(Error::EncodingError(format!(
-                "Expected that {} bytes were written but the output holds {} bytes",
-                written,
-                buffer.len()
-            )))
-        } else {
-            Ok(buffer)
-        }
+        tls_serialize_detached_default(self)
     }
 }
 
-/// The `SerializeBytes` trait provides a function to serialize a struct or enum.
-///
-/// The trait provides one function:
-/// * `tls_serialize` that returns a byte vector
-pub trait SerializeBytes: Size {
-    /// Serialize `self` and return it as a byte vector.
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+/// This is the default implementation for [`Serialize::tls_serialize_detached`]
+#[cfg(feature = "std")]
+fn tls_serialize_detached_default<T: ?Sized + Serialize>(s: &T) -> Result<Vec<u8>, Error> {
+    let mut buffer = Vec::with_capacity(s.tls_serialized_len());
+    let written = s.tls_serialize(&mut buffer)?;
+    debug_assert_eq!(
+        written,
+        buffer.len(),
+        "Expected that {} bytes were written but the output holds {} bytes",
+        written,
+        buffer.len()
+    );
+    if written != buffer.len() {
+        Err(Error::EncodingError(format!(
+            "Expected that {} bytes were written but the output holds {} bytes",
+            written,
+            buffer.len()
+        )))
+    } else {
+        Ok(buffer)
+    }
 }
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
@@ -182,20 +201,26 @@ pub trait Deserialize: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
-    #[cfg(feature = "std")]
+    #[cfg(all(feature = "std", not(hax)))]
     fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        let mut bytes = bytes.as_ref();
-        let out = Self::tls_deserialize(&mut bytes)?;
-
-        if !bytes.is_empty() {
-            return Err(Error::TrailingData);
-        }
-
-        Ok(out)
+        tls_deserialize_exact_default(bytes)
     }
+}
+
+/// This is the default implementation for [`Deserialize::tls_deserialize_exact`]
+#[cfg(feature = "std")]
+fn tls_deserialize_exact_default<T: Deserialize>(bytes: impl AsRef<[u8]>) -> Result<T, Error> {
+    let mut bytes = bytes.as_ref();
+    let out = T::tls_deserialize(&mut bytes)?;
+
+    if !bytes.is_empty() {
+        return Err(Error::TrailingData);
+    }
+
+    Ok(out)
 }
 
 /// The `DeserializeBytes` trait defines functions to deserialize a byte slice
@@ -217,6 +242,7 @@ pub trait DeserializeBytes: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
+    #[cfg(not(hax))]
     fn tls_deserialize_exact_bytes(bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,

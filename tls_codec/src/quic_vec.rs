@@ -14,7 +14,7 @@
 use super::alloc::vec::Vec;
 use core::fmt;
 
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(hax)))]
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[cfg(feature = "arbitrary")]
@@ -105,6 +105,7 @@ fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
 }
 
 #[inline(always)]
+#[allow(clippy::assign_op_pattern)]
 pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let len_len = length_encoding_bytes(content_length.try_into()?)?;
     if !cfg!(fuzzing) {
@@ -127,8 +128,10 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
         }
     }
     let mut len = content_length;
-    for b in length_bytes.iter_mut().rev() {
-        *b |= (len & 0xFF) as u8;
+    let l = length_bytes.len();
+    for i in 0..l {
+        // Not using |= is a workaround for https://github.com/cryspen/hax/issues/1512
+        length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
         len >>= 8;
     }
 
@@ -186,7 +189,10 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
         // Serialize the elements
         for e in self.iter() {
-            out.append(&mut e.tls_serialize()?);
+            // Not inlining serialized_e is a workaround for
+            // https://github.com/cryspen/hax/issues/1584
+            let mut serialized_e = e.tls_serialize()?;
+            out.append(&mut serialized_e);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -238,6 +244,7 @@ fn write_hex(f: &mut fmt::Formatter<'_>, data: &[u8]) -> fmt::Result {
 
 macro_rules! impl_vl_bytes_generic {
     ($name:ident) => {
+        #[hax_lib::opaque]
         impl fmt::Debug for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{} {{ ", stringify!($name))?;
@@ -250,18 +257,6 @@ macro_rules! impl_vl_bytes_generic {
             /// Get a reference to the vlbytes's vec.
             pub fn as_slice(&self) -> &[u8] {
                 self.vec().as_ref()
-            }
-
-            /// Add an element to this.
-            #[inline]
-            pub fn push(&mut self, value: u8) {
-                self.vec_mut().push(value);
-            }
-
-            /// Remove the last element.
-            #[inline]
-            pub fn pop(&mut self) -> Option<u8> {
-                self.vec_mut().pop()
             }
         }
 
@@ -295,7 +290,7 @@ macro_rules! impl_vl_bytes_generic {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[cfg_attr(feature = "std", derive(Zeroize))]
+#[cfg_attr(all(feature = "std", not(hax)), derive(Zeroize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
@@ -316,8 +311,16 @@ impl VLBytes {
         &self.vec
     }
 
-    fn vec_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.vec
+    /// Add an element to this.
+    #[inline]
+    pub fn push(&mut self, v: u8) {
+        self.vec.push(v)
+    }
+
+    /// Remove the last element.
+    #[inline]
+    pub fn pop(&mut self) -> Option<u8> {
+        self.vec.pop()
     }
 }
 
@@ -442,6 +445,7 @@ mod serde_impl {
 }
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
+#[hax_lib::opaque]
 impl fmt::Debug for VLByteSlice<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "VLByteSlice {{ ")?;
@@ -648,7 +652,7 @@ mod rw_bytes {
             let mut result = Self {
                 vec: vec![0u8; length],
             };
-            bytes.read_exact(result.vec.as_mut_slice())?;
+            bytes.read_exact(&mut result.vec)?;
             Ok(result)
         }
     }
@@ -675,7 +679,8 @@ mod secret_bytes {
     /// behaves just like [`VLBytes`], except that it doesn't allow conversion into
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+    #[cfg_attr(not(hax), derive(Zeroize, ZeroizeOnDrop))]
     pub struct SecretVLBytes(VLBytes);
 
     impl SecretVLBytes {
@@ -689,8 +694,16 @@ mod secret_bytes {
             &self.0.vec
         }
 
-        fn vec_mut(&mut self) -> &mut Vec<u8> {
-            &mut self.0.vec
+        /// Add an element to this.
+        #[inline]
+        pub fn push(&mut self, v: u8) {
+            self.0.vec.push(v)
+        }
+
+        /// Remove the last element.
+        #[inline]
+        pub fn pop(&mut self) -> Option<u8> {
+            self.0.vec.pop()
         }
     }
 
