@@ -13,7 +13,9 @@ use serde::ser::SerializeStruct;
 use std::io::{Read, Write};
 use zeroize::Zeroize;
 
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24};
+use crate::{
+    Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24, primitives::add,
+};
 
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
@@ -87,7 +89,7 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            let end = len.checked_add($len_len).ok_or(Error::LibraryError)?;
+            let end = add!(len, $len_len);
             let vec = bytes.get($len_len..end).ok_or(Error::EndOfStream)?;
             let result = Self { vec: vec.to_vec() };
             Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
@@ -107,9 +109,7 @@ macro_rules! impl_deserialize {
             while (read - len_len) < len.try_into().unwrap() {
                 hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                read = read
-                    .checked_add(element.tls_serialized_len())
-                    .ok_or(Error::LibraryError)?;
+                read = add!(read, element.tls_serialized_len());
                 result.push(element);
             }
             Ok(result)
@@ -129,9 +129,7 @@ macro_rules! impl_deserialize_bytes {
                 hax_lib::loop_invariant!(read >= len_len);
                 let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
                 remainder = next_remainder;
-                read = read
-                    .checked_add(element.tls_serialized_len())
-                    .ok_or(Error::LibraryError)?;
+                read = add!(read, element.tls_serialized_len());
                 result.push(element);
             }
             Ok((result, remainder))
@@ -177,7 +175,7 @@ macro_rules! impl_byte_serialize {
             let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
             // Now serialize the elements
-            written = written.checked_add(writer.write($self.as_slice())?).ok_or(Error::LibraryError)?;
+            written = add!(written, writer.write($self.as_slice())?);
 
             $self.assert_written_bytes(tls_serialized_len, written)?;
             Ok(written)

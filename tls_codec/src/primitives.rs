@@ -10,6 +10,17 @@ use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
+macro_rules! add {
+    ($x: expr, $y: expr) => {
+        if cfg!(debug_assertions) {
+            $x.checked_add($y).ok_or(Error::LibraryError)?
+        } else {
+            $x + $y
+        }
+    };
+}
+pub(crate) use add;
+
 impl<T: Size> Size for Option<T> {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
@@ -46,9 +57,7 @@ impl<T: Serialize> Serialize for Option<T> {
                 let written = writer.write(&[1])?;
                 hax_lib::assume!(written == 1);
                 debug_assert_eq!(written, 1);
-                e.tls_serialize(writer)?
-                    .checked_add(1)
-                    .ok_or(Error::LibraryError)
+                Ok(add!(e.tls_serialize(writer)?, 1))
             }
             None => {
                 writer.write_all(&[0])?;
@@ -63,11 +72,7 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
-                let mut out = Vec::with_capacity(
-                    e.tls_serialized_len()
-                        .checked_add(1)
-                        .ok_or(Error::LibraryError)?,
-                );
+                let mut out = Vec::with_capacity(add!(e.tls_serialized_len(), 1));
                 out.push(1);
                 // Not inlining serialized_e is a workaround for
                 // https://github.com/cryspen/hax/issues/1584
@@ -263,10 +268,7 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
-        self.1
-            .tls_serialize(writer)?
-            .checked_add(written)
-            .ok_or(Error::LibraryError)
+        Ok(add!(self.1.tls_serialize(writer)?, written))
     }
 }
 
@@ -329,13 +331,8 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
-        let written = written
-            .checked_add(self.1.tls_serialize(writer)?)
-            .ok_or(Error::LibraryError)?;
-        self.2
-            .tls_serialize(writer)?
-            .checked_add(written)
-            .ok_or(Error::LibraryError)
+        let written = add!(written, self.1.tls_serialize(writer)?);
+        Ok(add!(self.2.tls_serialize(writer)?, written))
     }
 }
 

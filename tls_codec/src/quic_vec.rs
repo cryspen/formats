@@ -22,7 +22,7 @@ use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
-use crate::{DeserializeBytes, Error, SerializeBytes, Size};
+use crate::{DeserializeBytes, Error, SerializeBytes, Size, primitives::add};
 
 #[cfg(not(feature = "mls"))]
 #[hax_lib::fstar::verification_status(lax)] // Need lemma for (1 << 62) >= 1
@@ -180,9 +180,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
             hax_lib::loop_invariant!(read >= len_len);
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
-            read = read
-                .checked_add(element.tls_serialized_len())
-                .ok_or(Error::LibraryError)?;
+            read = add!(read, element.tls_serialized_len());
             result.push(element);
         }
         Ok((result, remainder))
@@ -360,20 +358,30 @@ impl From<VLBytes> for Vec<u8> {
 }
 
 #[inline(always)]
-fn tls_serialize_bytes_len(bytes: &[u8]) -> Option<usize> {
+fn tls_serialize_bytes_len_checked(bytes: &[u8]) -> Option<usize> {
     let content_length = bytes.len();
     let len_len = length_encoding_bytes(content_length as u64).ok()?;
     content_length.checked_add(len_len)
 }
 
+#[inline(always)]
+fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
+    let content_length = bytes.len();
+    let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
+        // We can't do anything about the error. Let's say there's no content.
+        0
+    });
+    content_length + len_len
+}
+
 impl Size for VLBytes {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        tls_serialize_bytes_len(self.as_slice()).unwrap_or(0)
+        tls_serialize_bytes_len(self.as_slice())
     }
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
-        tls_serialize_bytes_len(self.as_slice())
+        tls_serialize_bytes_len_checked(self.as_slice())
     }
 }
 
@@ -499,22 +507,22 @@ impl VLByteSlice<'_> {
 impl Size for &VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
-        tls_serialize_bytes_len(self.0).unwrap_or(0)
+        tls_serialize_bytes_len(self.0)
     }
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
-        tls_serialize_bytes_len(self.0)
+        tls_serialize_bytes_len_checked(self.0)
     }
 }
 
 impl Size for VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
-        tls_serialize_bytes_len(self.0)
+        tls_serialize_bytes_len_checked(self.0)
     }
     #[inline]
     fn tls_serialized_len(&self) -> usize {
-        tls_serialize_bytes_len(self.0).unwrap_or(0)
+        tls_serialize_bytes_len(self.0)
     }
 }
 
@@ -569,9 +577,7 @@ pub mod rw {
             while (read - len_len) < length {
                 hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                read = read
-                    .checked_add(element.tls_serialized_len())
-                    .ok_or(Error::LibraryError)?;
+                read = add!(read, element.tls_serialized_len());
                 result.push(element);
             }
             Ok(result)
@@ -661,9 +667,7 @@ mod rw_bytes {
         // Now serialize the elements
         writer.write_all(bytes)?;
 
-        content_length
-            .checked_add(len_len)
-            .ok_or(Error::LibraryError)
+        Ok(add!(content_length, len_len))
     }
 
     impl Serialize for VLBytes {
