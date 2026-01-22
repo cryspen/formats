@@ -16,7 +16,7 @@ zeroize = { version = "1.8", default-features = false, features = [
     "alloc",
     "zeroize_derive",
 ] }
-hax-lib = {git = "https://github.com/cryspen/hax", branch = "tls-codec-panic-freedom"}
+hax-lib = "0.3.6"
 
 # optional dependencies
 arbitrary = { version = "1.4", features = ["derive"], optional = true }

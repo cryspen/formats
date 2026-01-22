@@ -17,6 +17,9 @@ use crate::{
     Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24, primitives::add,
 };
 
+#[cfg(hax)]
+use hax_lib::ToInt;
+
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
         /// The serialized len, if there is no overflow
@@ -32,7 +35,9 @@ macro_rules! impl_size {
         fn tls_serialized_length(&$self) -> usize {
             $self.as_slice()
                 .iter()
-                .fold($len_len, |acc, e| acc + e.tls_serialized_len())
+                .fold($len_len, |acc, e| {
+                    hax_lib::assume!(acc.to_int() + e.tls_serialized_len().to_int() <= usize::MAX.to_int());
+                    acc + e.tls_serialized_len()})
         }
     }
 }
@@ -47,6 +52,7 @@ macro_rules! impl_byte_size {
         /// The serialized len
         #[inline(always)]
         fn tls_serialized_byte_length(&$self) -> usize {
+            hax_lib::assume!($self.as_slice().len().to_int() + $len_len.to_int() <= usize::MAX.to_int());
             $self.as_slice().len() + $len_len
         }
     }
@@ -401,6 +407,7 @@ macro_rules! impl_vec_members {
         /// Add an element to this.
         #[inline]
         pub fn push(&mut self, value: $element_type) {
+            hax_lib::assume!(self.vec.len() < usize::MAX);
             self.vec.push(value);
         }
 

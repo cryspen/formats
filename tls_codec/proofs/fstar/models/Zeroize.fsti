@@ -1,6 +1,6 @@
 module Zeroize
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
-open Core
+open Core_models
 open FStar.Mul
 
 class t_Zeroize (v_Self: Type0) = {

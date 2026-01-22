@@ -24,6 +24,9 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
 use crate::{DeserializeBytes, Error, SerializeBytes, Size, primitives::add};
 
+#[cfg(hax)]
+use hax_lib::ToInt;
+
 #[cfg(not(feature = "mls"))]
 #[hax_lib::fstar::verification_status(lax)] // Need lemma for (1 << 62) >= 1
 const MAX_LEN: u64 = (1 << 62) - 1;
@@ -181,6 +184,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
             read = add!(read, element.tls_serialized_len());
+            hax_lib::assume!(result.len() < usize::MAX);
             result.push(element);
         }
         Ok((result, remainder))
@@ -244,12 +248,16 @@ impl<T: Size> Size for &[T] {
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let content_length = self.iter().fold(0, |acc, e| {
+            hax_lib::assume!(acc.to_int() + e.tls_serialized_len().to_int() <= usize::MAX.to_int());
+            acc + e.tls_serialized_len()
+        });
         let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
             // We can't do anything about the error unless we change the trait.
             // Let's say there's no content for now.
             0
         });
+        hax_lib::assume!(content_length.to_int() + len_len.to_int() <= usize::MAX.to_int());
         content_length + len_len
     }
 }
@@ -339,6 +347,7 @@ impl VLBytes {
     /// Add an element to this.
     #[inline]
     pub fn push(&mut self, v: u8) {
+        hax_lib::assume!(self.vec.len() < usize::MAX);
         self.vec.push(v)
     }
 
@@ -371,6 +380,7 @@ fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
         // We can't do anything about the error. Let's say there's no content.
         0
     });
+    hax_lib::assume!(content_length.to_int() + len_len.to_int() <= usize::MAX.to_int());
     content_length + len_len
 }
 
@@ -578,6 +588,7 @@ pub mod rw {
                 hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
                 read = add!(read, element.tls_serialized_len());
+                hax_lib::assume!(result.len() < usize::MAX);
                 result.push(element);
             }
             Ok(result)
@@ -751,6 +762,7 @@ mod secret_bytes {
         /// Add an element to this.
         #[inline]
         pub fn push(&mut self, v: u8) {
+            hax_lib::assume!(self.0.vec.len() < usize::MAX);
             self.0.vec.push(v)
         }
 

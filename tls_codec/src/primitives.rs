@@ -6,6 +6,9 @@ use crate::{DeserializeBytes, SerializeBytes, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
+#[cfg(hax)]
+use hax_lib::ToInt;
+
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
@@ -32,7 +35,10 @@ impl<T: Size> Size for Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         1 + match self {
-            Some(v) => v.tls_serialized_len(),
+            Some(v) => {
+                hax_lib::assume!(v.tls_serialized_len() < usize::MAX);
+                v.tls_serialized_len()
+            }
             None => 0,
         }
     }
@@ -77,6 +83,8 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
                 // Not inlining serialized_e is a workaround for
                 // https://github.com/cryspen/hax/issues/1584
                 let mut serialized_e = e.tls_serialize()?;
+                // Could be turned into a post-condition on `tls_serialize`
+                hax_lib::assume!(serialized_e.len() == e.tls_serialized_len());
                 out.append(&mut serialized_e);
                 Ok(out)
             }
@@ -285,6 +293,10 @@ where
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(
+            self.0.tls_serialized_len().to_int() + self.1.tls_serialized_len().to_int()
+                <= usize::MAX.to_int()
+        );
         self.0.tls_serialized_len() + self.1.tls_serialized_len()
     }
 }
@@ -351,6 +363,12 @@ where
     }
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(
+            self.0.tls_serialized_len().to_int()
+                + self.1.tls_serialized_len().to_int()
+                + self.2.tls_serialized_len().to_int()
+                <= usize::MAX.to_int()
+        );
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
