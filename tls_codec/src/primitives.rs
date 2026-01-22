@@ -6,15 +6,39 @@ use crate::{DeserializeBytes, SerializeBytes, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
+#[cfg(hax)]
+use hax_lib::ToInt;
+
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
+macro_rules! add {
+    ($x: expr, $y: expr) => {
+        if cfg!(debug_assertions) {
+            $x.checked_add($y).ok_or(Error::LibraryError)?
+        } else {
+            $x + $y
+        }
+    };
+}
+pub(crate) use add;
+
 impl<T: Size> Size for Option<T> {
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        1usize.checked_add(match self {
+            Some(v) => v.tls_serialized_len_checked()?,
+            None => 0,
+        })
+    }
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         1 + match self {
-            Some(v) => v.tls_serialized_len(),
+            Some(v) => {
+                hax_lib::assume!(v.tls_serialized_len() < usize::MAX);
+                v.tls_serialized_len()
+            }
             None => 0,
         }
     }
@@ -25,6 +49,10 @@ impl<T: Size> Size for &Option<T> {
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
     }
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
+    }
 }
 
 impl<T: Serialize> Serialize for Option<T> {
@@ -33,8 +61,9 @@ impl<T: Serialize> Serialize for Option<T> {
         match self {
             Some(e) => {
                 let written = writer.write(&[1])?;
+                hax_lib::assume!(written == 1);
                 debug_assert_eq!(written, 1);
-                e.tls_serialize(writer).map(|l| l + 1)
+                Ok(add!(e.tls_serialize(writer)?, 1))
             }
             None => {
                 writer.write_all(&[0])?;
@@ -49,11 +78,13 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
-                let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
+                let mut out = Vec::with_capacity(add!(e.tls_serialized_len(), 1));
                 out.push(1);
                 // Not inlining serialized_e is a workaround for
                 // https://github.com/cryspen/hax/issues/1584
                 let mut serialized_e = e.tls_serialize()?;
+                // Could be turned into a post-condition on `tls_serialize`
+                hax_lib::assume!(serialized_e.len() == e.tls_serialized_len());
                 out.append(&mut serialized_e);
                 Ok(out)
             }
@@ -160,6 +191,7 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 let written = writer.write(&self.to_be_bytes())?;
+                #[cfg(not(hax))]
                 debug_assert_eq!(written, $bytes);
                 Ok(written)
             }
@@ -178,12 +210,20 @@ macro_rules! impl_unsigned {
             fn tls_serialized_len(&self) -> usize {
                 $bytes
             }
+            #[inline]
+            fn tls_serialized_len_checked(&self) -> Option<usize> {
+                Some($bytes)
+            }
         }
 
         impl Size for &$t {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 (*self).tls_serialized_len()
+            }
+            #[inline]
+            fn tls_serialized_len_checked(&self) -> Option<usize> {
+                (*self).tls_serialized_len_checked()
             }
         }
     };
@@ -236,7 +276,7 @@ where
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let written = self.0.tls_serialize(writer)?;
-        self.1.tls_serialize(writer).map(|l| l + written)
+        Ok(add!(self.1.tls_serialize(writer)?, written))
     }
 }
 
@@ -246,7 +286,17 @@ where
     U: Size,
 {
     #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.0
+            .tls_serialized_len_checked()?
+            .checked_add(self.1.tls_serialized_len_checked()?)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(
+            self.0.tls_serialized_len().to_int() + self.1.tls_serialized_len().to_int()
+                <= usize::MAX.to_int()
+        );
         self.0.tls_serialized_len() + self.1.tls_serialized_len()
     }
 }
@@ -292,9 +342,9 @@ where
     #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        let mut written = self.0.tls_serialize(writer)?;
-        written += self.1.tls_serialize(writer)?;
-        self.2.tls_serialize(writer).map(|l| l + written)
+        let written = self.0.tls_serialize(writer)?;
+        let written = add!(written, self.1.tls_serialize(writer)?);
+        Ok(add!(self.2.tls_serialize(writer)?, written))
     }
 }
 
@@ -305,7 +355,20 @@ where
     V: Size,
 {
     #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.0
+            .tls_serialized_len_checked()?
+            .checked_add(self.1.tls_serialized_len_checked()?)?
+            .checked_add(self.2.tls_serialized_len_checked()?)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
+        hax_lib::assume!(
+            self.0.tls_serialized_len().to_int()
+                + self.1.tls_serialized_len().to_int()
+                + self.2.tls_serialized_len().to_int()
+                <= usize::MAX.to_int()
+        );
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
@@ -314,6 +377,10 @@ impl Size for () {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        Some(0)
     }
 }
 
@@ -343,6 +410,10 @@ impl<T> Size for PhantomData<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        Some(0)
     }
 }
 
@@ -380,6 +451,10 @@ impl<T: Size> Size for Box<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.as_ref().tls_serialized_len()
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.as_ref().tls_serialized_len_checked()
     }
 }
 

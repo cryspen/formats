@@ -269,6 +269,10 @@ mod custom {
         TlsByteSliceU32(v).tls_serialized_len()
     }
 
+    pub fn tls_serialized_len_checked(v: &[u8]) -> Option<usize> {
+        TlsByteSliceU32(v).tls_serialized_len_checked()
+    }
+
     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {
         TlsByteSliceU32(v).tls_serialize(writer)
     }
@@ -291,6 +295,10 @@ mod custom_bytes {
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()
+    }
+
+    pub fn tls_serialized_len_checked(v: &[u8]) -> Option<usize> {
+        TlsByteSliceU32(v).tls_serialized_len_checked()
     }
 
     pub fn tls_serialize<W: Write>(v: &[u8], writer: &mut W) -> Result<usize, tls_codec::Error> {

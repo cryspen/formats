@@ -22,9 +22,13 @@ use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
-use crate::{DeserializeBytes, Error, SerializeBytes, Size};
+use crate::{DeserializeBytes, Error, SerializeBytes, Size, primitives::add};
+
+#[cfg(hax)]
+use hax_lib::ToInt;
 
 #[cfg(not(feature = "mls"))]
+#[hax_lib::fstar::verification_status(lax)] // Need lemma for (1 << 62) >= 1
 const MAX_LEN: u64 = (1 << 62) - 1;
 #[cfg(not(feature = "mls"))]
 const MAX_LEN_LEN_LOG: usize = 3;
@@ -50,6 +54,7 @@ fn calculate_length(len_len_byte: u8) -> Result<(usize, usize), Error> {
     let length: usize = (len_len_byte & 0x3F).into();
     let len_len_log = (len_len_byte >> 6).into();
     if !cfg!(fuzzing) {
+        #[cfg(not(hax))]
         debug_assert!(len_len_log <= MAX_LEN_LEN_LOG);
     }
     if len_len_log > MAX_LEN_LEN_LOG {
@@ -87,6 +92,7 @@ fn read_variable_length_bytes(bytes: &[u8]) -> Result<((usize, usize), &[u8]), E
 #[inline(always)]
 fn length_encoding_bytes(length: u64) -> Result<usize, Error> {
     if !cfg!(fuzzing) {
+        #[cfg(not(hax))]
         debug_assert!(length <= MAX_LEN);
     }
     if length > MAX_LEN {
@@ -130,6 +136,7 @@ pub fn write_variable_length(content_length: usize) -> Result<Vec<u8>, Error> {
     let mut len = content_length;
     let l = length_bytes.len();
     for i in 0..l {
+        hax_lib::loop_invariant!(|_: usize| length_bytes.len() == l);
         // Not using |= is a workaround for https://github.com/cryspen/hax/issues/1512
         length_bytes[l - i - 1] = length_bytes[l - i - 1] | ((len & 0xFF) as u8);
         len >>= 8;
@@ -143,12 +150,20 @@ impl<T: Size> Size for Vec<T> {
     fn tls_serialized_len(&self) -> usize {
         self.as_slice().tls_serialized_len()
     }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        self.as_slice().tls_serialized_len_checked()
+    }
 }
 
 impl<T: Size> Size for &Vec<T> {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
     }
 }
 
@@ -165,9 +180,11 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
         let mut result = Vec::new();
         let mut read = len_len;
         while (read - len_len) < length {
+            hax_lib::loop_invariant!(read >= len_len);
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
             remainder = next_remainder;
-            read += element.tls_serialized_len();
+            read = add!(read, element.tls_serialized_len());
+            hax_lib::assume!(result.len() < usize::MAX);
             result.push(element);
         }
         Ok((result, remainder))
@@ -180,6 +197,8 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         // We need to pre-compute the length of the content.
         // This requires more computations but the other option would be to buffer
         // the entire content, which can end up requiring a lot of memory.
+
+        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
         let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
         let mut length = write_variable_length(content_length)?;
         let len_len = length.len();
@@ -218,13 +237,27 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
 
 impl<T: Size> Size for &[T] {
     #[inline(always)]
+    #[allow(clippy::manual_try_fold)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
+        let content_length = self.iter().fold(Some(0usize), |acc, e| {
+            acc?.checked_add(e.tls_serialized_len_checked()?)
+        })?;
+        let len_len = length_encoding_bytes(content_length as u64).ok()?;
+        content_length.checked_add(len_len)
+    }
+    #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let content_length = self.iter().fold(0, |acc, e| {
+            hax_lib::assume!(acc.to_int() + e.tls_serialized_len().to_int() <= usize::MAX.to_int());
+            acc + e.tls_serialized_len()
+        });
         let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
             // We can't do anything about the error unless we change the trait.
             // Let's say there's no content for now.
             0
         });
+        hax_lib::assume!(content_length.to_int() + len_len.to_int() <= usize::MAX.to_int());
         content_length + len_len
     }
 }
@@ -314,6 +347,7 @@ impl VLBytes {
     /// Add an element to this.
     #[inline]
     pub fn push(&mut self, v: u8) {
+        hax_lib::assume!(self.vec.len() < usize::MAX);
         self.vec.push(v)
     }
 
@@ -333,12 +367,20 @@ impl From<VLBytes> for Vec<u8> {
 }
 
 #[inline(always)]
+fn tls_serialize_bytes_len_checked(bytes: &[u8]) -> Option<usize> {
+    let content_length = bytes.len();
+    let len_len = length_encoding_bytes(content_length as u64).ok()?;
+    content_length.checked_add(len_len)
+}
+
+#[inline(always)]
 fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
     let content_length = bytes.len();
     let len_len = length_encoding_bytes(content_length as u64).unwrap_or({
         // We can't do anything about the error. Let's say there's no content.
         0
     });
+    hax_lib::assume!(content_length.to_int() + len_len.to_int() <= usize::MAX.to_int());
     content_length + len_len
 }
 
@@ -346,6 +388,10 @@ impl Size for VLBytes {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.as_slice())
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        tls_serialize_bytes_len_checked(self.as_slice())
     }
 }
 
@@ -358,6 +404,7 @@ impl DeserializeBytes for VLBytes {
         }
 
         if !cfg!(fuzzing) {
+            #[cfg(not(hax))]
             debug_assert!(
                 length <= MAX_LEN as usize,
                 "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
@@ -368,11 +415,12 @@ impl DeserializeBytes for VLBytes {
                 "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
             )));
         }
-        match remainder.get(..length).ok_or(Error::EndOfStream) {
-            Ok(vec) => Ok((Self { vec: vec.to_vec() }, &remainder[length..])),
+        match remainder.split_at_checked(length).ok_or(Error::EndOfStream) {
+            Ok((vec, remainder)) => Ok((Self { vec: vec.to_vec() }, remainder)),
             Err(_e) => {
                 let remaining_len = remainder.len();
                 if !cfg!(fuzzing) {
+                    #[cfg(not(hax))]
                     debug_assert_eq!(
                         remaining_len, length,
                         "Expected to read {length} bytes but {remaining_len} were read.",
@@ -390,6 +438,10 @@ impl Size for &VLBytes {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
+    }
+    #[inline(always)]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        (*self).tls_serialized_len_checked()
     }
 }
 
@@ -467,9 +519,17 @@ impl Size for &VLByteSlice<'_> {
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
     }
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        tls_serialize_bytes_len_checked(self.0)
+    }
 }
 
 impl Size for VLByteSlice<'_> {
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        tls_serialize_bytes_len_checked(self.0)
+    }
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
@@ -525,8 +585,10 @@ pub mod rw {
             let mut result = Vec::new();
             let mut read = len_len;
             while (read - len_len) < length {
+                hax_lib::loop_invariant!(read >= len_len);
                 let element = T::tls_deserialize(bytes)?;
-                read += element.tls_serialized_len();
+                read = add!(read, element.tls_serialized_len());
+                hax_lib::assume!(result.len() < usize::MAX);
                 result.push(element);
             }
             Ok(result)
@@ -557,6 +619,7 @@ pub mod rw {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
+            hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
             let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
             let len_len = write_length(writer, content_length)?;
 
@@ -598,6 +661,7 @@ mod rw_bytes {
         let content_length = bytes.len();
 
         if !cfg!(fuzzing) {
+            #[cfg(not(hax))]
             debug_assert!(
                 content_length as u64 <= MAX_LEN,
                 "Vector can't be encoded. It's too large. {content_length} >= {MAX_LEN}",
@@ -614,7 +678,7 @@ mod rw_bytes {
         // Now serialize the elements
         writer.write_all(bytes)?;
 
-        Ok(content_length + len_len)
+        Ok(add!(content_length, len_len))
     }
 
     impl Serialize for VLBytes {
@@ -639,6 +703,7 @@ mod rw_bytes {
             }
 
             if !cfg!(fuzzing) {
+                #[cfg(not(hax))]
                 debug_assert!(
                     length <= MAX_LEN as usize,
                     "Trying to allocate {length} bytes. Only {MAX_LEN} allowed.",
@@ -697,6 +762,7 @@ mod secret_bytes {
         /// Add an element to this.
         #[inline]
         pub fn push(&mut self, v: u8) {
+            hax_lib::assume!(self.0.vec.len() < usize::MAX);
             self.0.vec.push(v)
         }
 
@@ -712,6 +778,9 @@ mod secret_bytes {
     impl Size for SecretVLBytes {
         fn tls_serialized_len(&self) -> usize {
             self.0.tls_serialized_len()
+        }
+        fn tls_serialized_len_checked(&self) -> Option<usize> {
+            self.0.tls_serialized_len_checked()
         }
     }
 

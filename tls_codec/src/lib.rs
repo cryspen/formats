@@ -107,7 +107,11 @@ mod serialize_bytes {
     /// efficiently serialized.
     /// This allows to collect the length of a serialized structure before allocating
     /// memory.
+    #[hax_lib::attributes]
     pub trait Size {
+        #[hax_lib::requires(true)]
+        fn tls_serialized_len_checked(&self) -> Option<usize>;
+        #[hax_lib::requires(true)]
         fn tls_serialized_len(&self) -> usize;
     }
 
@@ -115,8 +119,10 @@ mod serialize_bytes {
     ///
     /// The trait provides one function:
     /// * `tls_serialize` that returns a byte vector
+    #[hax_lib::attributes]
     pub trait SerializeBytes: Size {
         /// Serialize `self` and return it as a byte vector.
+        #[hax_lib::requires(true)]
         fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
     }
 }
@@ -146,10 +152,12 @@ impl From<std::io::Error> for Error {
 /// The trait provides two functions:
 /// * `tls_serialize` that takes a buffer to write the serialization to
 /// * `tls_serialize_detached` that returns a byte vector
+#[hax_lib::attributes]
 pub trait Serialize: Size {
     /// Serialize `self` and write it to the `writer`.
     /// The function returns the number of bytes written to `writer`.
     #[cfg(feature = "std")]
+    #[hax_lib::requires(true)]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
 
     /// Serialize `self` and return it as a byte vector.
@@ -164,6 +172,7 @@ pub trait Serialize: Size {
 fn tls_serialize_detached_default<T: ?Sized + Serialize>(s: &T) -> Result<Vec<u8>, Error> {
     let mut buffer = Vec::with_capacity(s.tls_serialized_len());
     let written = s.tls_serialize(&mut buffer)?;
+    #[cfg(not(hax))]
     debug_assert_eq!(
         written,
         buffer.len(),
@@ -184,6 +193,7 @@ fn tls_serialize_detached_default<T: ?Sized + Serialize>(s: &T) -> Result<Vec<u8
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
+#[hax_lib::attributes]
 pub trait Deserialize: Size {
     /// This function deserializes the `bytes` from the provided a [`std::io::Read`]
     /// and returns the populated struct.
@@ -192,6 +202,7 @@ pub trait Deserialize: Size {
     ///
     /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "std")]
+    #[hax_lib::requires(true)]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
         Self: Sized;
@@ -226,6 +237,7 @@ fn tls_deserialize_exact_default<T: Deserialize>(bytes: impl AsRef<[u8]>) -> Res
 /// The `DeserializeBytes` trait defines functions to deserialize a byte slice
 /// to a struct or enum. In contrast to [`Deserialize`], this trait operates
 /// directly on byte slices and can return any remaining bytes.
+#[hax_lib::attributes]
 pub trait DeserializeBytes: Size {
     /// This function deserializes the `bytes` from the provided a `&[u8]`
     /// and returns the populated struct, as well as the remaining slice.
@@ -233,6 +245,7 @@ pub trait DeserializeBytes: Size {
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
     /// Returns an error if one occurs during deserialization.
+    #[hax_lib::requires(true)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized;
@@ -280,6 +293,7 @@ impl From<U24> for usize {
     fn from(value: U24) -> usize {
         const LEN: usize = core::mem::size_of::<usize>();
         let mut usize_bytes = [0u8; LEN];
+        hax_lib::assume!(usize_bytes.len() == LEN); // https://github.com/cryspen/hax/issues/1702
         usize_bytes[LEN - 3..].copy_from_slice(&value.0);
         usize::from_be_bytes(usize_bytes)
     }
@@ -288,13 +302,14 @@ impl From<U24> for usize {
 impl TryFrom<usize> for U24 {
     type Error = Error;
 
-    fn try_from(value: usize) -> Result<Self, Self::Error> {
+    fn try_from(value: usize) -> Result<Self, Error> {
         const LEN: usize = core::mem::size_of::<usize>();
         // In practice, our usages of this conversion should never be invalid, as the values
         // have to come from `TryFrom<U24> for usize`.
         if value > (1 << 24) - 1 {
             Err(Error::LibraryError)
         } else {
+            hax_lib::assume!(value.to_be_bytes().len() == LEN); // https://github.com/cryspen/hax/issues/1702
             Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
         }
     }

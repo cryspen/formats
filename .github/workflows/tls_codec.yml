@@ -86,7 +86,8 @@ jobs:
         uses: hacspec/hax-actions@main
         with:
           fstar: v2025.08.07
+          hax_reference: tls-codec-panic-freedom
       - name: 🏃 Extract F*
         run: cargo hax into fstar
-      - name: 🏃 Lax-check extracted F*
-        run: OTHERFLAGS="--admit_smt_queries true" make -C proofs/fstar/extraction/
+      - name: 🏃 Type-check extracted F*
+        run: make -C proofs/fstar/extraction/
