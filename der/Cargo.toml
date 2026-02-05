@@ -23,7 +23,7 @@ const-oid = { version = "0.10", optional = true }
 der_derive = { version = "0.8.0-rc.6", optional = true }
 flagset = { version = "0.4.7", optional = true }
 pem-rfc7468 = { version = "1", optional = true, features = ["alloc"] }
-time = { version = "0.3.4", optional = true, default-features = false }
+time = { version = "0.3.47", optional = true, default-features = false }
 zeroize = { version = "1.8", optional = true, default-features = false }
 heapless = { version = "0.9", optional = true, default-features = false }
 
