@@ -2,7 +2,7 @@
 #[cfg(hax)]
 use tls_codec::SerializeDetached;
 use tls_codec::{SecretTlsVecU16, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32};
-use tls_codec_derive::{TlsSerialize, TlsSize};
+use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked};
 
 #[derive(TlsSerialize, TlsSize, Debug)]
 #[repr(u16)]
@@ -116,7 +116,7 @@ fn lifetimes() {
     assert_eq!(vec![0, 4, 1, 2, 3, 4], serialized);
 }
 
-#[derive(TlsSerialize, TlsSize)]
+#[derive(TlsSerialize, TlsSize, TlsSizeChecked)]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -125,7 +125,7 @@ struct Custom {
 
 mod custom {
     use std::io::Write;
-    use tls_codec::{Serialize, Size, TlsByteSliceU32};
+    use tls_codec::{Serialize, Size, SizeChecked, TlsByteSliceU32};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()

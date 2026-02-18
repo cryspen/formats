@@ -110,9 +110,17 @@ mod serialize_bytes {
     #[hax_lib::attributes]
     pub trait Size {
         #[hax_lib::requires(true)]
-        fn tls_serialized_len_checked(&self) -> Option<usize>;
-        #[hax_lib::requires(true)]
         fn tls_serialized_len(&self) -> usize;
+    }
+
+    /// The `Size` trait needs to be implemented by any struct that should be
+    /// efficiently serialized.
+    /// This allows to collect the length of a serialized structure before allocating
+    /// memory.
+    #[hax_lib::attributes]
+    pub trait SizeChecked {
+        #[hax_lib::requires(true)]
+        fn tls_serialized_len_checked(&self) -> Option<usize>;
     }
 
     /// The `SerializeBytes` trait provides a function to serialize a struct or enum.

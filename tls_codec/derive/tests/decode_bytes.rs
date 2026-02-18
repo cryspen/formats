@@ -1,5 +1,5 @@
 use tls_codec::{DeserializeBytes, SerializeBytes, Size};
-use tls_codec_derive::{TlsDeserializeBytes, TlsSerializeBytes, TlsSize};
+use tls_codec_derive::{TlsDeserializeBytes, TlsSerializeBytes, TlsSize, TlsSizeChecked};
 
 #[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, PartialEq, Debug)]
 #[repr(u16)]
@@ -76,7 +76,7 @@ fn byte_arrays() {
     assert!(rest.is_empty());
 }
 
-#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, Debug, PartialEq)]
+#[derive(TlsSerializeBytes, TlsDeserializeBytes, TlsSize, TlsSizeChecked, Debug, PartialEq)]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -84,7 +84,7 @@ struct Custom {
 }
 
 mod custom {
-    use tls_codec::{DeserializeBytes, SerializeBytes, Size};
+    use tls_codec::{DeserializeBytes, SerializeBytes, Size, SizeChecked};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         v.tls_serialized_len()

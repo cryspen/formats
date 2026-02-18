@@ -1,5 +1,5 @@
 use tls_codec::{SerializeBytes, Size};
-use tls_codec_derive::{TlsSerializeBytes, TlsSize};
+use tls_codec_derive::{TlsSerializeBytes, TlsSize, TlsSizeChecked};
 
 #[derive(TlsSerializeBytes, TlsSize, Debug)]
 #[repr(u16)]
@@ -93,7 +93,7 @@ fn lifetimes() {
     assert_eq!(vec![4, 1, 2, 3, 4], serialized);
 }
 
-#[derive(TlsSerializeBytes, TlsSize)]
+#[derive(TlsSerializeBytes, TlsSize, TlsSizeChecked)]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -101,7 +101,7 @@ struct Custom {
 }
 
 mod custom {
-    use tls_codec::{SerializeBytes, Size};
+    use tls_codec::{SerializeBytes, Size, SizeChecked};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         v.tls_serialized_len()

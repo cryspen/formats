@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, SizeChecked};
 
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
@@ -51,6 +51,9 @@ impl<const LEN: usize> Size for [u8; LEN] {
     fn tls_serialized_len(&self) -> usize {
         LEN
     }
+}
+
+impl<const LEN: usize> SizeChecked for [u8; LEN] {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         Some(LEN)

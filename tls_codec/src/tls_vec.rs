@@ -14,7 +14,8 @@ use std::io::{Read, Write};
 use zeroize::Zeroize;
 
 use crate::{
-    Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24, primitives::add,
+    Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, SizeChecked, U24,
+    primitives::add,
 };
 
 #[cfg(hax)]
@@ -22,14 +23,6 @@ use hax_lib::ToInt;
 
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        /// The serialized len, if there is no overflow
-        #[inline(always)]
-        fn tls_serialized_length_checked(&$self) -> Option<usize> {
-            hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-            $self.as_slice()
-                .iter()
-                .fold(Some($len_len), |acc, e| acc?.checked_add(e.tls_serialized_len_checked()?))
-        }
         /// The serialized len
         #[inline(always)]
         fn tls_serialized_length(&$self) -> usize {
@@ -38,6 +31,19 @@ macro_rules! impl_size {
                 .fold($len_len, |acc, e| {
                     hax_lib::assume!(acc.to_int() + e.tls_serialized_len().to_int() <= usize::MAX.to_int());
                     acc + e.tls_serialized_len()})
+        }
+    }
+}
+
+macro_rules! impl_size_checked {
+    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        /// The serialized len, if there is no overflow
+        #[inline(always)]
+        fn tls_serialized_length_checked(&$self) -> Option<usize> {
+            hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
+            $self.as_slice()
+                .iter()
+                .fold(Some($len_len), |acc, e| acc?.checked_add(e.tls_serialized_len_checked()?))
         }
     }
 }
@@ -264,6 +270,9 @@ macro_rules! impl_tls_vec_codec_generic {
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
+        }
+
+        impl<T: $($bounds + )* SizeChecked> SizeChecked for $name<T> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
@@ -282,6 +291,9 @@ macro_rules! impl_tls_vec_codec_generic {
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
+        }
+
+        impl<T: $($bounds + )* SizeChecked> SizeChecked for &$name<T> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
@@ -312,11 +324,14 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
-        impl Size for $name {
+        impl SizeChecked for $name {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
             }
+        }
+
+        impl Size for $name {
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
             }
@@ -329,11 +344,14 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
-        impl Size for &$name {
+        impl SizeChecked for &$name {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
             }
+        }
+
+        impl Size for &$name {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -871,6 +889,10 @@ macro_rules! impl_secret_tls_vec {
             impl_size!(self, $size, $name, $len_len);
         }
 
+        impl<T: SizeChecked + Zeroize> $name<T> {
+            impl_size_checked!(self, $size, $name, $len_len);
+        }
+
         impl<T: Deserialize + Zeroize> $name<T> {
             impl_deserialize!(self, $size, $name, $len_len);
         }
@@ -906,6 +928,10 @@ macro_rules! impl_public_tls_vec {
 
         impl<T: Size> $name<T> {
             impl_size!(self, $size, $name, $len_len);
+        }
+
+        impl<T: SizeChecked> $name<T> {
+            impl_size_checked!(self, $size, $name, $len_len);
         }
 
         impl<T: Deserialize> $name<T> {
@@ -985,22 +1011,28 @@ macro_rules! impl_tls_byte_slice {
             }
         }
 
-        impl<'a> Size for &$name<'a> {
+        impl<'a> SizeChecked for &$name<'a> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
             }
+        }
+
+        impl<'a> Size for &$name<'a> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
             }
         }
 
-        impl<'a> Size for $name<'a> {
+        impl<'a> SizeChecked for $name<'a> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
             }
+        }
+
+        impl<'a> Size for $name<'a> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -1030,6 +1062,10 @@ macro_rules! impl_tls_slice {
             impl_size!(self, $size, $name, $len_len);
         }
 
+        impl<'a, T: SizeChecked> $name<'a, T> {
+            impl_size_checked!(self, $size, $name, $len_len);
+        }
+
         impl<'a, T: Serialize> $name<'a, T> {
             impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
             impl_serialize!(self, $size, $name, $len_len);
@@ -1049,22 +1085,28 @@ macro_rules! impl_tls_slice {
             }
         }
 
-        impl<'a, T: Size> Size for &$name<'a, T> {
+        impl<'a, T: SizeChecked> SizeChecked for &$name<'a, T> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
             }
+        }
+
+        impl<'a, T: Size> Size for &$name<'a, T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
-        impl<'a, T: Size> Size for $name<'a, T> {
+        impl<'a, T: SizeChecked> SizeChecked for $name<'a, T> {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
             }
+        }
+
+        impl<'a, T: Size> Size for $name<'a, T> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()

@@ -74,9 +74,9 @@
 //! ```
 //! # #[cfg(feature = "std")]
 //! # {
-//! use tls_codec_derive::{TlsSerialize, TlsSize};
+//! use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked};
 //!
-//! #[derive(TlsSerialize, TlsSize)]
+//! #[derive(TlsSerialize, TlsSize, TlsSizeChecked)]
 //! struct Bytes {
 //!     #[tls_codec(with = "bytes")]
 //!     values: Vec<u8>,
@@ -84,7 +84,7 @@
 //!
 //! mod bytes {
 //!     use std::io::Write;
-//!     use tls_codec::{Serialize, Size, TlsByteSliceU32};
+//!     use tls_codec::{Serialize, Size, SizeChecked, TlsByteSliceU32};
 //!
 //!     pub fn tls_serialized_len(v: &[u8]) -> usize {
 //!         TlsByteSliceU32(v).tls_serialized_len()
@@ -620,6 +620,16 @@ pub fn size_macro_derive(input: TokenStream) -> TokenStream {
     impl_tls_size(parsed_ast).into()
 }
 
+#[proc_macro_derive(TlsSizeChecked, attributes(tls_codec))]
+pub fn size_checked_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_tls_size_checked(parsed_ast).into()
+}
+
 #[proc_macro_derive(TlsSerialize, attributes(tls_codec))]
 pub fn serialize_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -791,21 +801,12 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         #(#prefixes::tls_serialized_len(&self.#members) + )*
                         0
                     }
-                    #[inline]
-                    #[allow(clippy::needless_question_mark)]
-                    fn tls_serialized_len_checked(&self) -> Option<usize> {
-                        Some(0usize#(.checked_add(#prefixes::tls_serialized_len_checked(&self.#members)?)?)*)
-                    }
                 }
 
                 impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
                         tls_codec::Size::tls_serialized_len(*self)
-                    }
-                    #[inline]
-                    fn tls_serialized_len_checked(&self) -> Option<usize> {
-                        tls_codec::Size::tls_serialized_len_checked(*self)
                     }
                 }
             }
@@ -840,6 +841,78 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         };
                         core::mem::size_of::<#repr>() + field_len
                     }
+                }
+
+                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len(&self) -> usize {
+                        tls_codec::Size::tls_serialized_len(*self)
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[allow(unused_variables)]
+fn impl_tls_size_checked(parsed_ast: TlsStruct) -> TokenStream2 {
+    match parsed_ast {
+        TlsStruct::Struct(Struct {
+            call_site,
+            ident,
+            generics,
+            members,
+            member_prefixes,
+            member_skips,
+        }) => {
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
+
+            let prefixes = member_prefixes
+                .iter()
+                .map(|p| p.for_trait("SizeChecked"))
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::SizeChecked for #ident #ty_generics #where_clause {
+                    #[inline]
+                    #[allow(clippy::needless_question_mark)]
+                    fn tls_serialized_len_checked(&self) -> Option<usize> {
+                        Some(0usize#(.checked_add(#prefixes::tls_serialized_len_checked(&self.#members)?)?)*)
+                    }
+                }
+
+                impl #impl_generics tls_codec::SizeChecked for &#ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len_checked(&self) -> Option<usize> {
+                        tls_codec::SizeChecked::tls_serialized_len_checked(*self)
+                    }
+                }
+            }
+        }
+        TlsStruct::Enum(Enum {
+            call_site,
+            ident,
+            generics,
+            repr,
+            variants,
+            ..
+        }) => {
+            let field_arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let members = &variant.members;
+                    let bindings = make_n_ids(members.len());
+                    let prefixes = variant.member_prefixes.iter().map(|p| p.for_trait("SizeChecked")).collect::<Vec<_>>();
+                    quote! {
+                        #ident::#variant_id { #(#members: #bindings,)* } => 0 #(+ #prefixes::tls_serialized_len(#bindings))*,
+                    }
+                })
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::SizeChecked for #ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len_checked(&self) -> Option<usize> {
                         let field_len = match self {
@@ -849,14 +922,10 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     }
                 }
 
-                impl #impl_generics tls_codec::Size for &#ident #ty_generics #where_clause {
-                    #[inline]
-                    fn tls_serialized_len(&self) -> usize {
-                        tls_codec::Size::tls_serialized_len(*self)
-                    }
+                impl #impl_generics tls_codec::SizeChecked for &#ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len_checked(&self) -> Option<usize> {
-                        tls_codec::Size::tls_serialized_len_checked(*self)
+                        tls_codec::SizeChecked::tls_serialized_len_checked(*self)
                     }
                 }
             }

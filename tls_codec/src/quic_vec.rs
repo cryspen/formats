@@ -22,7 +22,7 @@ use arbitrary::{Arbitrary, Unstructured};
 #[cfg(feature = "serde")]
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
-use crate::{DeserializeBytes, Error, SerializeBytes, Size, primitives::add};
+use crate::{DeserializeBytes, Error, SerializeBytes, Size, SizeChecked, primitives::add};
 
 #[cfg(hax)]
 use hax_lib::ToInt;
@@ -150,6 +150,9 @@ impl<T: Size> Size for Vec<T> {
     fn tls_serialized_len(&self) -> usize {
         self.as_slice().tls_serialized_len()
     }
+}
+
+impl<T: SizeChecked> SizeChecked for Vec<T> {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         self.as_slice().tls_serialized_len_checked()
@@ -161,6 +164,9 @@ impl<T: Size> Size for &Vec<T> {
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
     }
+}
+
+impl<T: SizeChecked> SizeChecked for &Vec<T> {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         (*self).tls_serialized_len_checked()
@@ -235,7 +241,7 @@ impl<T: SerializeBytes> SerializeBytes for Vec<T> {
     }
 }
 
-impl<T: Size> Size for &[T] {
+impl<T: SizeChecked> SizeChecked for &[T] {
     #[inline(always)]
     #[allow(clippy::manual_try_fold)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
@@ -246,6 +252,9 @@ impl<T: Size> Size for &[T] {
         let len_len = length_encoding_bytes(content_length as u64).ok()?;
         content_length.checked_add(len_len)
     }
+}
+
+impl<T: Size> Size for &[T] {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         let content_length = self.iter().fold(0, |acc, e| {
@@ -389,6 +398,9 @@ impl Size for VLBytes {
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.as_slice())
     }
+}
+
+impl SizeChecked for VLBytes {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         tls_serialize_bytes_len_checked(self.as_slice())
@@ -439,6 +451,9 @@ impl Size for &VLBytes {
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
     }
+}
+
+impl SizeChecked for &VLBytes {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         (*self).tls_serialized_len_checked()
@@ -519,6 +534,16 @@ impl Size for &VLByteSlice<'_> {
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
     }
+}
+
+impl SizeChecked for &VLByteSlice<'_> {
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        tls_serialize_bytes_len_checked(self.0)
+    }
+}
+
+impl SizeChecked for VLByteSlice<'_> {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         tls_serialize_bytes_len_checked(self.0)
@@ -526,10 +551,6 @@ impl Size for &VLByteSlice<'_> {
 }
 
 impl Size for VLByteSlice<'_> {
-    #[inline]
-    fn tls_serialized_len_checked(&self) -> Option<usize> {
-        tls_serialize_bytes_len_checked(self.0)
-    }
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.0)
@@ -779,6 +800,9 @@ mod secret_bytes {
         fn tls_serialized_len(&self) -> usize {
             self.0.tls_serialized_len()
         }
+    }
+
+    impl SizeChecked for SecretVLBytes {
         fn tls_serialized_len_checked(&self) -> Option<usize> {
             self.0.tls_serialized_len_checked()
         }

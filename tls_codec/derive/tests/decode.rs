@@ -5,7 +5,9 @@ use tls_codec::{
 };
 #[cfg(hax)]
 use tls_codec::{DeserializeExact, SerializeDetached};
-use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
+use tls_codec_derive::{
+    TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsSizeChecked,
+};
 
 #[derive(
     TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize,
@@ -254,7 +256,7 @@ fn kat_mls_key_package() {
     );
 }
 
-#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize)]
+#[derive(Debug, PartialEq, TlsDeserialize, TlsSerialize, TlsSize, TlsSizeChecked)]
 struct Custom {
     #[tls_codec(with = "custom")]
     values: Vec<u8>,
@@ -263,7 +265,7 @@ struct Custom {
 
 mod custom {
     use std::io::{Read, Write};
-    use tls_codec::{Deserialize, Serialize, Size, TlsByteSliceU32, TlsByteVecU32};
+    use tls_codec::{Deserialize, Serialize, Size, SizeChecked, TlsByteSliceU32, TlsByteVecU32};
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()
@@ -282,7 +284,7 @@ mod custom {
     }
 }
 
-#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize)]
+#[derive(Debug, PartialEq, TlsDeserializeBytes, TlsSerialize, TlsSize, TlsSizeChecked)]
 struct CustomBytes {
     #[tls_codec(with = "custom_bytes")]
     values: Vec<u8>,
@@ -291,7 +293,9 @@ struct CustomBytes {
 
 mod custom_bytes {
     use std::io::Write;
-    use tls_codec::{DeserializeBytes, Serialize, Size, TlsByteSliceU32, TlsByteVecU32};
+    use tls_codec::{
+        DeserializeBytes, Serialize, Size, SizeChecked, TlsByteSliceU32, TlsByteVecU32,
+    };
 
     pub fn tls_serialized_len(v: &[u8]) -> usize {
         TlsByteSliceU32(v).tls_serialized_len()

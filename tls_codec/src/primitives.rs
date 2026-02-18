@@ -2,7 +2,7 @@
 
 use alloc::{boxed::Box, vec::Vec};
 
-use crate::{DeserializeBytes, SerializeBytes, U24};
+use crate::{DeserializeBytes, SerializeBytes, SizeChecked, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
@@ -26,13 +26,6 @@ pub(crate) use add;
 
 impl<T: Size> Size for Option<T> {
     #[inline]
-    fn tls_serialized_len_checked(&self) -> Option<usize> {
-        1usize.checked_add(match self {
-            Some(v) => v.tls_serialized_len_checked()?,
-            None => 0,
-        })
-    }
-    #[inline]
     fn tls_serialized_len(&self) -> usize {
         1 + match self {
             Some(v) => {
@@ -44,11 +37,24 @@ impl<T: Size> Size for Option<T> {
     }
 }
 
+impl<T: SizeChecked> SizeChecked for Option<T> {
+    #[inline]
+    fn tls_serialized_len_checked(&self) -> Option<usize> {
+        1usize.checked_add(match self {
+            Some(v) => v.tls_serialized_len_checked()?,
+            None => 0,
+        })
+    }
+}
+
 impl<T: Size> Size for &Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
     }
+}
+
+impl<T: SizeChecked> SizeChecked for &Option<T> {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         (*self).tls_serialized_len_checked()
@@ -210,6 +216,9 @@ macro_rules! impl_unsigned {
             fn tls_serialized_len(&self) -> usize {
                 $bytes
             }
+        }
+
+        impl SizeChecked for $t {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 Some($bytes)
@@ -221,6 +230,9 @@ macro_rules! impl_unsigned {
             fn tls_serialized_len(&self) -> usize {
                 (*self).tls_serialized_len()
             }
+        }
+
+        impl SizeChecked for &$t {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 (*self).tls_serialized_len_checked()
@@ -280,10 +292,10 @@ where
     }
 }
 
-impl<T, U> Size for (T, U)
+impl<T, U> SizeChecked for (T, U)
 where
-    T: Size,
-    U: Size,
+    T: SizeChecked,
+    U: SizeChecked,
 {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
@@ -291,6 +303,13 @@ where
             .tls_serialized_len_checked()?
             .checked_add(self.1.tls_serialized_len_checked()?)
     }
+}
+
+impl<T, U> Size for (T, U)
+where
+    T: Size,
+    U: Size,
+{
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         hax_lib::assume!(
@@ -348,11 +367,11 @@ where
     }
 }
 
-impl<T, U, V> Size for (T, U, V)
+impl<T, U, V> SizeChecked for (T, U, V)
 where
-    T: Size,
-    U: Size,
-    V: Size,
+    T: SizeChecked,
+    U: SizeChecked,
+    V: SizeChecked,
 {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
@@ -361,6 +380,14 @@ where
             .checked_add(self.1.tls_serialized_len_checked()?)?
             .checked_add(self.2.tls_serialized_len_checked()?)
     }
+}
+
+impl<T, U, V> Size for (T, U, V)
+where
+    T: Size,
+    U: Size,
+    V: Size,
+{
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         hax_lib::assume!(
@@ -378,6 +405,9 @@ impl Size for () {
     fn tls_serialized_len(&self) -> usize {
         0
     }
+}
+
+impl SizeChecked for () {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         Some(0)
@@ -411,6 +441,9 @@ impl<T> Size for PhantomData<T> {
     fn tls_serialized_len(&self) -> usize {
         0
     }
+}
+
+impl<T> SizeChecked for PhantomData<T> {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         Some(0)
@@ -452,6 +485,9 @@ impl<T: Size> Size for Box<T> {
     fn tls_serialized_len(&self) -> usize {
         self.as_ref().tls_serialized_len()
     }
+}
+
+impl<T: SizeChecked> SizeChecked for Box<T> {
     #[inline(always)]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         self.as_ref().tls_serialized_len_checked()
