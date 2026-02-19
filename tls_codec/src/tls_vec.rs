@@ -14,8 +14,8 @@ use std::io::{Read, Write};
 use zeroize::Zeroize;
 
 use crate::{
-    Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, SizeChecked, U24,
-    primitives::add,
+    Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, SizeChecked,
+    SizeOverflow, U24, primitives::add,
 };
 
 #[cfg(hax)]
@@ -48,6 +48,23 @@ macro_rules! impl_size_checked {
     }
 }
 
+macro_rules! impl_size_overflow {
+    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        /// The serialized len, if there is no overflow
+        #[inline(always)]
+        fn tls_serialized_length_overflow(&$self) -> (usize, bool) {
+            hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
+            $self.as_slice()
+                .iter()
+                .fold(($len_len, false), |(acc, acc_overflow), e| {
+                    let (sum, overflow) = e.tls_serialized_len_overflow();
+                    let (sum, overflow_add) = usize::overflowing_add(acc, sum);
+                    (sum, overflow | overflow_add | acc_overflow)
+                })
+        }
+    }
+}
+
 macro_rules! impl_byte_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
         /// The serialized len, if there is no addition overflow
@@ -55,11 +72,18 @@ macro_rules! impl_byte_size {
         fn tls_serialized_byte_length_checked(&$self) -> Option<usize> {
             $self.as_slice().len().checked_add($len_len)
         }
+
         /// The serialized len
         #[inline(always)]
         fn tls_serialized_byte_length(&$self) -> usize {
             hax_lib::assume!($self.as_slice().len().to_int() + $len_len.to_int() <= usize::MAX.to_int());
             $self.as_slice().len() + $len_len
+        }
+
+        /// The serialized len
+        #[inline(always)]
+        fn tls_serialized_byte_length_overflow(&$self) -> (usize, bool) {
+            $self.as_slice().len().overflowing_add($len_len)
         }
     }
 }
@@ -199,7 +223,13 @@ macro_rules! impl_serialize_common {
     ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
-            let tls_serialized_len = $self.tls_serialized_len();
+            // let tls_serialized_len = $self.tls_serialized_len_checked().ok_or(Error::InvalidVectorLength)?;
+            // let tls_serialized_len = $self.tls_serialized_len();
+            let (tls_serialized_len, overflow) = $self.tls_serialized_len_overflow();
+            if overflow {
+                return Err(Error::InvalidVectorLength);
+            }
+
             let byte_length = tls_serialized_len.checked_sub($len_len).ok_or(Error::InvalidVectorLength)?;
             let max_len = <$size>::MAX.try_into().unwrap();
             #[cfg(not(hax))]
@@ -258,7 +288,7 @@ macro_rules! impl_serialize_bytes_bytes {
 
 macro_rules! impl_tls_vec_codec_generic {
     ($size:ty, $name:ident, $len_len: literal $(, $bounds:ident)*) => {
-        impl<T: $($bounds + )* Serialize> Serialize for $name<T> {
+        impl<T: $($bounds + )* Serialize + SizeChecked + SizeOverflow> Serialize for $name<T> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
@@ -279,7 +309,7 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
-        impl<T: $($bounds + )* Serialize> Serialize for &$name<T> {
+        impl<T: $($bounds + )* Serialize + SizeChecked + SizeOverflow> Serialize for &$name<T> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
@@ -297,6 +327,20 @@ macro_rules! impl_tls_vec_codec_generic {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
+            }
+        }
+
+        impl<T: $($bounds + )* SizeOverflow> SizeOverflow for $name<T> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_length_overflow()
+            }
+        }
+
+        impl<T: $($bounds + )* SizeOverflow> SizeOverflow for &$name<T> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_length_overflow()
             }
         }
 
@@ -331,6 +375,13 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
+        impl SizeOverflow for $name {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_byte_length_overflow()
+            }
+        }
+
         impl Size for $name {
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -348,6 +399,13 @@ macro_rules! impl_tls_vec_codec_bytes {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
+            }
+        }
+
+        impl SizeOverflow for &$name {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_byte_length_overflow()
             }
         }
 
@@ -880,7 +938,7 @@ macro_rules! impl_secret_tls_vec {
         impl_tls_vec_generic!($size, $name, $len_len, Zeroize);
         impl_tls_vec_codec_generic!($size, $name, $len_len, Zeroize);
 
-        impl<T: Serialize + Zeroize> $name<T> {
+        impl<T: Serialize + SizeChecked + SizeOverflow + Zeroize> $name<T> {
             impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
             impl_serialize!(self, $size, $name, $len_len);
         }
@@ -891,6 +949,10 @@ macro_rules! impl_secret_tls_vec {
 
         impl<T: SizeChecked + Zeroize> $name<T> {
             impl_size_checked!(self, $size, $name, $len_len);
+        }
+
+        impl<T: SizeOverflow + Zeroize> $name<T> {
+            impl_size_overflow!(self, $size, $name, $len_len);
         }
 
         impl<T: Deserialize + Zeroize> $name<T> {
@@ -921,7 +983,7 @@ macro_rules! impl_public_tls_vec {
 
         impl_tls_vec_codec_generic!($size, $name, $len_len);
 
-        impl<T: Serialize> $name<T> {
+        impl<T: Serialize + SizeChecked + SizeOverflow> $name<T> {
             impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
             impl_serialize!(self, $size, $name, $len_len);
         }
@@ -932,6 +994,10 @@ macro_rules! impl_public_tls_vec {
 
         impl<T: SizeChecked> $name<T> {
             impl_size_checked!(self, $size, $name, $len_len);
+        }
+
+        impl<T: SizeOverflow> $name<T> {
+            impl_size_overflow!(self, $size, $name, $len_len);
         }
 
         impl<T: Deserialize> $name<T> {
@@ -1018,6 +1084,13 @@ macro_rules! impl_tls_byte_slice {
             }
         }
 
+        impl<'a> SizeOverflow for &$name<'a> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_byte_length_overflow()
+            }
+        }
+
         impl<'a> Size for &$name<'a> {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
@@ -1029,6 +1102,13 @@ macro_rules! impl_tls_byte_slice {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_byte_length_checked()
+            }
+        }
+
+        impl<'a> SizeOverflow for $name<'a> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_byte_length_overflow()
             }
         }
 
@@ -1066,19 +1146,23 @@ macro_rules! impl_tls_slice {
             impl_size_checked!(self, $size, $name, $len_len);
         }
 
-        impl<'a, T: Serialize> $name<'a, T> {
+        impl<'a, T: SizeOverflow> $name<'a, T> {
+            impl_size_overflow!(self, $size, $name, $len_len);
+        }
+
+        impl<'a, T: Serialize + SizeChecked + SizeOverflow> $name<'a, T> {
             impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
             impl_serialize!(self, $size, $name, $len_len);
         }
 
-        impl<'a, T: Serialize> Serialize for &$name<'a, T> {
+        impl<'a, T: Serialize + SizeChecked + SizeOverflow> Serialize for &$name<'a, T> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
             }
         }
 
-        impl<'a, T: Serialize> Serialize for $name<'a, T> {
+        impl<'a, T: Serialize + SizeChecked + SizeOverflow> Serialize for $name<'a, T> {
             #[cfg(feature = "std")]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 self.serialize(writer)
@@ -1089,6 +1173,13 @@ macro_rules! impl_tls_slice {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
+            }
+        }
+
+        impl<'a, T: SizeOverflow> SizeOverflow for &$name<'a, T> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_length_overflow()
             }
         }
 
@@ -1103,6 +1194,13 @@ macro_rules! impl_tls_slice {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 self.tls_serialized_length_checked()
+            }
+        }
+
+        impl<'a, T: SizeOverflow> SizeOverflow for $name<'a, T> {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                self.tls_serialized_length_overflow()
             }
         }
 

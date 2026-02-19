@@ -1,8 +1,25 @@
 use criterion::{BatchSize, Criterion};
 use criterion::{criterion_group, criterion_main};
+use tls_codec::TlsVecU32;
+use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked, TlsSizeOverflow};
 
 /// Length of the test bytes vector.
 const N: usize = 0xFFFF;
+
+#[derive(TlsSize, TlsSizeChecked, TlsSizeOverflow, TlsSerialize, Default, Clone, Copy)]
+#[repr(u8)]
+enum Type {
+    One,
+
+    #[default]
+    Two,
+}
+
+#[derive(TlsSize, TlsSizeChecked, TlsSizeOverflow, TlsSerialize, Default, Clone)]
+struct Inner {
+    the_type: Type,
+    bytes: TlsVecU32<u8>,
+}
 
 fn vector(c: &mut Criterion) {
     use tls_codec::*;
@@ -13,6 +30,7 @@ fn vector(c: &mut Criterion) {
             BatchSize::SmallInput,
         )
     });
+
     c.bench_function("TLS Deserialize Vector", |b| {
         b.iter_batched_ref(
             || {
@@ -22,6 +40,14 @@ fn vector(c: &mut Criterion) {
             |serialized_long_vec| {
                 TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap()
             },
+            BatchSize::SmallInput,
+        )
+    });
+
+    c.bench_function("TLS Serialize Vector (Inner)", |b| {
+        b.iter_batched_ref(
+            || TlsVecU32::from(vec![Inner::default(); N]),
+            |long_vec| long_vec.tls_serialize_detached().unwrap(),
             BatchSize::SmallInput,
         )
     });

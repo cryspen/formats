@@ -2,7 +2,7 @@
 
 use alloc::{boxed::Box, vec::Vec};
 
-use crate::{DeserializeBytes, SerializeBytes, SizeChecked, U24};
+use crate::{DeserializeBytes, SerializeBytes, SizeChecked, SizeOverflow, U24};
 
 use super::{Deserialize, Error, Serialize, Size};
 
@@ -47,6 +47,18 @@ impl<T: SizeChecked> SizeChecked for Option<T> {
     }
 }
 
+impl<T: SizeOverflow> SizeOverflow for Option<T> {
+    #[inline]
+    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+        let (inner_len, overflow) = self
+            .as_ref()
+            .map_or((0, false), |v| v.tls_serialized_len_overflow());
+
+        let (sum, sum_overflow) = 1usize.overflowing_add(inner_len);
+        (sum, overflow | sum_overflow)
+    }
+}
+
 impl<T: Size> Size for &Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
@@ -58,6 +70,12 @@ impl<T: SizeChecked> SizeChecked for &Option<T> {
     #[inline]
     fn tls_serialized_len_checked(&self) -> Option<usize> {
         (*self).tls_serialized_len_checked()
+    }
+}
+
+impl<T: SizeOverflow> SizeOverflow for &Option<T> {
+    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+        (*self).tls_serialized_len_overflow()
     }
 }
 
@@ -225,6 +243,13 @@ macro_rules! impl_unsigned {
             }
         }
 
+        impl SizeOverflow for $t {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                ($bytes, false)
+            }
+        }
+
         impl Size for &$t {
             #[inline]
             fn tls_serialized_len(&self) -> usize {
@@ -236,6 +261,13 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialized_len_checked(&self) -> Option<usize> {
                 (*self).tls_serialized_len_checked()
+            }
+        }
+
+        impl SizeOverflow for &$t {
+            #[inline]
+            fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                (*self).tls_serialized_len_overflow()
             }
         }
     };

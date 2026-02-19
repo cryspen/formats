@@ -630,6 +630,16 @@ pub fn size_checked_macro_derive(input: TokenStream) -> TokenStream {
     impl_tls_size_checked(parsed_ast).into()
 }
 
+#[proc_macro_derive(TlsSizeOverflow, attributes(tls_codec))]
+pub fn size_overflow_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let parsed_ast = match parse_ast(ast) {
+        Ok(ast) => ast,
+        Err(err_ts) => return err_ts.into_compile_error().into(),
+    };
+    impl_tls_size_overflow(parsed_ast).into()
+}
+
 #[proc_macro_derive(TlsSerialize, attributes(tls_codec))]
 pub fn serialize_macro_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -926,6 +936,93 @@ fn impl_tls_size_checked(parsed_ast: TlsStruct) -> TokenStream2 {
                     #[inline]
                     fn tls_serialized_len_checked(&self) -> Option<usize> {
                         tls_codec::SizeChecked::tls_serialized_len_checked(*self)
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[allow(unused_variables)]
+fn impl_tls_size_overflow(parsed_ast: TlsStruct) -> TokenStream2 {
+    match parsed_ast {
+        TlsStruct::Struct(Struct {
+            call_site,
+            ident,
+            generics,
+            members,
+            member_prefixes,
+            member_skips,
+        }) => {
+            let ((members, member_prefixes), _) =
+                partition_skipped(members, member_prefixes, member_skips);
+
+            let prefixes = member_prefixes
+                .iter()
+                .map(|p| p.for_trait("SizeOverflow"))
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            quote! {
+                impl #impl_generics tls_codec::SizeOverflow for #ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                        let mut acc = 0usize;
+                        let mut overflow = false;
+                        let mut of2;
+                        #(
+                            let (len, of) = #prefixes::tls_serialized_len_overflow(&self.#members);
+                            (acc, of2) = acc.overflowing_add(len);
+                            overflow |= of | of2;
+                        )*
+                        (acc, overflow)
+                    }
+                }
+
+                impl #impl_generics tls_codec::SizeOverflow for &#ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                        tls_codec::SizeOverflow::tls_serialized_len_overflow(*self)
+                    }
+                }
+            }
+        }
+        TlsStruct::Enum(Enum {
+            call_site,
+            ident,
+            generics,
+            repr,
+            variants,
+            ..
+        }) => {
+            let field_arms = variants
+                .iter()
+                .map(|variant| {
+                    let variant_id = &variant.ident;
+                    let members = &variant.members;
+                    let bindings = make_n_ids(members.len());
+                    let prefixes = variant.member_prefixes.iter().map(|p| p.for_trait("SizeOverflow")).collect::<Vec<_>>();
+                    quote! {
+                        #ident::#variant_id { #(#members: #bindings,)* } => 0 #(+ #prefixes::tls_serialized_len(#bindings))*,
+                    }
+                })
+                .collect::<Vec<_>>();
+            let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+            quote! {
+                impl #impl_generics tls_codec::SizeOverflow for #ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                        let field_len = match self {
+                            #(#field_arms)*
+                        };
+                        core::mem::size_of::<#repr>().overflowing_add(field_len)
+                    }
+                }
+
+                impl #impl_generics tls_codec::SizeOverflow for &#ident #ty_generics #where_clause {
+                    #[inline]
+                    fn tls_serialized_len_overflow(&self) -> (usize, bool) {
+                        tls_codec::SizeOverflow::tls_serialized_len_overflow(*self)
                     }
                 }
             }

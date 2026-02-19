@@ -2,7 +2,7 @@
 #[cfg(hax)]
 use tls_codec::SerializeDetached;
 use tls_codec::{SecretTlsVecU16, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32};
-use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked};
+use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked, TlsSizeOverflow};
 
 #[derive(TlsSerialize, TlsSize, Debug)]
 #[repr(u16)]
@@ -31,12 +31,12 @@ pub struct StructWithLifetime<'a> {
     value: &'a TlsVecU16<u8>,
 }
 
-#[derive(TlsSerialize, TlsSize, Debug, Clone)]
+#[derive(TlsSerialize, TlsSize, Debug, Clone, TlsSizeOverflow, TlsSizeChecked)]
 struct SomeValue {
     val: TlsVecU16<u8>,
 }
 
-#[derive(TlsSerialize, TlsSize)]
+#[derive(TlsSerialize, TlsSize, TlsSizeOverflow, TlsSizeChecked)]
 pub struct StructWithDoubleLifetime<'a, 'b> {
     value: &'a TlsSliceU16<'a, &'b SomeValue>,
 }
