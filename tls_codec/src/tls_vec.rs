@@ -223,14 +223,11 @@ macro_rules! impl_serialize_common {
     ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
-            // let tls_serialized_len = $self.tls_serialized_len_checked().ok_or(Error::InvalidVectorLength)?;
-            // let tls_serialized_len = $self.tls_serialized_len();
-            let (tls_serialized_len, overflow) = $self.tls_serialized_len_overflow();
-            if overflow {
-                return Err(Error::InvalidVectorLength);
-            }
+            let tls_serialized_len = $self.tls_serialized_len_checked().ok_or(Error::InvalidVectorLength)?;
 
-            let byte_length = tls_serialized_len.checked_sub($len_len).ok_or(Error::InvalidVectorLength)?;
+            // This doesn't need to be a checked sub because the tls_serialized_len_checked
+            // is at least $len_len.
+            let byte_length = tls_serialized_len - $len_len;
             let max_len = <$size>::MAX.try_into().unwrap();
             #[cfg(not(hax))]
             debug_assert!(

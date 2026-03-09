@@ -138,7 +138,7 @@ mod serialize_bytes {
     /// The trait provides one function:
     /// * `tls_serialize` that returns a byte vector
     #[hax_lib::attributes]
-    pub trait SerializeBytes: Size {
+    pub trait SerializeBytes: Size + SizeChecked {
         /// Serialize `self` and return it as a byte vector.
         #[hax_lib::requires(true)]
         fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
@@ -171,7 +171,7 @@ impl From<std::io::Error> for Error {
 /// * `tls_serialize` that takes a buffer to write the serialization to
 /// * `tls_serialize_detached` that returns a byte vector
 #[hax_lib::attributes]
-pub trait Serialize: Size {
+pub trait Serialize: Size + SizeChecked {
     /// Serialize `self` and write it to the `writer`.
     /// The function returns the number of bytes written to `writer`.
     #[cfg(feature = "std")]

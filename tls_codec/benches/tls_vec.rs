@@ -1,6 +1,6 @@
 use criterion::{BatchSize, Criterion};
 use criterion::{criterion_group, criterion_main};
-use tls_codec::TlsVecU32;
+use tls_codec::TlsByteVecU32;
 use tls_codec_derive::{TlsSerialize, TlsSize, TlsSizeChecked, TlsSizeOverflow};
 
 /// Length of the test bytes vector.
@@ -18,7 +18,7 @@ enum Type {
 #[derive(TlsSize, TlsSizeChecked, TlsSizeOverflow, TlsSerialize, Default, Clone)]
 struct Inner {
     the_type: Type,
-    bytes: TlsVecU32<u8>,
+    bytes: TlsByteVecU32,
 }
 
 fn vector(c: &mut Criterion) {

@@ -205,7 +205,12 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         // the entire content, which can end up requiring a lot of memory.
 
         hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let content_length = self
+            .iter()
+            .fold(Some(0usize), |acc, e| {
+                acc?.checked_add(e.tls_serialized_len_checked()?)
+            })
+            .ok_or(Error::InvalidVectorLength)?;
         let mut length = write_variable_length(content_length)?;
         let len_len = length.len();
 
@@ -627,21 +632,26 @@ pub mod rw {
         Ok(buf_len)
     }
 
-    impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
+    impl<T: Serialize> Serialize for Vec<T> {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             self.as_slice().tls_serialize(writer)
         }
     }
 
-    impl<T: Serialize + std::fmt::Debug> Serialize for &[T] {
+    impl<T: Serialize> Serialize for &[T] {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
             hax_lib::fstar!("admit ()"); // https://github.com/cryspen/hax/issues/1700
-            let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+            let content_length = self
+                .iter()
+                .fold(Some(0usize), |acc, e| {
+                    acc?.checked_add(e.tls_serialized_len_checked()?)
+                })
+                .ok_or(Error::InvalidVectorLength)?;
             let len_len = write_length(writer, content_length)?;
 
             // Serialize the elements
