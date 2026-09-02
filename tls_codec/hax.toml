@@ -1,0 +1,28 @@
+# hax proof scenario for the `tls_codec` crate.
+#
+# Run from this directory:
+#   cargo hax tools show          # resolved charon/aeneas/Lean versions
+#   cargo hax extract --dry-run   # print the resolved invocation
+#   cargo hax extract             # run it; output in proofs/tls-codec/lean
+#
+# No [tools] / [versions] pins: the defaults shipped with the installed
+# cargo-hax release are the tested combination and are what we want.
+
+[scenario.tls-codec]
+backend = "lean"
+
+# The verification target is the `no_std` + `alloc` core of the crate: the
+# `Size` / `SerializeBytes` / `DeserializeBytes` traits and their impls, which
+# operate on byte slices only. Turning `std` off (it is the sole default
+# feature) removes, by `cfg`, everything that is out of scope for the Lean
+# backend: the `std::io::{Read, Write}`-based `Serialize` / `Deserialize`
+# methods, `From<std::io::Error>`, the `rw` module, and the `Secret*` wrappers.
+# `derive`, `serde` and `arbitrary` stay off for the same reason.
+no-default-features = true
+
+# `mls` is the configuration OpenMLS builds this crate in: variable-length
+# vectors are capped at 2^30-1 bytes and, more importantly, length prefixes
+# must use the minimal varint encoding on the way in (`check_min_len`). That
+# canonicity check is a property worth verifying, and it is a no-op without
+# this feature.
+features = ["mls"]
