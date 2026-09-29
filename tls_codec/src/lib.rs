@@ -38,6 +38,8 @@ use std::io::{Read, Write};
 mod arrays;
 mod primitives;
 mod quic_vec;
+#[cfg(hax)]
+pub mod spec;
 mod string;
 mod tls_vec;
 mod varint;
@@ -180,12 +182,15 @@ fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Ve
 ///
 /// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
 /// need to be part of the public API.
+#[cfg_attr(hax, hax_lib::requires(a <= usize::MAX - b))]
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(target_pointer_width = "64")]
 pub(crate) const fn len_add(a: usize, b: usize) -> usize {
     a + b
 }
 
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(not(target_pointer_width = "64"))]
 pub(crate) const fn len_add(a: usize, b: usize) -> usize {
@@ -198,12 +203,15 @@ pub(crate) const fn len_add(a: usize, b: usize) -> usize {
 /// why it can't overflow). On narrower targets an overflow becomes
 /// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
 /// written to the wire.
+#[cfg_attr(hax, hax_lib::requires(a <= usize::MAX - b))]
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(target_pointer_width = "64")]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
     Ok(a + b)
 }
 
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(not(target_pointer_width = "64"))]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
@@ -216,6 +224,7 @@ pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
 /// `isize::MAX`, so anything larger becomes [`Error::InvalidVectorLength`]
 /// instead of a panic. Call this at allocation sites — not in the per-element
 /// length folds, which use the cheaper [`checked_len_add`].
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 pub(crate) fn checked_capacity(len: usize) -> Result<usize, Error> {
     if len > isize::MAX as usize {
@@ -230,6 +239,11 @@ pub(crate) fn checked_capacity(len: usize) -> Result<usize, Error> {
 /// The `saturating_add` collapses a `usize` wrap (possible on narrow targets)
 /// into a value the `isize::MAX` check then rejects, so both failure modes are
 /// covered by a single check.
+#[cfg_attr(hax, hax_lib::ensures(|res| if a.saturating_add(b) <= isize::MAX as usize {
+    res == Ok(a + b)
+} else {
+    res == Err(Error::InvalidVectorLength)
+}))]
 #[inline(always)]
 pub(crate) fn checked_alloc_len(a: usize, b: usize) -> Result<usize, Error> {
     checked_capacity(a.saturating_add(b))
@@ -282,8 +296,11 @@ pub trait Serialize: Size {
 ///
 /// The trait provides one function:
 /// * `tls_serialize_bytes` that returns a byte vector
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait SerializeBytes: Size {
     /// Serialize `self` and return it as a byte vector.
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        res.is_err() || res.is_ok_and(|bytes| bytes.len() == self.tls_serialized_len())))]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error>;
 }
 
@@ -325,6 +342,7 @@ pub trait Deserialize: Size {
 /// The `DeserializeBytes` trait defines functions to deserialize a byte slice
 /// to a struct or enum. In contrast to [`Deserialize`], this trait operates
 /// directly on byte slices and can return any remaining bytes.
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait DeserializeBytes: Size {
     /// This function deserializes the `bytes` from the provided a `&[u8]`
     /// and returns the populated struct, as well as the remaining slice.
@@ -332,6 +350,10 @@ pub trait DeserializeBytes: Size {
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
     /// Returns an error if one occurs during deserialization.
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized;
@@ -341,6 +363,8 @@ pub trait DeserializeBytes: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
+    #[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|value| value.tls_serialized_len() == bytes.len())))]
     fn tls_deserialize_exact_bytes(bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,
@@ -361,20 +385,29 @@ pub trait DeserializeBytes: Size {
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct U24([u8; 3]);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl U24 {
     pub const MAX: Self = Self([255u8; 3]);
     pub const MIN: Self = Self([0u8; 3]);
 
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.to_be_bytes() == bytes))]
     pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
         U24(bytes)
     }
 
+    #[cfg_attr(hax, hax_lib::ensures(|res| U24::from_be_bytes(res) == self))]
     pub fn to_be_bytes(self) -> [u8; 3] {
         self.0
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl From<U24> for usize {
+    #[cfg_attr(hax, hax_lib::ensures(|res| {
+        let [b0, b1, b2] = value.to_be_bytes();
+        res == (b0 as usize) * 0x1_0000 + (b1 as usize) * 0x100 + (b2 as usize)
+            && res <= 0x00ff_ffff
+    }))]
     fn from(value: U24) -> usize {
         const LEN: usize = core::mem::size_of::<usize>();
         let mut usize_bytes = [0u8; LEN];
@@ -383,9 +416,15 @@ impl From<U24> for usize {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl TryFrom<usize> for U24 {
     type Error = Error;
 
+    #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= 0x00ff_ffff {
+        Ok(U24::from_be_bytes([(value >> 16) as u8, (value >> 8) as u8, value as u8]))
+    } else {
+        Err(Error::LibraryError)
+    }))]
     fn try_from(value: usize) -> Result<Self, Self::Error> {
         const LEN: usize = core::mem::size_of::<usize>();
         // In practice, our usages of this conversion should never be invalid, as the values

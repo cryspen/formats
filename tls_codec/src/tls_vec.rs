@@ -16,25 +16,33 @@ use zeroize::Zeroize;
 use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24};
 
 macro_rules! impl_size {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        /// The serialized len
-        #[inline(always)]
-        fn tls_serialized_length(&$self) -> usize {
-            $self.as_slice()
-                .iter()
-                .fold($len_len, |acc, e| crate::len_add(acc, e.tls_serialized_len()))
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// The serialized len
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            fn tls_serialized_length(&$self) -> usize {
+                $self.as_slice()
+                    .iter()
+                    .fold($len_len, |acc, e| crate::len_add(acc, e.tls_serialized_len()))
+            }
         }
-    }
+    };
 }
 
 macro_rules! impl_byte_size {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        /// The serialized len
-        #[inline(always)]
-        fn tls_serialized_byte_length(&$self) -> usize {
-            $self.as_slice().len() + $len_len
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// The serialized len
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            fn tls_serialized_byte_length(&$self) -> usize {
+                $self.as_slice().len() + $len_len
+            }
         }
-    }
+    };
 }
 
 macro_rules! impl_byte_deserialize {
@@ -274,7 +282,9 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* Size> Size for $name<T> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
@@ -288,7 +298,9 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* Size> Size for &$name<T> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
@@ -302,7 +314,12 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* DeserializeBytes> DeserializeBytes for $name<T> {
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+                || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+                    && (!cfg!(feature = "mls")
+                        || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes(bytes)
             }
@@ -319,7 +336,9 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for $name {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -333,7 +352,9 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for &$name {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -347,13 +368,21 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl DeserializeBytes for $name {
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+                || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+                    && (!cfg!(feature = "mls")
+                        || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes_bytes(bytes)
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl SerializeBytes for $name {
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
             fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 self.serialize_bytes_bytes()
             }
@@ -362,92 +391,107 @@ macro_rules! impl_tls_vec_codec_bytes {
 }
 
 macro_rules! impl_vec_members {
-    ($element_type:ident, $len_len:literal) => {
-        /// Create a new `TlsVec` from a Rust Vec.
-        #[inline]
-        pub fn new(vec: Vec<$element_type>) -> Self {
-            Self { vec }
-        }
-
-        /// Create a new `TlsVec` from a slice.
-        #[inline]
-        pub fn from_slice(slice: &[$element_type]) -> Self
-        where
-            $element_type: Clone,
-        {
-            Self {
-                vec: slice.to_vec(),
+    ({$($header:tt)*}, $element_type:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// Create a new `TlsVec` from a Rust Vec.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == vec.len()))]
+            #[inline]
+            pub fn new(vec: Vec<$element_type>) -> Self {
+                Self { vec }
             }
-        }
 
-        /// Get the length of the vector.
-        #[inline]
-        pub fn len(&self) -> usize {
-            self.vec.len()
-        }
+            /// Create a new `TlsVec` from a slice.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == slice.len()))]
+            #[inline]
+            pub fn from_slice(slice: &[$element_type]) -> Self
+            where
+                $element_type: Clone,
+            {
+                Self {
+                    vec: slice.to_vec(),
+                }
+            }
 
-        /// Get a slice to the raw vector.
-        #[inline]
-        pub fn as_slice(&self) -> &[$element_type] {
-            &self.vec
-        }
+            /// Get the length of the vector.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline]
+            pub fn len(&self) -> usize {
+                self.vec.len()
+            }
 
-        /// Check if the vector is empty.
-        #[inline]
-        pub fn is_empty(&self) -> bool {
-            self.vec.is_empty()
-        }
+            /// Get a slice to the raw vector.
+            #[inline]
+            pub fn as_slice(&self) -> &[$element_type] {
+                &self.vec
+            }
 
-        /// Get the underlying vector and consume this.
-        #[inline]
-        pub fn into_vec(mut self) -> Vec<$element_type> {
-            core::mem::take(&mut self.vec)
-        }
+            /// Check if the vector is empty.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res == (self.len() == 0)))]
+            #[inline]
+            pub fn is_empty(&self) -> bool {
+                self.vec.is_empty()
+            }
 
-        /// Add an element to this.
-        #[inline]
-        pub fn push(&mut self, value: $element_type) {
-            self.vec.push(value);
-        }
+            /// Get the underlying vector and consume this.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == self.len()))]
+            #[inline]
+            pub fn into_vec(mut self) -> Vec<$element_type> {
+                core::mem::take(&mut self.vec)
+            }
 
-        /// Remove the last element.
-        #[inline]
-        pub fn pop(&mut self) -> Option<$element_type> {
-            self.vec.pop()
-        }
+            /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::ensures(|_| future(self).len() == self.len() + 1))]
+            #[inline]
+            pub fn push(&mut self, value: $element_type) {
+                self.vec.push(value);
+            }
 
-        /// Remove the element at `index`.
-        #[inline]
-        pub fn remove(&mut self, index: usize) -> $element_type {
-            self.vec.remove(index)
-        }
+            /// Remove the last element.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_some() == (self.len() > 0)
+                && future(self).len() == self.len() - usize::from(res.is_some())))]
+            #[inline]
+            pub fn pop(&mut self) -> Option<$element_type> {
+                self.vec.pop()
+            }
 
-        /// Returns a reference to an element or subslice depending on the type of index.
-        /// XXX: implement SliceIndex instead
-        #[inline]
-        pub fn get(&self, index: usize) -> Option<&$element_type> {
-            self.vec.get(index)
-        }
+            /// Remove the element at `index`.
+            #[cfg_attr(hax, hax_lib::requires(index < self.len()))]
+            #[cfg_attr(hax, hax_lib::ensures(|_| future(self).len() == self.len() - 1))]
+            #[inline]
+            pub fn remove(&mut self, index: usize) -> $element_type {
+                self.vec.remove(index)
+            }
 
-        /// Returns an iterator over the slice.
-        #[inline]
-        pub fn iter(&self) -> core::slice::Iter<'_, $element_type> {
-            self.vec.iter()
-        }
+            /// Returns a reference to an element or subslice depending on the type of index.
+            /// XXX: implement SliceIndex instead
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_some() == (index < self.len())))]
+            #[inline]
+            pub fn get(&self, index: usize) -> Option<&$element_type> {
+                self.vec.get(index)
+            }
 
-        /// Retains only the elements specified by the predicate.
-        #[inline]
-        pub fn retain<F>(&mut self, f: F)
-        where
-            F: FnMut(&$element_type) -> bool,
-        {
-            self.vec.retain(f)
-        }
+            /// Returns an iterator over the slice.
+            #[inline]
+            pub fn iter(&self) -> core::slice::Iter<'_, $element_type> {
+                self.vec.iter()
+            }
 
-        /// Get the number of bytes used for the length encoding.
-        #[inline(always)]
-        pub fn len_len() -> usize {
-            $len_len
+            /// Retains only the elements specified by the predicate.
+            #[inline]
+            pub fn retain<F>(&mut self, f: F)
+            where
+                F: FnMut(&$element_type) -> bool,
+            {
+                self.vec.retain(f)
+            }
+
+            /// Get the number of bytes used for the length encoding.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            pub fn len_len() -> usize {
+                $len_len
+            }
         }
     };
 }
@@ -465,9 +509,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: $($bounds + )*> $name<T> {
-            impl_vec_members!(T, $len_len);
-        }
+        impl_vec_members!({impl<T: $($bounds + )*> $name<T>}, T, $len_len);
 
         impl<T: $($bounds + )* core::hash::Hash> core::hash::Hash for $name<T> {
             #[inline]
@@ -476,9 +518,11 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )*> core::ops::Index<usize> for $name<T> {
             type Output = T;
 
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index(&self, i: usize) -> &T {
                 self.vec.index(i)
@@ -491,7 +535,9 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
@@ -663,9 +709,7 @@ macro_rules! impl_tls_vec {
             vec: Vec<u8>,
         }
 
-        impl $name {
-            impl_vec_members!(u8, $len_len);
-        }
+        impl_vec_members!({impl $name}, u8, $len_len);
 
         impl core::hash::Hash for $name {
             #[inline]
@@ -674,9 +718,11 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl core::ops::Index<usize> for $name {
             type Output = u8;
 
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index(&self, i: usize) -> &u8 {
                 self.vec.index(i)
@@ -689,7 +735,9 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl core::ops::IndexMut<usize> for $name {
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index_mut(&mut self, i: usize) -> &mut Self::Output {
                 self.vec.index_mut(i)
@@ -853,22 +901,11 @@ macro_rules! impl_secret_tls_vec {
         impl_tls_vec_generic!($size, $name, $len_len, Zeroize);
         impl_tls_vec_codec_generic!($size, $name, $len_len, Zeroize);
 
-        impl<T: Serialize + Zeroize> $name<T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Size + Zeroize> $name<T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Deserialize + Zeroize> $name<T> {
-            impl_deserialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: DeserializeBytes + Zeroize> $name<T> {
-            impl_deserialize_bytes!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<T: Serialize + Zeroize> $name<T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<T: Serialize + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_size!({impl<T: Size + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize!({impl<T: Deserialize + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize_bytes!({impl<T: DeserializeBytes + Zeroize> $name<T>}, self, $size, $name, $len_len);
 
         impl<T: Zeroize> Zeroize for $name<T> {
             fn zeroize(&mut self) {
@@ -890,22 +927,11 @@ macro_rules! impl_public_tls_vec {
 
         impl_tls_vec_codec_generic!($size, $name, $len_len);
 
-        impl<T: Serialize> $name<T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Size> $name<T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Deserialize> $name<T> {
-            impl_deserialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: DeserializeBytes> $name<T> {
-            impl_deserialize_bytes!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<T: Serialize> $name<T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<T: Serialize> $name<T>}, self, $size, $name, $len_len);
+        impl_size!({impl<T: Size> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize!({impl<T: Deserialize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize_bytes!({impl<T: DeserializeBytes> $name<T>}, self, $size, $name, $len_len);
     };
 }
 
@@ -913,14 +939,12 @@ macro_rules! impl_tls_byte_vec {
     ($size:ty, $name:ident, $len_len: literal) => {
         impl_tls_vec!($name, $len_len);
 
-        impl $name {
-            // This implements serialize and size for all versions
-            impl_serialize_common!(self, $size, $name, $len_len);
-            impl_byte_serialize!(self, $size, $name, $len_len);
-            impl_serialize_bytes_bytes!(self, $size, $name, $len_len);
-            impl_byte_size!(self, $size, $name, $len_len);
-            impl_byte_deserialize!(self, $size, $name, $len_len);
-        }
+        // This implements serialize and size for all versions
+        impl_serialize_common!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_serialize!({impl $name}, self, $size, $name, $len_len);
+        impl_serialize_bytes_bytes!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_size!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_deserialize!({impl $name}, self, $size, $name, $len_len);
 
         impl_tls_vec_codec_bytes!($size, $name, $len_len);
     };
@@ -948,19 +972,19 @@ macro_rules! impl_tls_byte_slice {
     ($size:ty, $name:ident, $len_len:literal) => {
         pub struct $name<'a>(pub &'a [u8]);
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> $name<'a> {
             /// Get the raw slice.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline(always)]
             pub fn as_slice(&self) -> &[u8] {
                 self.0
             }
         }
 
-        impl<'a> $name<'a> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_byte_serialize!(self, $size, $name, $len_len);
-            impl_byte_size!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<'a> $name<'a>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_byte_serialize!({impl<'a> $name<'a>}, self, $size, $name, $len_len);
+        impl_byte_size!({impl<'a> $name<'a>}, self, $size, $name, $len_len);
 
         impl<'a> Serialize for &$name<'a> {
             #[cfg(feature = "std")]
@@ -976,14 +1000,18 @@ macro_rules! impl_tls_byte_slice {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> Size for &$name<'a> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> Size for $name<'a> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -1001,22 +1029,19 @@ macro_rules! impl_tls_slice {
     ($size:ty, $name:ident, $len_len: literal) => {
         pub struct $name<'a, T>(pub &'a [T]);
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T> $name<'a, T> {
             /// Get the raw slice.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline(always)]
             pub fn as_slice(&self) -> &[T] {
                 self.0
             }
         }
 
-        impl<'a, T: Size> $name<'a, T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<'a, T: Serialize> $name<'a, T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
+        impl_size!({impl<'a, T: Size> $name<'a, T>}, self, $size, $name, $len_len);
+        impl_serialize_common!({impl<'a, T: Serialize> $name<'a, T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<'a, T: Serialize> $name<'a, T>}, self, $size, $name, $len_len);
 
         impl<'a, T: Serialize> Serialize for &$name<'a, T> {
             #[cfg(feature = "std")]
@@ -1032,14 +1057,18 @@ macro_rules! impl_tls_slice {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T: Size> Size for &$name<'a, T> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T: Size> Size for $name<'a, T> {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()

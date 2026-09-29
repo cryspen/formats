@@ -10,7 +10,9 @@ use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: Size> Size for Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         1 + match self {
@@ -20,7 +22,9 @@ impl<T: Size> Size for Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: Size> Size for &Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
@@ -43,7 +47,14 @@ impl<T: Serialize> Serialize for Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: SerializeBytes> SerializeBytes for Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| if self.is_none() {
+        res.is_ok_and(|out| out == vec![0u8] && out.len() == self.tls_serialized_len())
+    } else {
+        res.is_err() || res.is_ok_and(|out| out.first() == Some(&1u8)
+            && out.len() == self.tls_serialized_len())
+    }))]
     #[inline]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         match self {
@@ -66,7 +77,10 @@ impl<T: Serialize> Serialize for &Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: SerializeBytes> SerializeBytes for &Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
     #[inline]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         (*self).tls_serialize_bytes()
@@ -93,7 +107,14 @@ impl<T: Deserialize> Deserialize for Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)|
+            bytes.first() == Some(&if value.is_some() { 1u8 } else { 0u8 })
+                && remainder.len() <= bytes.len()
+                && (!cfg!(feature = "mls")
+                    || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (some_or_none, remainder) = <u8>::tls_deserialize_bytes(bytes)?;
@@ -122,7 +143,20 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl DeserializeBytes for $t {
+            #[cfg_attr(hax, hax_lib::ensures(|res| if bytes.len() < $bytes {
+                                        res == Err(Error::EndOfStream)
+                                    } else {
+                                        res.is_ok_and(|(value, remainder)|
+                                            <$t>::to_be_bytes(value)[..] == bytes[..$bytes]
+                                                && remainder.len() == bytes.len() - $bytes
+                                                && remainder.len() <= bytes.len()
+                                                && (!cfg!(feature = "mls")
+                                                    || remainder.len()
+                                                        + value.tls_serialized_len()
+                                                        == bytes.len()))
+                                    }))]
             #[inline]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
@@ -138,14 +172,20 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl SerializeBytes for &$t {
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
             #[inline]
             fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 Ok(self.to_be_bytes().to_vec())
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl SerializeBytes for $t {
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
             #[inline]
             fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 <&Self as SerializeBytes>::tls_serialize_bytes(&self)
@@ -170,14 +210,18 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for $t {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 $bytes
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for &$t {
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 (*self).tls_serialized_len()
@@ -211,11 +255,16 @@ where
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T, U> DeserializeBytes for (T, U)
 where
     T: DeserializeBytes,
     U: DeserializeBytes,
 {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
@@ -237,11 +286,13 @@ where
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T, U> Size for (T, U)
 where
     T: Size,
     U: Size,
 {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.0.tls_serialized_len() + self.1.tls_serialized_len()
@@ -265,12 +316,17 @@ where
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T, U, V> DeserializeBytes for (T, U, V)
 where
     T: DeserializeBytes,
     U: DeserializeBytes,
     V: DeserializeBytes,
 {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (first_element, remainder) = T::tls_deserialize_bytes(bytes)?;
@@ -295,19 +351,23 @@ where
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T, U, V> Size for (T, U, V)
 where
     T: Size,
     U: Size,
     V: Size,
 {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl Size for () {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
@@ -322,7 +382,12 @@ impl Deserialize for () {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl DeserializeBytes for () {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok(((), bytes))
@@ -336,7 +401,9 @@ impl Serialize for () {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T> Size for PhantomData<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         0
@@ -351,7 +418,12 @@ impl<T> Deserialize for PhantomData<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T> DeserializeBytes for PhantomData<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         Ok((PhantomData, bytes))
@@ -366,14 +438,19 @@ impl<T> Serialize for PhantomData<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T> SerializeBytes for PhantomData<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
     #[inline(always)]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         Ok(vec![])
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: Size> Size for Box<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         self.as_ref().tls_serialized_len()
@@ -388,7 +465,10 @@ impl<T: Serialize> Serialize for Box<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: SerializeBytes> SerializeBytes for Box<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
     #[inline(always)]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         self.as_ref().tls_serialize_bytes()
@@ -403,7 +483,12 @@ impl<T: Deserialize> Deserialize for Box<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: DeserializeBytes> DeserializeBytes for Box<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         T::tls_deserialize_bytes(bytes).map(|(v, r)| (Box::new(v), r))
