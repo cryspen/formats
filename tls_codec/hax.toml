@@ -10,19 +10,28 @@
 
 [scenario.tls-codec]
 backend = "lean"
-
-# The verification target is the `no_std` + `alloc` core of the crate: the
-# `Size` / `SerializeBytes` / `DeserializeBytes` traits and their impls, which
-# operate on byte slices only. Turning `std` off (it is the sole default
-# feature) removes, by `cfg`, everything that is out of scope for the Lean
-# backend: the `std::io::{Read, Write}`-based `Serialize` / `Deserialize`
-# methods, `From<std::io::Error>`, the `rw` module, and the `Secret*` wrappers.
-# `derive`, `serde` and `arbitrary` stay off for the same reason.
 no-default-features = true
-
-# `mls` is the configuration OpenMLS builds this crate in: variable-length
-# vectors are capped at 2^30-1 bytes and, more importantly, length prefixes
-# must use the minimal varint encoding on the way in (`check_min_len`). That
-# canonicity check is a property worth verifying, and it is a no-op without
-# this feature.
 features = ["mls"]
+# Aeneas cannot translate the *signature* of `Iterator::try_fold`
+exclude = ["core::iter::traits::iterator::Iterator::try_fold"]
+# Bodies aeneas cannot translate. `opaque` (not `exclude`) keeps the signature,
+# so callers stay translatable; only the body is dropped.
+opaque = [
+  # `Unreachable` on the `write!` formatting machinery (quic_vec.rs:286)
+  "tls_codec::quic_vec::write_hex",
+  # Body calls the excluded `Iterator::try_fold` (quic_vec.rs:211). `&Slice<_>`
+  # is how charon's pattern language spells `&[T]`; a bare `&_` would also
+  # capture the `&VLBytes` and `&Vec<T>` impls next to it.
+  "tls_codec::quic_vec::{tls_codec::SerializeBytes<&Slice<_>>}::tls_serialize_bytes",
+  # Bodies call the excluded `Iterator::try_fold` (tls_vec.rs:250). These live in
+  # *inherent* impls, which charon's matcher cannot name (`PatElem::Impl` vs
+  # `ImplElem::Ty` is an unimplemented `false`), so the impl block has to be a
+  # `_`. It is exact all the same: `TlsByteVecU{8,16,24,32}` are the only types
+  # in this module with a `get_content_lengths` under these features.
+  "tls_codec::tls_vec::_::get_content_lengths",
+  # `Can't end abstraction ... non-endable` on the `map` closure inside this
+  # method (primitives.rs:494); opaquing the enclosing method covers the closure.
+  # `Box` is left without generic arguments on purpose: `--treat-box-as-builtin`
+  # and `--hide-allocator` are on, and `Box<_>` fails to match under them.
+  "tls_codec::primitives::{tls_codec::DeserializeBytes<alloc::boxed::Box>}::tls_deserialize_bytes",
+]
