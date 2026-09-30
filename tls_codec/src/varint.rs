@@ -16,7 +16,7 @@ impl TlsVarInt {
     ///
     /// Returns [`Error::InvalidVectorLength`] if the value is larger than
     /// [`TlsVarInt::MAX`].
-    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+    #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= TlsVarInt::MAX { Ok(TlsVarInt(value)) } else { Err(Error::InvalidVectorLength) }))]
     #[inline]
     pub(crate) fn try_new(value: u64) -> Result<Self, Error> {
         if Self::MAX < value {

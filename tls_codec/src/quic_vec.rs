@@ -315,6 +315,7 @@ macro_rules! impl_vl_bytes_generic {
             }
 
             /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::requires(self.as_slice().len() < usize::MAX))]
             #[cfg_attr(hax, hax_lib::ensures(|_|
                                 future(self).as_slice().len() == self.as_slice().len() + 1))]
             #[inline]

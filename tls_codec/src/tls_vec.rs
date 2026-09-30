@@ -487,6 +487,7 @@ macro_rules! impl_vec_members {
             }
 
             /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::requires(self.len() < usize::MAX))]
             #[cfg_attr(hax, hax_lib::ensures(|_| future(self).len() == self.len() + 1))]
             #[inline]
             pub fn push(&mut self, value: $element_type) {
