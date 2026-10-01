@@ -448,7 +448,7 @@ impl DeserializeBytes for VLBytes {
             Ok(vec) => Ok((Self { vec: vec.to_vec() }, &remainder[length..])),
             Err(_e) => {
                 let remaining_len = remainder.len();
-                if !cfg!(fuzzing) {
+                if !cfg!(fuzzing) && !cfg!(hax) {
                     debug_assert_eq!(
                         remaining_len, length,
                         "Expected to read {length} bytes but {remaining_len} were read.",
@@ -556,7 +556,7 @@ impl DeserializeBytes for VLByteVec {
             Ok(vec) => Ok((Self { vec: vec.to_vec() }, &remainder[length..])),
             Err(_e) => {
                 let remaining_len = remainder.len();
-                if !cfg!(fuzzing) {
+                if !cfg!(fuzzing) && !cfg!(hax) {
                     debug_assert_eq!(
                         remaining_len, length,
                         "Expected to read {length} bytes but {remaining_len} were read.",
