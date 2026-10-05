@@ -1,0 +1,27 @@
+name = "TlsCodec"
+version = "0.1.0"
+defaultTargets = ["TlsCodec"]
+
+[[lean_lib]]
+name = "TlsCodec"
+
+# LOCAL OVERRIDE -- do not commit. The aeneas Lean library has to match the
+# aeneas binary that generated `Extraction/`, and `../../../hax.toml` points
+# that binary at a local checkout, so this require does too. hax generated
+# this file with a `git`/`rev` require on the default aeneas and does not
+# touch it again: it never overwrites an existing lakefile, and a
+# path-resolved aeneas gives it no rev to check this one against.
+[[require]]
+name = "aeneas"
+path = "/workspace/aeneas/cryspen/main/backends/lean"
+
+# v0.3.27 is what cargo-hax 0.4.1 resolves `hax-lean-lib` to, and hax warns on
+# every run when this pin disagrees with it. `../../../hax.toml` no longer
+# pins `hax-lean-lib`, so the default applies. Unverified: whether this
+# version's own require on the aeneas Lean library agrees with the local
+# checkout above -- Lean cannot run in this container, so the first `lake
+# build` has to confirm it.
+[[require]]
+name = "hax"
+git = "https://github.com/cryspen/hax-lean"
+rev = "v0.3.27"
