@@ -39,7 +39,7 @@ macro_rules! impl_byte_size {
             #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline(always)]
             fn tls_serialized_byte_length(&$self) -> usize {
-                $self.as_slice().len() + $len_len
+                crate::len_add($self.as_slice().len(), $len_len)
             }
         }
     };
@@ -260,6 +260,7 @@ macro_rules! impl_serialize_common {
                 let tls_serialized_len = crate::checked_len_add(byte_length, $len_len)?;
 
                 let max_len = <$size>::MAX.try_into().unwrap();
+                #[cfg(not(hax))]
                 debug_assert!(
                     byte_length <= max_len,
                     "Vector length can't be encoded in the vector length a {} >= {}",

@@ -34,4 +34,17 @@ opaque = [
   # `Box` is left without generic arguments on purpose: `--treat-box-as-builtin`
   # and `--hide-allocator` are on, and `Box<_>` fails to match under them.
   "tls_codec::primitives::{tls_codec::DeserializeBytes<alloc::boxed::Box>}::tls_deserialize_bytes",
+  # Length-sum helpers (lib.rs, `target_pointer_width = "64"` variants); their
+  # bound is the ASSUMED `len_add_spec` / `checked_len_add_spec` in
+  # `Assumptions/CrateAssumptions.lean`.
+  "tls_codec::len_add",
+  "tls_codec::checked_len_add",
+]
+# The crate-independent missing core models and missing third-party models in
+# `Assumptions/` are imported into every generated file by aeneas'
+# `-extra-includes`. Their specs (`MissingCoreModelsSpecs`) are only for proofs
+# and are imported by `Verification/Helpers.lean` instead. `FunsExternal.lean`
+# holds only the template's crate-specific axioms.
+aeneas-args = [
+  "-extra-includes=TlsCodec.Assumptions.MissingCoreModels,TlsCodec.Assumptions.MissingThirdPartyModels",
 ]

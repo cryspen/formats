@@ -13,10 +13,13 @@ use std::io::{Read, Write};
 impl<T: Size> Size for Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
-        1 + match self {
-            Some(v) => v.tls_serialized_len(),
-            None => 0,
-        }
+        crate::len_add(
+            1,
+            match self {
+                Some(v) => v.tls_serialized_len(),
+                None => 0,
+            },
+        )
     }
 }
 
@@ -139,17 +142,17 @@ macro_rules! impl_unsigned {
         #[cfg_attr(hax, hax_lib::attributes)]
         impl DeserializeBytes for $t {
             #[cfg_attr(hax, hax_lib::ensures(|res| if bytes.len() < $bytes {
-                                        res == Err(Error::EndOfStream)
-                                    } else {
-                                        res.is_ok_and(|(value, remainder)|
-                                            <$t>::to_be_bytes(value)[..] == bytes[..$bytes]
-                                                && remainder.len() == bytes.len() - $bytes
-                                                && remainder.len() <= bytes.len()
-                                                && (!cfg!(feature = "mls")
-                                                    || remainder.len()
-                                                        + value.tls_serialized_len()
-                                                        == bytes.len()))
-                                    }))]
+                                                res == Err(Error::EndOfStream)
+                                            } else {
+                                                res.is_ok_and(|(value, remainder)|
+                                                    <$t>::to_be_bytes(value)[..] == bytes[..$bytes]
+                                                        && remainder.len() == bytes.len() - $bytes
+                                                        && remainder.len() <= bytes.len()
+                                                        && (!cfg!(feature = "mls")
+                                                            || remainder.len()
+                                                                + value.tls_serialized_len()
+                                                                == bytes.len()))
+                                            }))]
             #[inline]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();
@@ -271,7 +274,7 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0.tls_serialized_len() + self.1.tls_serialized_len()
+        crate::len_add(self.0.tls_serialized_len(), self.1.tls_serialized_len())
     }
 }
 
@@ -330,7 +333,10 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
+        crate::len_add(
+            crate::len_add(self.0.tls_serialized_len(), self.1.tls_serialized_len()),
+            self.2.tls_serialized_len(),
+        )
     }
 }
 
