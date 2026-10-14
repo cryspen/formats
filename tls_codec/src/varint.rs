@@ -221,9 +221,7 @@ impl SerializeBytes for TlsVarInt {
     }
 }
 
-#[cfg_attr(hax, hax_lib::attributes)]
 impl Size for TlsVarInt {
-    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         self.bytes_len()

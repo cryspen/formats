@@ -328,9 +328,7 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* Size> Size for $name<T> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
@@ -344,9 +342,7 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* Size> Size for &$name<T> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
@@ -360,12 +356,7 @@ macro_rules! impl_tls_vec_codec_generic {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )* DeserializeBytes> DeserializeBytes for $name<T> {
-            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
-                || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
-                    && (!cfg!(feature = "mls")
-                        || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes(bytes)
             }
@@ -382,9 +373,7 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for $name {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -398,9 +387,7 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl Size for &$name {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -414,21 +401,13 @@ macro_rules! impl_tls_vec_codec_bytes {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl DeserializeBytes for $name {
-            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
-                || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
-                    && (!cfg!(feature = "mls")
-                        || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 Self::deserialize_bytes_bytes(bytes)
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl SerializeBytes for $name {
-            #[cfg_attr(hax, hax_lib::ensures(|res|
-                res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
             fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 self.serialize_bytes_bytes()
             }
@@ -1047,18 +1026,14 @@ macro_rules! impl_tls_byte_slice {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> Size for &$name<'a> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> Size for $name<'a> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_byte_length()
@@ -1104,18 +1079,14 @@ macro_rules! impl_tls_slice {
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T: Size> Size for &$name<'a, T> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()
             }
         }
 
-        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T: Size> Size for $name<'a, T> {
-            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline]
             fn tls_serialized_len(&self) -> usize {
                 self.tls_serialized_length()

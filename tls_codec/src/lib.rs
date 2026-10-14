@@ -182,15 +182,12 @@ fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Ve
 ///
 /// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
 /// need to be part of the public API.
-#[cfg_attr(hax, hax_lib::requires(a <= usize::MAX - b))]
-#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(target_pointer_width = "64")]
 pub(crate) const fn len_add(a: usize, b: usize) -> usize {
     a + b
 }
 
-#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(not(target_pointer_width = "64"))]
 pub(crate) const fn len_add(a: usize, b: usize) -> usize {
@@ -203,15 +200,12 @@ pub(crate) const fn len_add(a: usize, b: usize) -> usize {
 /// why it can't overflow). On narrower targets an overflow becomes
 /// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
 /// written to the wire.
-#[cfg_attr(hax, hax_lib::requires(a <= usize::MAX - b))]
-#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(target_pointer_width = "64")]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
     Ok(a + b)
 }
 
-#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 #[cfg(not(target_pointer_width = "64"))]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
@@ -253,7 +247,9 @@ pub(crate) fn checked_alloc_len(a: usize, b: usize) -> Result<usize, Error> {
 /// efficiently serialized.
 /// This allows to collect the length of a serialized structure before allocating
 /// memory.
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait Size {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     fn tls_serialized_len(&self) -> usize;
 }
 

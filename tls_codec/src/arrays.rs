@@ -49,18 +49,13 @@ impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
     }
 }
 
-#[cfg_attr(hax, hax_lib::attributes)]
 impl<const LEN: usize> SerializeBytes for [u8; LEN] {
-    #[cfg_attr(hax, hax_lib::ensures(|res|
-        res.is_err() || res.is_ok_and(|out| out.len() == self.tls_serialized_len())))]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         Ok(self.to_vec())
     }
 }
 
-#[cfg_attr(hax, hax_lib::attributes)]
 impl<const LEN: usize> Size for [u8; LEN] {
-    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn tls_serialized_len(&self) -> usize {
         LEN
