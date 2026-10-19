@@ -1,0 +1,22 @@
+name = "TlsCodec"
+version = "0.1.0"
+defaultTargets = ["TlsCodec"]
+
+[[lean_lib]]
+name = "TlsCodec"
+# The extracted code uses names containing `__`, which the mathlib naming
+# linter flags. `weak.` avoids an "unknown option" error in files that do not
+# import mathlib.
+leanOptions = { weak.linter.style.nameCheck = false }
+
+# LOCAL OVERRIDE -- do not commit. The aeneas Lean library has to match the
+# local aeneas binary that `../../../hax.toml` points at, and hax cannot express
+# that as a git require.
+[[require]]
+name = "aeneas"
+path = "../../../../../../../aeneas/cryspen/main/backends/lean"
+
+[[require]]
+name = "hax"
+git = "https://github.com/cryspen/hax-lean"
+rev = "v0.3.27"

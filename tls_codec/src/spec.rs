@@ -36,6 +36,29 @@ macro_rules! round_trip {
 
         round_trip!(@decode_encode $decode_encode, $t);
     };
+    ($encode_decode:ident, $decode_encode:ident, $t:ty, total) => {
+        /// Serialize, then deserialize: always succeeds, and is the identity on values.
+        #[hax_lib::ensures(|res| res.is_ok_and(|(out, remaining)| out == *value && remaining == 0))]
+        pub fn $encode_decode(value: &$t) -> Result<($t, usize), Error> {
+            let bytes = value.tls_serialize_bytes()?;
+            let (out, remainder) = <$t>::tls_deserialize_bytes(&bytes)?;
+            Ok((out, remainder.len()))
+        }
+
+        round_trip!(@decode_encode $decode_encode, $t);
+    };
+    ($encode_decode:ident, $decode_encode:ident, $t:ty, total, requires |$value:ident| $pre:expr) => {
+        /// Serialize, then deserialize: always succeeds, and is the identity on values.
+        #[hax_lib::requires($pre)]
+        #[hax_lib::ensures(|res| res.is_ok_and(|(out, remaining)| out == *$value && remaining == 0))]
+        pub fn $encode_decode($value: &$t) -> Result<($t, usize), Error> {
+            let bytes = $value.tls_serialize_bytes()?;
+            let (out, remainder) = <$t>::tls_deserialize_bytes(&bytes)?;
+            Ok((out, remainder.len()))
+        }
+
+        round_trip!(@decode_encode $decode_encode, $t);
+    };
     (@decode_encode $decode_encode:ident, $t:ty) => {
         /// Deserialize, then serialize: the identity on the bytes consumed.
         #[hax_lib::ensures(|res| res.is_err()
@@ -49,22 +72,25 @@ macro_rules! round_trip {
     };
 }
 
-round_trip!(u8_encode_decode, u8_decode_encode, u8);
-round_trip!(u16_encode_decode, u16_decode_encode, u16);
-round_trip!(u32_encode_decode, u32_decode_encode, u32);
-round_trip!(u64_encode_decode, u64_decode_encode, u64);
-round_trip!(u24_encode_decode, u24_decode_encode, U24);
-round_trip!(array4_encode_decode, array4_decode_encode, [u8; 4]);
+// Fixed-size encodings: `encode_decode` always succeeds.
+round_trip!(u8_encode_decode, u8_decode_encode, u8, total);
+round_trip!(u16_encode_decode, u16_decode_encode, u16, total);
+round_trip!(u32_encode_decode, u32_decode_encode, u32, total);
+round_trip!(u64_encode_decode, u64_decode_encode, u64, total);
+round_trip!(u24_encode_decode, u24_decode_encode, U24, total);
+round_trip!(array4_encode_decode, array4_decode_encode, [u8; 4], total);
 round_trip!(
     option_u16_encode_decode,
     option_u16_decode_encode,
-    Option<u16>
+    Option<u16>,
+    total
 );
 
 round_trip!(
     varint_encode_decode,
     varint_decode_encode,
     TlsVarInt,
+    total,
     requires | value | value.value() <= TlsVarInt::MAX
 );
 
