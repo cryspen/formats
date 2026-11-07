@@ -2,10 +2,13 @@
 -- Seeded by hax from Extraction/FunsExternal_Template.lean: fill the holes.
 -- hax never modifies this file; after re-extraction, compare it against the
 -- regenerated template to see what changed.
-import Aeneas
-import CoreModels
-import TlsCodec.Extraction.Types
-import TlsCodec.Assumptions.CrateAssumptions
+module
+
+public import Aeneas
+public import CoreModels
+public import TlsCodec.Extraction.Types
+public import TlsCodec.Assumptions.CrateAssumptions
+@[expose] public section
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -89,7 +92,7 @@ axiom quic_vec.VLByteSlice.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.TlsVecU8.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU8 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
 
@@ -97,7 +100,7 @@ axiom tls_vec.TlsVecU8.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.TlsVecU16.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU16 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
 
@@ -105,7 +108,7 @@ axiom tls_vec.TlsVecU16.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.TlsVecU24.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU24 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
 
@@ -113,7 +116,7 @@ axiom tls_vec.TlsVecU24.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.TlsVecU32.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU32 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
 
@@ -121,7 +124,7 @@ axiom tls_vec.TlsVecU32.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
   zeroize.Zeroize T) :
   tls_vec.SecretTlsVecU8 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
@@ -130,7 +133,7 @@ axiom tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
   zeroize.Zeroize T) :
   tls_vec.SecretTlsVecU16 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
@@ -139,7 +142,7 @@ axiom tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
   zeroize.Zeroize T) :
   tls_vec.SecretTlsVecU24 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
@@ -148,7 +151,7 @@ axiom tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/tls_vec.rs', lines 528:21-528:26
     Visibility: public -/
 axiom tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
   zeroize.Zeroize T) :
   tls_vec.SecretTlsVecU32 T → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
@@ -242,16 +245,18 @@ def checked_alloc_len
   let i ← core.num.Usize.saturating_add a b
   checked_capacity i
 
-/-- Copy of `U24.MAX` (Extraction/Funs.lean:552). -/
-def U24.MAX : U24 := let a := Array.repeat 3#usize 255#u8
-                     a
+/-- Copy of `U24.MAX` (Extraction/Funs.lean:1457). -/
+def U24.MAX : RustM U24 := do
+  let a ← core.array.repeat 3#usize core.U8.Insts.CoreCloneClone 255#u8
+  ok a
 
 /-- Copy of `FromUsizeU24.from.LEN` (Extraction/Funs.lean:565). -/
 def FromUsizeU24.from.LEN : RustM Std.Usize := core.mem.size_of Std.Usize
 
-/-- Copy of `Usize.Insts.CoreConvertFromU24.from` (Extraction/Funs.lean:570). -/
+/-- Copy of `Usize.Insts.CoreConvertFromU24.from` (Extraction/Funs.lean:1477). -/
 def Usize.Insts.CoreConvertFromU24.from (value : U24) : RustM Std.Usize := do
-  let usize_bytes := Array.repeat 8#usize 0#u8
+  let usize_bytes ←
+    core.array.repeat 8#usize core.U8.Insts.CoreCloneClone 0#u8
   let i ← FromUsizeU24.from.LEN
   let i1 ← i - 3#usize
   let (s, index_mut_back) ←
@@ -259,7 +264,7 @@ def Usize.Insts.CoreConvertFromU24.from (value : U24) : RustM Std.Usize := do
       (core.Slice.Insts.CoreOpsIndexIndexMut
       (core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
       Std.U8)) usize_bytes { start := i1 }
-  let s1 ← lift (Array.to_slice value)
+  let s1 ← core.array.Array.as_slice value
   let s2 ← core.slice.Slice.copy_from_slice core.U8.Insts.CoreMarkerCopy s s1
   let usize_bytes1 := index_mut_back s2
   core.num.Usize.from_be_bytes usize_bytes1
@@ -339,10 +344,10 @@ def quic_vec.ContentLength.from_usize
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       quic_vec.ContentLength.new val1
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         quic_vec.ContentLength (core.convert.From.Blanket Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       quic_vec.ContentLength Error.Insts.CoreConvertFromTryFromIntError
       residual
 
@@ -466,7 +471,7 @@ def varint.TlsVarInt.write_bytes_loop3
       value1 i1)
     (bytes, value, i)
 
-/-- Copy of `varint.TlsVarInt.write_bytes` (Extraction/Funs.lean:3297). -/
+/-- Copy of `varint.TlsVarInt.write_bytes` (Extraction/Funs.lean:5056). -/
 def varint.TlsVarInt.write_bytes
   (self : varint.TlsVarInt) (buf : Slice Std.U8) :
   RustM ((core.result.Result Std.Usize Error) × (Slice Std.U8))
@@ -487,24 +492,24 @@ def varint.TlsVarInt.write_bytes
       match len.val with
       | 1 =>
         let s ← Slice.update bytes 0#usize 0#u8
-        let bytes1 ← varint.TlsVarInt.write_bytes_loop0 s self 1#usize
+        let bytes1 ← varint.TlsVarInt.write_bytes_loop0 s self len
         let buf1 := index_mut_back bytes1
-        ok (core.result.Result.Ok 1#usize, buf1)
+        ok (core.result.Result.Ok len, buf1)
       | 2 =>
         let s ← Slice.update bytes 0#usize 64#u8
-        let bytes1 ← varint.TlsVarInt.write_bytes_loop1 s self 2#usize
+        let bytes1 ← varint.TlsVarInt.write_bytes_loop1 s self len
         let buf1 := index_mut_back bytes1
-        ok (core.result.Result.Ok 2#usize, buf1)
+        ok (core.result.Result.Ok len, buf1)
       | 4 =>
         let s ← Slice.update bytes 0#usize 128#u8
-        let bytes1 ← varint.TlsVarInt.write_bytes_loop2 s self 4#usize
+        let bytes1 ← varint.TlsVarInt.write_bytes_loop2 s self len
         let buf1 := index_mut_back bytes1
-        ok (core.result.Result.Ok 4#usize, buf1)
+        ok (core.result.Result.Ok len, buf1)
       | 8 =>
         let s ← Slice.update bytes 0#usize 192#u8
-        let bytes1 ← varint.TlsVarInt.write_bytes_loop3 s self 8#usize
+        let bytes1 ← varint.TlsVarInt.write_bytes_loop3 s self len
         let buf1 := index_mut_back bytes1
-        ok (core.result.Result.Ok 8#usize, buf1)
+        ok (core.result.Result.Ok len, buf1)
       | _ =>
         let a ←
           core.fmt.rt.Argument.new_display core.Usize.Insts.CoreFmtDisplay len
@@ -584,7 +589,7 @@ def tls_vec.TlsByteVecU8.get_content_lengths
           | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
                 Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
             ok (done r2)
         | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -597,18 +602,18 @@ def tls_vec.TlsByteVecU8.get_content_lengths
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue tls_serialized_len =>
       let r2 ←
-        core.convert.TryFromTUInfallible.Blanket.try_from
+        core.convert.TryFromTUNever.Blanket.try_from
           (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU8) core.num.U8.MAX
       let max_len ←
-        core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r2
+        core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r2
       if byte_length > max_len
       then ok (core.result.Result.Err tls_codec.Error.InvalidVectorLength)
       else ok (core.result.Result.Ok (tls_serialized_len, byte_length))
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
 
 
@@ -676,7 +681,7 @@ def tls_vec.TlsByteVecU16.get_content_lengths
           | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
                 Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
             ok (done r2)
         | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -689,18 +694,18 @@ def tls_vec.TlsByteVecU16.get_content_lengths
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue tls_serialized_len =>
       let r2 ←
-        core.convert.TryFromTUInfallible.Blanket.try_from
+        core.convert.TryFromTUNever.Blanket.try_from
           (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU16) core.num.U16.MAX
       let max_len ←
-        core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r2
+        core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r2
       if byte_length > max_len
       then ok (core.result.Result.Err tls_codec.Error.InvalidVectorLength)
       else ok (core.result.Result.Ok (tls_serialized_len, byte_length))
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
 
 
@@ -768,7 +773,7 @@ def tls_vec.TlsByteVecU24.get_content_lengths
           | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
                 Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
             ok (done r2)
         | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -780,20 +785,21 @@ def tls_vec.TlsByteVecU24.get_content_lengths
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue tls_serialized_len =>
+      let u24_max ← tls_codec.Copied.U24.MAX
       let r2 ←
-        core.convert.TryFromTUInfallible.Blanket.try_from
+        core.convert.TryFromTUNever.Blanket.try_from
           (core.convert.Into.Blanket tls_codec.Copied.Usize.Insts.CoreConvertFromU24)
-          tls_codec.Copied.U24.MAX
+          u24_max
       let max_len ←
-        core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r2
+        core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r2
       if byte_length > max_len
       then ok (core.result.Result.Err tls_codec.Error.InvalidVectorLength)
       else ok (core.result.Result.Ok (tls_serialized_len, byte_length))
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
 
 
@@ -861,7 +867,7 @@ def tls_vec.TlsByteVecU32.get_content_lengths
           | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
                 Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
             ok (done r2)
         | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -882,10 +888,10 @@ def tls_vec.TlsByteVecU32.get_content_lengths
       then ok (core.result.Result.Err tls_codec.Error.InvalidVectorLength)
       else ok (core.result.Result.Ok (tls_serialized_len, byte_length))
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
 
 /-- Hand-translated (not extracted):
@@ -950,7 +956,7 @@ def tls_vec.TlsByteVecU32.get_content_lengths
     - `#[cfg(debug_assertions)]` is on: the `out.len() - len_len != content_length`
       check is in the model (with the panicking `-` of a debug build). -/
 def Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
-  {T : Type} (SerializeBytesInst : SerializeBytes T) (self : Slice T) :
+  {T : Type _} (SerializeBytesInst : SerializeBytes T) (self : Slice T) :
   RustM (core.result.Result (alloc.vec.Vec Std.U8) tls_codec.Error) := do
   let i ← core.slice.Slice.iter self
   let r ←
@@ -967,7 +973,7 @@ def Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
           | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
                 Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
             ok (done r2)
         | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -1023,16 +1029,16 @@ def Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
             then ok (core.result.Result.Err tls_codec.Error.LibraryError)
             else ok (core.result.Result.Ok out3)
         | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
             (alloc.vec.Vec Std.U8) (core.convert.From.Blanket tls_codec.Error) residual
       | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
           (alloc.vec.Vec Std.U8) (core.convert.From.Blanket tls_codec.Error) residual
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (alloc.vec.Vec Std.U8) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (alloc.vec.Vec Std.U8) (core.convert.From.Blanket tls_codec.Error) residual
 
 /-- Hand-translated (not extracted):
@@ -1054,7 +1060,7 @@ def Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
     identity on pairs; `Result::map` of it is written out as a `match` (the closure has
     no extracted `FnOnce` instance to pass to CoreModels' `Result::map`). -/
 def Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) (bytes : Slice Std.U8) :
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) (bytes : Slice Std.U8) :
   RustM (core.result.Result (T × (Slice Std.U8)) tls_codec.Error) := do
   let r ← DeserializeBytesInst.tls_deserialize_bytes bytes
   match r with
@@ -1134,7 +1140,7 @@ as a `loop` over `Iter::next`, first `Err` returned unchanged; `as_slice()` inli
 namespace tls_codec.HandTranslated
 
 /-- `elements.iter().try_fold(0usize, |acc, e| crate::checked_len_add(acc, len(e)))`. -/
-def checked_len_fold {T : Type} (len : T → RustM Std.Usize) (elements : Slice T) :
+def checked_len_fold {T : Type _} (len : T → RustM Std.Usize) (elements : Slice T) :
   RustM (core.result.Result Std.Usize tls_codec.Error) := do
   let i ← core.slice.Slice.iter elements
   loop
@@ -1150,7 +1156,7 @@ def checked_len_fold {T : Type} (len : T → RustM Std.Usize) (elements : Slice 
         | core.ops.control_flow.ControlFlow.Continue acc1 => ok (cont (iter1, acc1))
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
               Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
           ok (done r2)
       | core.option.Option.None => ok (done (core.result.Result.Ok p.2)))
@@ -1169,7 +1175,7 @@ def checked_len_fold {T : Type} (len : T → RustM Std.Usize) (elements : Slice 
                 if byte_length > max_len { return Err(Error::InvalidVectorLength); }
                 Ok((tls_serialized_len, byte_length))
     ``` -/
-def get_content_lengths_std {T : Type} (len : T → RustM Std.Usize) (len_len : Std.Usize)
+def get_content_lengths_std {T : Type _} (len : T → RustM Std.Usize) (len_len : Std.Usize)
   (max_len : RustM Std.Usize) (elements : Slice T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let r ← checked_len_fold len elements
@@ -1185,30 +1191,30 @@ def get_content_lengths_std {T : Type} (len : T → RustM Std.Usize) (len_len : 
       then ok (core.result.Result.Err tls_codec.Error.InvalidVectorLength)
       else ok (core.result.Result.Ok (tls_serialized_len, byte_length))
     | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
         (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual
       (Std.Usize × Std.Usize) (core.convert.From.Blanket tls_codec.Error) residual
 
 /-- `u8::MAX.try_into().unwrap()` (`usize: TryFrom<u8>` via `From`, error `Infallible`). -/
 def max_len_U8 : RustM Std.Usize := do
-  let r ← core.convert.TryFromTUInfallible.Blanket.try_from
+  let r ← core.convert.TryFromTUNever.Blanket.try_from
     (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU8) core.num.U8.MAX
-  core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r
+  core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r
 
 /-- `u16::MAX.try_into().unwrap()`. -/
 def max_len_U16 : RustM Std.Usize := do
-  let r ← core.convert.TryFromTUInfallible.Blanket.try_from
+  let r ← core.convert.TryFromTUNever.Blanket.try_from
     (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU16) core.num.U16.MAX
-  core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r
+  core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r
 
 /-- `U24::MAX.try_into().unwrap()` (`usize: From<U24>`, crate impl, via `Copied`). -/
 def max_len_U24 : RustM Std.Usize := do
-  let r ← core.convert.TryFromTUInfallible.Blanket.try_from
-    (core.convert.Into.Blanket tls_codec.Copied.Usize.Insts.CoreConvertFromU24)
-    tls_codec.Copied.U24.MAX
-  core.result.Result.unwrap core.convert.Infallible.Insts.CoreFmtDebug r
+  let u24_max ← tls_codec.Copied.U24.MAX
+  let r ← core.convert.TryFromTUNever.Blanket.try_from
+    (core.convert.Into.Blanket tls_codec.Copied.Usize.Insts.CoreConvertFromU24) u24_max
+  core.result.Result.unwrap core.Never.Insts.CoreFmtDebug r
 
 /-- `u32::MAX.try_into().unwrap()` (`usize: TryFrom<u32>`, error `TryFromIntError`). -/
 def max_len_U32 : RustM Std.Usize := do
@@ -1220,14 +1226,14 @@ end tls_codec.HandTranslated
 /-- Hand-translated (not extracted): [tls_codec::quic_vec::rw::checked_content_length],
     `elements.iter().try_fold(0usize, |acc, e| crate::checked_len_add(acc, e.tls_serialized_len()))`. -/
 def quic_vec.rw.checked_content_length
-  {T : Type} (SizeInst : Size T) (elements : Slice T) :
+  {T : Type _} (SizeInst : Size T) (elements : Slice T) :
   RustM (core.result.Result Std.Usize tls_codec.Error) :=
   tls_codec.HandTranslated.checked_len_fold SizeInst.tls_serialized_len elements
 
 /-- Hand-translated: [tls_codec::tls_vec::{TlsVecU8<T>}::get_content_lengths]
     (`impl_public_tls_vec!(u8, TlsVecU8, 1)`). -/
 def tls_vec.TlsVecU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU8 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU8 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
@@ -1236,7 +1242,7 @@ def tls_vec.TlsVecU8.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{SecretTlsVecU8<T>}::get_content_lengths]
     (`impl_secret_tls_vec!(u8, SecretTlsVecU8, 1)`). -/
 def tls_vec.SecretTlsVecU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
@@ -1246,7 +1252,7 @@ def tls_vec.SecretTlsVecU8.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsSliceU8<'a, T>}::get_content_lengths]
     (`impl_tls_slice!(u8, TlsSliceU8, 1)`; `as_slice()` is `self.0`, the newtype erased). -/
 def tls_vec.TlsSliceU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU8 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU8 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) :=
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
     1#usize tls_codec.HandTranslated.max_len_U8 self
@@ -1263,7 +1269,7 @@ def tls_vec.TlsByteSliceU8.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsVecU16<T>}::get_content_lengths]
     (`impl_public_tls_vec!(u16, TlsVecU16, 2)`). -/
 def tls_vec.TlsVecU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU16 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU16 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
@@ -1272,7 +1278,7 @@ def tls_vec.TlsVecU16.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{SecretTlsVecU16<T>}::get_content_lengths]
     (`impl_secret_tls_vec!(u16, SecretTlsVecU16, 2)`). -/
 def tls_vec.SecretTlsVecU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
@@ -1282,7 +1288,7 @@ def tls_vec.SecretTlsVecU16.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsSliceU16<'a, T>}::get_content_lengths]
     (`impl_tls_slice!(u16, TlsSliceU16, 2)`; `as_slice()` is `self.0`, the newtype erased). -/
 def tls_vec.TlsSliceU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU16 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU16 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) :=
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
     2#usize tls_codec.HandTranslated.max_len_U16 self
@@ -1299,7 +1305,7 @@ def tls_vec.TlsByteSliceU16.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsVecU24<T>}::get_content_lengths]
     (`impl_public_tls_vec!(U24, TlsVecU24, 3)`). -/
 def tls_vec.TlsVecU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU24 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU24 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
@@ -1308,7 +1314,7 @@ def tls_vec.TlsVecU24.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{SecretTlsVecU24<T>}::get_content_lengths]
     (`impl_secret_tls_vec!(U24, SecretTlsVecU24, 3)`). -/
 def tls_vec.SecretTlsVecU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
@@ -1318,7 +1324,7 @@ def tls_vec.SecretTlsVecU24.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsSliceU24<'a, T>}::get_content_lengths]
     (`impl_tls_slice!(U24, TlsSliceU24, 3)`; `as_slice()` is `self.0`, the newtype erased). -/
 def tls_vec.TlsSliceU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU24 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU24 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) :=
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
     3#usize tls_codec.HandTranslated.max_len_U24 self
@@ -1335,7 +1341,7 @@ def tls_vec.TlsByteSliceU24.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsVecU32<T>}::get_content_lengths]
     (`impl_public_tls_vec!(u32, TlsVecU32, 4)`). -/
 def tls_vec.TlsVecU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU32 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsVecU32 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
@@ -1344,7 +1350,7 @@ def tls_vec.TlsVecU32.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{SecretTlsVecU32<T>}::get_content_lengths]
     (`impl_secret_tls_vec!(u32, SecretTlsVecU32, 4)`). -/
 def tls_vec.SecretTlsVecU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) := do
   let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
@@ -1354,7 +1360,7 @@ def tls_vec.SecretTlsVecU32.get_content_lengths
 /-- Hand-translated: [tls_codec::tls_vec::{TlsSliceU32<'a, T>}::get_content_lengths]
     (`impl_tls_slice!(u32, TlsSliceU32, 4)`; `as_slice()` is `self.0`, the newtype erased). -/
 def tls_vec.TlsSliceU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU32 T) :
+  {T : Type _} (SerializeInst : Serialize T) (self : tls_vec.TlsSliceU32 T) :
   RustM (core.result.Result (Std.Usize × Std.Usize) tls_codec.Error) :=
   tls_codec.HandTranslated.get_content_lengths_std SerializeInst.SizeInst.tls_serialized_len
     4#usize tls_codec.HandTranslated.max_len_U32 self
@@ -1375,20 +1381,20 @@ Opaque in `hax.toml` (they have no Rust body). They read the views of lawful wri
 views are trivial, which no contract relies on (every spec takes the `…Lawful` hypothesis). -/
 
 /-- [tls_codec::spec::io::sink]: the bytes written so far. -/
-def spec.io.sink {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (writer : W) :
+def spec.io.sink {W : Type _} (coreiowriteWriteInst : core.io.write.Write W) (writer : W) :
     RustM (alloc.vec.Vec Std.U8) :=
-  ok ⟨core.io.write.Write.view coreiowriteWriteInst writer,
-    core.io.write.Write.view_le coreiowriteWriteInst writer⟩
+  ok (Slice.from (core.io.write.Write.view coreiowriteWriteInst writer)
+    (core.io.write.Write.view_le coreiowriteWriteInst writer))
 
 /-- [tls_codec::spec::io::stream]: the bytes still to come. -/
-def spec.io.stream {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (reader : R) :
+def spec.io.stream {R : Type _} (allocioreadReadInst : alloc.io.read.Read R) (reader : R) :
     RustM (alloc.vec.Vec Std.U8) :=
-  ok ⟨alloc.io.read.Read.view allocioreadReadInst reader,
-    alloc.io.read.Read.view_le allocioreadReadInst reader⟩
+  ok (Slice.from (alloc.io.read.Read.view allocioreadReadInst reader)
+    (alloc.io.read.Read.view_le allocioreadReadInst reader))
 
 open Classical in
 /-- [tls_codec::spec::io::advanced]: `after` is `before` advanced by at most its view. -/
-def spec.io.advanced {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (before after : R) :
+def spec.io.advanced {R : Type _} (allocioreadReadInst : alloc.io.read.Read R) (before after : R) :
     RustM Bool :=
   ok (decide (∃ n, n ≤ (alloc.io.read.Read.view allocioreadReadInst before).length ∧
     after = alloc.io.read.Read.adv allocioreadReadInst before n))

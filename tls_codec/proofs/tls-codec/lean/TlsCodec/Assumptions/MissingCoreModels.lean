@@ -1,9 +1,12 @@
 /- Missing core models: `core` / `alloc` items the extraction references that
-CoreModels (hax-lean v0.3.27) does not provide. Crate-independent (imports only
+CoreModels (hax-lean v0.3.34) does not provide. Crate-independent (imports only
 Aeneas and CoreModels), so `-extra-includes` can import it into every generated file.
 Specs for these and for existing CoreModels functions: `MissingCoreModelsSpecs.lean`. -/
-import Aeneas
-import CoreModels
+module
+
+public import Aeneas
+public import CoreModels
+@[expose] public section
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -17,7 +20,7 @@ set_option linter.style.longLine false
 
 /-- Hand-written stopgap (not generated): `alloc::string::FromUtf8Error` is
     referenced by Extraction/Funs.lean but not provided by CoreModels
-    (hax-lean v0.3.27).
+    (hax-lean v0.3.34).
 
     Rust: `struct FromUtf8Error { bytes: Vec<u8>, error: Utf8Error }`, private
     fields, built only by `String::from_utf8` from the rejected input. `error`
@@ -31,7 +34,7 @@ structure CoreModels.alloc.string.FromUtf8Error : Type where
 /-! ## Hand-written stopgaps for CoreModels gaps (not generated)
 
 Rust `core`/`alloc` items that Extraction/Funs.lean references but that
-CoreModels (hax-lean v0.3.27) does not provide. Candidates for upstreaming into
+CoreModels (hax-lean v0.3.34) does not provide. Candidates for upstreaming into
 hax's core models. Where the Rust semantics is trivial and certain, the item is
 a `def` that follows the Rust implementation; otherwise it is an opaque `axiom`
 that only fixes the type. -/
@@ -91,7 +94,7 @@ def alloc.string.String.from_utf8 (vec : alloc.vec.Vec Std.U8) :
     longest prefix that fits (keeping `as_bytes` total, as in Rust). -/
 def alloc.string.String.as_bytes (self : alloc.string.String) : RustM (Slice Std.U8) :=
   let l := self.toByteArray.data.toList.map fun b : UInt8 => (⟨b.toBitVec⟩ : Std.U8)
-  ok ⟨l.take Usize.max, by simp⟩
+  ok (Slice.from (l.take Usize.max) (by simp))
 
 namespace CoreModels
 
@@ -107,44 +110,27 @@ noncomputable def alloc.string.FromUtf8Error.Insts.CoreFmtDisplay :
   fmt := alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt
 }
 
-/-- [core::num::error::{impl core::fmt::Debug for TryFromIntError}::fmt] -/
-axiom core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt :
-  core.num.error.TryFromIntError → core.fmt.Formatter →
-  RustM ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-
-/-- [core::num::error::{impl core::fmt::Debug for TryFromIntError}] -/
-@[reducible]
-noncomputable def core.num.error.TryFromIntError.Insts.CoreFmtDebug :
-  core.fmt.Debug core.num.error.TryFromIntError := {
-  fmt := core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt
-}
-
-/-- [core::convert::{impl core::fmt::Debug for Infallible}::fmt] -/
-axiom core.convert.Infallible.Insts.CoreFmtDebug.fmt :
-  core.convert.Infallible → core.fmt.Formatter →
-  RustM ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-
-/-- [core::convert::{impl core::fmt::Debug for Infallible}] -/
-@[reducible]
-noncomputable def core.convert.Infallible.Insts.CoreFmtDebug :
-  core.fmt.Debug core.convert.Infallible := {
-  fmt := core.convert.Infallible.Insts.CoreFmtDebug.fmt
-}
-
 /-- [core::convert::{impl core::convert::TryFrom<U> for T}::try_from]
     (`where U: Into<T>`, `type Error = Infallible`): `Ok(U::into(value))`, as in
     Rust's `core`. CoreModels has this blanket impl as
-    `convert.TryFromUTInfallible.Blanket` with a `From` bound instead. -/
-def core.convert.TryFromTUInfallible.Blanket.try_from
-  {T U : Type} (IntoInst : core.convert.Into U T) (value : U) :
-  RustM (core.result.Result T core.convert.Infallible) := do
+    `convert.TryFromUTInfallible.Blanket` with a `From` bound instead. `Infallible`
+    is an alias of `!` (`Never`), hence the name. -/
+def core.convert.TryFromTUNever.Blanket.try_from
+  {T U : Type _} (IntoInst : core.convert.Into U T) (value : U) :
+  RustM (core.result.Result T Never) := do
   let t ← IntoInst.into value
   ok (core.result.Result.Ok t)
+
+/-- [core::fmt::{impl core::fmt::Debug for !}]: `!` has no value. -/
+@[reducible]
+def core.Never.Insts.CoreFmtDebug : core.fmt.Debug Never := {
+  fmt := fun x _ => nomatch x
+}
 
 /-- [core::mem::take]: `replace(dest, T::default())`, returning
     `(old value, new *dest)` as aeneas encodes `&mut` arguments. -/
 def core.mem.take
-  {T : Type} (DefaultInst : core.default.Default T) (dest : T) :
+  {T : Type _} (DefaultInst : core.default.Default T) (dest : T) :
   RustM (T × T) := do
   let d ← DefaultInst.default
   ok (dest, d)
@@ -152,7 +138,7 @@ def core.mem.take
 /-- [core::mem::size_of]. A type-directed constant, so it cannot be defined over
     an arbitrary `Type`: opaque, with its value fixed below for the types this
     crate queries (`primitives.rs:162`, `lib.rs:412`, `lib.rs:429`). -/
-axiom core.mem.size_of (T : Type) : RustM Std.Usize
+axiom core.mem.size_of (T : Type _) : RustM Std.Usize
 
 axiom core.mem.size_of_U8 : core.mem.size_of Std.U8 = ok 1#usize
 axiom core.mem.size_of_U16 : core.mem.size_of Std.U16 = ok 2#usize
@@ -166,7 +152,7 @@ axiom core.mem.size_of_Usize :
 
 /-- [alloc::boxed::{impl core::convert::AsRef<T> for Box<T>}::as_ref]
     (`Box` is erased by aeneas, so this is the identity). -/
-def alloc.Box.Insts.CoreConvertAsRef.as_ref {T : Type} (self : T) : RustM T :=
+def alloc.Box.Insts.CoreConvertAsRef.as_ref {T : Type _} (self : T) : RustM T :=
   ok self
 
 /-- [core::fmt::{Arguments}::from_str]. `core.fmt.Arguments` is `Unit` in
@@ -183,7 +169,7 @@ def core.fmt.Arguments.from_str (_s : Str) : RustM core.fmt.Arguments :=
     `Err`. The failure is the same; only its point moves, across pure steps (`Arguments::new`).
     The text written is discarded (the `Formatter` is `Unit`). -/
 def core.fmt.rt.Argument.new_display
-    {T : Type} (DisplayInst : core.fmt.Display T) (x : T) :
+    {T : Type _} (DisplayInst : core.fmt.Display T) (x : T) :
     RustM core.fmt.rt.Argument := do
   let (r, _) ← DisplayInst.fmt x ()
   match r with
@@ -206,7 +192,7 @@ def alloc.fmt.format (_args : core.fmt.Arguments) : RustM alloc.string.String :=
     is unused. Running out of length bound fails as `Vec::push` does (std panics
     with "capacity overflow"). A non-terminating iterator makes `loop` diverge. -/
 def alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend
-  {T I IntoIter : Type} (CopyInst : core.marker.Copy T)
+  {T I IntoIter : Type _} (CopyInst : core.marker.Copy T)
   (IntoIteratorInst : core.iter.traits.collect.IntoIterator I T IntoIter)
   (self : alloc.vec.Vec T) (iter : I) : RustM (alloc.vec.Vec T) := do
   let it ← IntoIteratorInst.into_iter iter
@@ -221,24 +207,24 @@ def alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend
 
 /-- [alloc::vec::{impl core::hash::Hash for Vec<T>}::hash] -/
 axiom alloc.vec.Vec.Insts.CoreHashHash.hash
-  {T H : Type} (HashInst : core.hash.Hash T) (HasherInst : core.hash.Hasher H) :
+  {T H : Type _} (HashInst : core.hash.Hash T) (HasherInst : core.hash.Hasher H) :
   alloc.vec.Vec T → H → RustM H
 
 /-- [alloc::vec::{impl core::cmp::Ord for Vec<T>}::cmp] -/
 axiom alloc.vec.Vec.Insts.CoreCmpOrd.cmp
-  {T : Type} (OrdInst : core.cmp.Ord T) :
+  {T : Type _} (OrdInst : core.cmp.Ord T) :
   alloc.vec.Vec T → alloc.vec.Vec T → RustM core.cmp.Ordering
 
 /-- [alloc::vec::{Vec<T>}::retain] -/
 axiom alloc.vec.Vec.retain
-  {T F : Type} (FnMutInst : core.ops.function.FnMut F T Bool) :
+  {T F : Type _} (FnMutInst : core.ops.function.FnMut F T Bool) :
   alloc.vec.Vec T → F → RustM (alloc.vec.Vec T)
 
 /-- [core::slice::iter::{impl Iterator for Iter<'a, T>}::any]: the trait's provided
     method (`Iterator::any`), at `slice::Iter` (as CoreModels does for `count` /
     `fold`). Needed by OpenMLS (`Extensions::try_from`). -/
 abbrev core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
-    {T F : Type} (FnInst : core.ops.function.FnMut F T Bool) :=
+    {T F : Type _} (FnInst : core.ops.function.FnMut F T Bool) :=
   iter.traits.iterator.Iterator.any.default
     (slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT T) FnInst
 
@@ -248,7 +234,7 @@ end CoreModels
 
 Hand-written models of the `std::io` items the `std` extraction references (CoreModels has
 none). Names are charon's: the traits and types moved to `core::io` / `alloc::io` in the
-toolchain charon uses (nightly-2026.09.02). Semantics follow that std
+toolchain charon uses (nightly-2026.10.31). Semantics follow that std
 (`library/{core,alloc}/src/io/`, read in rustup's nightly-2026-09-17 source). Everything is a
 `def` except the `Debug` formatting of `io::Error` (opaque, like every other `fmt` here).
 
@@ -305,7 +291,7 @@ noncomputable def core.io.error.Error.Insts.CoreFmtDebug : core.fmt.Debug core.i
 }
 
 /-- [core::io::write::Write] (the methods the extraction and OpenMLS use). -/
-structure core.io.write.Write (Self : Type) where
+structure core.io.write.Write (Self : Type _) where
   write : Self → Slice Std.U8 →
     RustM ((core.result.Result Std.Usize core.io.error.Error) × Self)
   write_all : Self → Slice Std.U8 →
@@ -335,7 +321,7 @@ def alloc.vec.VecU8.Insts.CoreIoWriteWrite : core.io.write.Write (alloc.vec.Vec 
 
 /-- [alloc::io::read::Read] (the methods the extraction and OpenMLS use; the provided
     methods `take` / `read_to_end` are the `.default` functions below). -/
-structure alloc.io.read.Read (Self : Type) where
+structure alloc.io.read.Read (Self : Type _) where
   read : Self → Slice Std.U8 →
     RustM ((core.result.Result Std.Usize core.io.error.Error) × Self × Slice Std.U8)
   read_exact : Self → Slice Std.U8 →
@@ -343,12 +329,12 @@ structure alloc.io.read.Read (Self : Type) where
 
 /-- `xs` cut to at most `n` elements, as a slice (`n` the length of a slice). -/
 def alloc.io.read.cut (xs : List Std.U8) (buf : Slice Std.U8) : Slice Std.U8 :=
-  ⟨xs.take buf.length, by have := buf.property; simp; omega⟩
+  (Slice.from (xs.take buf.length) (by have := buf.property; simp <;> omega))
 
 /-- [alloc::io::read::default_read_exact]: `read` until `buf` is full; `Ok(0)` first is
     `READ_EXACT_EOF`, `Interrupted` is retried, any other error is returned. `buf[n..]`
     panics if `read` claims more than the buffer holds. -/
-def alloc.io.read.default_read_exact {Self : Type}
+def alloc.io.read.default_read_exact {Self : Type _}
   (read : Self → Slice Std.U8 →
     RustM ((core.result.Result Std.Usize core.io.error.Error) × Self × Slice Std.U8))
   (self : Self) (buf : Slice Std.U8) :
@@ -356,7 +342,7 @@ def alloc.io.read.default_read_exact {Self : Type}
   loop (fun (p : Self × Slice Std.U8 × Nat) => do
       let (s, b, pos) := p
       if pos ≥ b.length then ok (done (core.result.Result.Ok (), s, b)) else
-      let rest : Slice Std.U8 := ⟨b.val.drop pos, by have := b.property; simp; omega⟩
+      let rest : Slice Std.U8 := (Slice.from (b.val.drop pos) (by have := b.property; simp <;> omega))
       let (r, s1, rest1) ← read s rest
       let b1 := alloc.io.read.cut (b.val.take pos ++ rest1.val) b
       match r with
@@ -375,8 +361,8 @@ def alloc.Shared0SliceU8.Insts.AllocIoReadRead.read
   (self : Slice Std.U8) (buf : Slice Std.U8) :
   RustM ((core.result.Result Std.Usize core.io.error.Error) × Slice Std.U8 × Slice Std.U8) :=
   let n := min buf.length self.length
-  let a : Slice Std.U8 := ⟨self.val.take n, by have := self.property; simp; omega⟩
-  let rest : Slice Std.U8 := ⟨self.val.drop n, by have := self.property; simp; omega⟩
+  let a : Slice Std.U8 := (Slice.from (self.val.take n) (by have := self.property; simp <;> omega))
+  let rest : Slice Std.U8 := (Slice.from (self.val.drop n) (by have := self.property; simp <;> omega))
   ok (core.result.Result.Ok (Slice.len a), rest, alloc.io.read.cut (a.val ++ buf.val.drop n) buf)
 
 /-- [alloc::io::impls::{impl Read for &[u8]}::read_exact]: if `buf` is longer than `self`,
@@ -386,11 +372,11 @@ def alloc.Shared0SliceU8.Insts.AllocIoReadRead.read_exact
   (self : Slice Std.U8) (buf : Slice Std.U8) :
   RustM ((core.result.Result Unit core.io.error.Error) × Slice Std.U8 × Slice Std.U8) :=
   if buf.length > self.length then
-    ok (core.result.Result.Err core.io.error.Error.READ_EXACT_EOF, ⟨[], by simp⟩, buf)
+    ok (core.result.Result.Err core.io.error.Error.READ_EXACT_EOF, (Slice.from ([]) (by simp)), buf)
   else
     ok (core.result.Result.Ok (),
-        ⟨self.val.drop buf.length, by have := self.property; simp; omega⟩,
-        ⟨self.val.take buf.length, by have := buf.property; simp; omega⟩)
+        (Slice.from (self.val.drop buf.length) (by have := self.property; simp <;> omega)),
+        (Slice.from (self.val.take buf.length) (by have := buf.property; simp <;> omega)))
 
 /-- [alloc::io::impls::{impl Read for &[u8]}] -/
 @[reducible]
@@ -402,22 +388,22 @@ def alloc.Shared0SliceU8.Insts.AllocIoReadRead : alloc.io.read.Read (Slice Std.U
 /-- [alloc::io::impls::{impl Read for &mut R}]: forwards every method to `R`'s impl
     (aeneas represents `&mut R` as `R`). -/
 @[reducible]
-def alloc.Mut0R.Insts.AllocIoReadRead {R : Type} (ReadInst : alloc.io.read.Read R) :
+def alloc.Mut0R.Insts.AllocIoReadRead {R : Type _} (ReadInst : alloc.io.read.Read R) :
   alloc.io.read.Read R := ReadInst
 
 /-- [core::io::util::Take] -/
-structure core.io.util.Take (T : Type) where
+structure core.io.util.Take (T : Type _) where
   inner : T
   len : Std.U64
   limit : Std.U64
 
 /-- [core::io::util::{Take<T>}::limit] -/
-def core.io.util.Take.impl.limit {T : Type} (self : core.io.util.Take T) : RustM Std.U64 :=
+def core.io.util.Take.impl.limit {T : Type _} (self : core.io.util.Take T) : RustM Std.U64 :=
   ok self.limit
 
 /-- [alloc::io::read::Read::take] (provided method): `Take { inner: self, limit, len: limit }`;
     the backward function gives back the inner reader. -/
-def alloc.io.read.Read.take.default {Self : Type} (ReadInst : alloc.io.read.Read Self)
+def alloc.io.read.Read.take.default {Self : Type _} (ReadInst : alloc.io.read.Read Self)
   (self : Self) (limit : Std.U64) :
   RustM (core.io.util.Take Self × (core.io.util.Take Self → Self)) :=
   ok ({ inner := self, len := limit, limit := limit }, fun t => t.inner)
@@ -425,14 +411,14 @@ def alloc.io.read.Read.take.default {Self : Type} (ReadInst : alloc.io.read.Read
 /-- [alloc::io::util::{impl Read for Take<T>}::read]: `Ok(0)` at limit 0 (the inner reader is
     not called); else read into `buf[..min(buf.len(), limit)]`, assert `n <= limit`, and
     decrease `limit` by `n`. An inner error is returned as is (`?`), `limit` unchanged. -/
-def alloc.core.io.util.Take.Insts.AllocIoReadRead.read {T : Type}
+def alloc.core.io.util.Take.Insts.AllocIoReadRead.read {T : Type _}
   (ReadInst : alloc.io.read.Read T) (self : core.io.util.Take T) (buf : Slice Std.U8) :
   RustM ((core.result.Result Std.Usize core.io.error.Error) × core.io.util.Take T ×
     Slice Std.U8) := do
   if self.limit = 0#u64 then ok (core.result.Result.Ok 0#usize, self, buf) else
   let max := min buf.length self.limit.val
   let (r, inner1, sub1) ←
-    ReadInst.read self.inner ⟨buf.val.take max, by have := buf.property; simp; omega⟩
+    ReadInst.read self.inner (Slice.from (buf.val.take max) (by have := buf.property; simp <;> omega))
   let buf1 := alloc.io.read.cut (sub1.val ++ buf.val.drop max) buf
   match r with
   | .Ok n =>
@@ -444,7 +430,7 @@ def alloc.core.io.util.Take.Insts.AllocIoReadRead.read {T : Type}
 
 /-- [alloc::io::util::{impl Read for Take<T>}] (`read_exact`: the provided method). -/
 @[reducible]
-def alloc.core.io.util.Take.Insts.AllocIoReadRead {T : Type}
+def alloc.core.io.util.Take.Insts.AllocIoReadRead {T : Type _}
   (ReadInst : alloc.io.read.Read T) : alloc.io.read.Read (core.io.util.Take T) := {
   read := alloc.core.io.util.Take.Insts.AllocIoReadRead.read ReadInst
   read_exact := alloc.io.read.default_read_exact
@@ -456,13 +442,13 @@ def alloc.core.io.util.Take.Insts.AllocIoReadRead {T : Type}
     bytes read so far left in `buf`; `Ok(bytes appended)`. DEVIATION(std): reads through
     `read` in 32-byte chunks (see the section note). The backward function is the identity
     (the reader is returned updated). -/
-def alloc.io.read.Read.read_to_end.default {Self : Type} (ReadInst : alloc.io.read.Read Self)
+def alloc.io.read.Read.read_to_end.default {Self : Type _} (ReadInst : alloc.io.read.Read Self)
   (self : Self) (buf : alloc.vec.Vec Std.U8) :
   RustM ((core.result.Result Std.Usize core.io.error.Error) × Self × alloc.vec.Vec Std.U8 ×
     (Self → Self)) := do
   let (r, s, v) ← loop (fun (p : Self × alloc.vec.Vec Std.U8) => do
       let (s, v) := p
-      let chunk : Slice Std.U8 := ⟨List.replicate 32 0#u8, by simp [Usize.max]; scalar_tac⟩
+      let chunk : Slice Std.U8 := (Slice.from (List.replicate 32 0#u8) (by simp [Usize.max]; scalar_tac))
       let (r, s1, chunk1) ← ReadInst.read s chunk
       match r with
       | .Ok n =>
@@ -470,7 +456,7 @@ def alloc.io.read.Read.read_to_end.default {Self : Type} (ReadInst : alloc.io.re
         else if n.val > 32 then fail .panic
         else
           let v1 ← alloc.vec.Vec.extend_from_slice core.U8.Insts.CoreCloneClone v
-            ⟨chunk1.val.take n.val, by have := chunk1.property; simp; omega⟩
+            (Slice.from (chunk1.val.take n.val) (by have := chunk1.property; simp <;> omega))
           ok (cont (s1, v1))
       | .Err e =>
         if e.repr_kind = .Interrupted then ok (cont (s1, v))
@@ -478,14 +464,14 @@ def alloc.io.read.Read.read_to_end.default {Self : Type} (ReadInst : alloc.io.re
     (self, buf)
   match r with
   | .Ok () =>
-    let n ← Slice.len ⟨v.val, v.property⟩ - Slice.len ⟨buf.val, buf.property⟩
+    let n ← Slice.len (Slice.from v.val v.property) - Slice.len (Slice.from buf.val buf.property)
     ok (core.result.Result.Ok n, s, v, fun x => x)
   | .Err e => ok (core.result.Result.Err e, s, v, fun x => x)
 
 /-- [core::fmt::rt::{Argument}::new_debug]: as `new_display` (same DEVIATION: `Debug::fmt` is
     called here, eagerly, and an `Err` panics as `format` would). -/
 def core.fmt.rt.Argument.new_debug
-    {T : Type} (DebugInst : core.fmt.Debug T) (x : T) :
+    {T : Type _} (DebugInst : core.fmt.Debug T) (x : T) :
     RustM core.fmt.rt.Argument := do
   let (r, _) ← DebugInst.fmt x ()
   match r with
@@ -528,81 +514,81 @@ namespace CoreModels
 /-- `clone_spec`: `clone` does not fail (no panic, no divergence); the result is
     unconstrained. Needed by generic callers of `clone` that must prove a `⇓`
     (total-correctness) post, e.g. `from_slice` (`Slice::to_vec`). -/
-structure core.clone.Clone.Lawful (Self : Type) (CloneInst : core.clone.Clone Self) : Prop where
+structure core.clone.Clone.Lawful (Self : Type _) (CloneInst : core.clone.Clone Self) : Prop where
   clone_spec (x : Self) : ⦃ ⌜ True ⌝ ⦄ CloneInst.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.borrow.Borrow.Lawful (Self : Type) (Borrowed : Type)
+structure core.borrow.Borrow.Lawful (Self : Type _) (Borrowed : Type _)
   (BorrowInst : core.borrow.Borrow Self Borrowed) : Prop where
   borrow_spec (x : Self) : ⦃ ⌜ True ⌝ ⦄ BorrowInst.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
 /-- `eq_spec`: the parent `PartialEq::eq` decides `=`. -/
-structure core.cmp.Eq.Lawful (Self : Type)
+structure core.cmp.Eq.Lawful (Self : Type _)
   (EqInst : core.cmp.Eq Self) : Prop where
   eq_spec (x y : Self) :
     ⦃ ⌜ True ⌝ ⦄ EqInst.PartialEqInst.eq x y ⦃ ⇓ r => ⌜ r = true ↔ x = y ⌝ ⦄
 
-structure core.cmp.Ord.Lawful (Self : Type)
+structure core.cmp.Ord.Lawful (Self : Type _)
   (OrdInst : core.cmp.Ord Self) : Prop where
 
-structure core.cmp.PartialEq.Lawful (Self : Type) (Rhs : Type)
+structure core.cmp.PartialEq.Lawful (Self : Type _) (Rhs : Type _)
   (PartialEqInst : core.cmp.PartialEq Self Rhs) : Prop where
   eq_spec (x : Self) (y : Rhs) :
     ⦃ ⌜ True ⌝ ⦄ PartialEqInst.eq x y ⦃ ⇓ r => ⌜ r = true ↔ HEq x y ⌝ ⦄
   ne_spec (x : Self) (y : Rhs) : ⦃ ⌜ True ⌝ ⦄ PartialEqInst.ne x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.cmp.PartialOrd.Lawful (Self : Type) (Rhs : Type)
+structure core.cmp.PartialOrd.Lawful (Self : Type _) (Rhs : Type _)
   (PartialOrdInst : core.cmp.PartialOrd Self Rhs) : Prop where
 
-structure core.convert.AsRef.Lawful (Self : Type) (T : Type)
+structure core.convert.AsRef.Lawful (Self : Type _) (T : Type _)
   (AsRefInst : core.convert.AsRef Self T) : Prop where
   as_ref_spec (x : Self) : ⦃ ⌜ True ⌝ ⦄ AsRefInst.as_ref x ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.convert.From.Lawful (Self : Type) (T : Type)
+structure core.convert.From.Lawful (Self : Type _) (T : Type _)
   (FromInst : core.convert.From Self T) : Prop where
   from_spec (x : T) : ⦃ ⌜ True ⌝ ⦄ FromInst.«from» x ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.convert.TryFrom.Lawful (Self : Type) (T : Type) (Self_Error : Type)
+structure core.convert.TryFrom.Lawful (Self : Type _) (T : Type _) (Self_Error : Type _)
   (TryFromInst : core.convert.TryFrom Self T Self_Error) : Prop where
   try_from_spec (x : T) : ⦃ ⌜ True ⌝ ⦄ TryFromInst.try_from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.default.Default.Lawful (Self : Type)
+structure core.default.Default.Lawful (Self : Type _)
   (DefaultInst : core.default.Default Self) : Prop where
   default_spec : ⦃ ⌜ True ⌝ ⦄ DefaultInst.default ⦃ ⇓ _ => ⌜ True ⌝ ⦄
 
-structure core.error.Error.Lawful (Self : Type)
+structure core.error.Error.Lawful (Self : Type _)
   (ErrorInst : core.error.Error Self) : Prop where
 
-structure core.fmt.Debug.Lawful (Self : Type)
+structure core.fmt.Debug.Lawful (Self : Type _)
   (DebugInst : core.fmt.Debug Self) : Prop where
 
-structure core.fmt.Display.Lawful (Self : Type)
+structure core.fmt.Display.Lawful (Self : Type _)
   (DisplayInst : core.fmt.Display Self) : Prop where
 
-structure core.hash.Hash.Lawful (Self : Type)
+structure core.hash.Hash.Lawful (Self : Type _)
   (HashInst : core.hash.Hash Self) : Prop where
 
-structure core.iter.traits.collect.FromIterator.Lawful (Self : Type) (A : Type)
+structure core.iter.traits.collect.FromIterator.Lawful (Self : Type _) (A : Type _)
   (FromIteratorInst : core.iter.traits.collect.FromIterator Self A) : Prop where
 
-structure core.marker.Copy.Lawful (Self : Type)
+structure core.marker.Copy.Lawful (Self : Type _)
   (CopyInst : core.marker.Copy Self) : Prop where
 
-structure core.marker.StructuralPartialEq.Lawful (Self : Type)
+structure core.marker.StructuralPartialEq.Lawful (Self : Type _)
   (StructuralPartialEqInst : core.marker.StructuralPartialEq Self) : Prop where
 
-structure core.ops.drop.Drop.Lawful (Self : Type)
+structure core.ops.drop.Drop.Lawful (Self : Type _)
   (DropInst : core.ops.drop.Drop Self) : Prop where
 
-structure core.ops.function.FnMut.Lawful (Self : Type) (Args : Type) (Self_Output : Type)
+structure core.ops.function.FnMut.Lawful (Self : Type _) (Args : Type _) (Self_Output : Type _)
   (FnMutInst : core.ops.function.FnMut Self Args Self_Output) : Prop where
 
-structure core.ops.function.FnOnce.Lawful (Self : Type) (Args : Type) (Self_Output : Type)
+structure core.ops.function.FnOnce.Lawful (Self : Type _) (Args : Type _) (Self_Output : Type _)
   (FnOnceInst : core.ops.function.FnOnce Self Args Self_Output) : Prop where
 
-structure core.ops.index.Index.Lawful (Self : Type) (Idx : Type) (Self_Output : Type)
+structure core.ops.index.Index.Lawful (Self : Type _) (Idx : Type _) (Self_Output : Type _)
   (IndexInst : core.ops.index.Index Self Idx Self_Output) : Prop where
 
-structure core.ops.index.IndexMut.Lawful (Self : Type) (Idx : Type) (Self_Output : Type)
+structure core.ops.index.IndexMut.Lawful (Self : Type _) (Idx : Type _) (Self_Output : Type _)
   (IndexMutInst : core.ops.index.IndexMut Self Idx Self_Output) : Prop where
 
 /-! ### `std::io` traits
@@ -619,7 +605,7 @@ ghost observers `spec::io::{sink, stream, advanced}` read the views
 (`Assumptions/FunsExternal.lean`); for a lawful instance the views are unique
 (`Verification/Std/Io.lean`), so the choice below is no assumption. -/
 
-structure core.io.write.Write.Law {Self : Type} (WriteInst : core.io.write.Write Self)
+structure core.io.write.Write.Law {Self : Type _} (WriteInst : core.io.write.Write Self)
     (view : Self → List Std.U8) : Prop where
   view_le (w : Self) : (view w).length ≤ Usize.max
   write_all_ok (w : Self) (s : Slice Std.U8) : (view w).length + s.val.length ≤ Usize.max →
@@ -627,11 +613,11 @@ structure core.io.write.Write.Law {Self : Type} (WriteInst : core.io.write.Write
   write_all_bound (w w' : Self) (s : Slice Std.U8) :
     WriteInst.write_all w s = ok (.Ok (), w') → (view w).length + s.val.length ≤ Usize.max
 
-structure core.io.write.Write.Lawful (Self : Type)
+structure core.io.write.Write.Lawful (Self : Type _)
   (WriteInst : core.io.write.Write Self) : Prop where
   law : ∃ view, core.io.write.Write.Law WriteInst view
 
-structure alloc.io.read.Read.Law {Self : Type} (ReadInst : alloc.io.read.Read Self)
+structure alloc.io.read.Read.Law {Self : Type _} (ReadInst : alloc.io.read.Read Self)
     (view : Self → List Std.U8) (adv : Self → Nat → Self) : Prop where
   view_le (r : Self) : (view r).length ≤ Usize.max
   adv_zero (r : Self) : adv r 0 = r
@@ -646,39 +632,39 @@ structure alloc.io.read.Read.Law {Self : Type} (ReadInst : alloc.io.read.Read Se
   read_exact_eof (r : Self) (buf : Slice Std.U8) : (view r).length < buf.val.length →
     ∃ r' b', ReadInst.read_exact r buf = ok (.Err core.io.error.Error.READ_EXACT_EOF, r', b')
 
-structure alloc.io.read.Read.Lawful (Self : Type)
+structure alloc.io.read.Read.Lawful (Self : Type _)
   (ReadInst : alloc.io.read.Read Self) : Prop where
   law : ∃ view adv, alloc.io.read.Read.Law ReadInst view adv
 
 open Classical in
 /-- The view of a lawful writer (a chosen one; unique, see the section note). -/
-noncomputable def core.io.write.Write.view {Self : Type} (WriteInst : core.io.write.Write Self) :
+noncomputable def core.io.write.Write.view {Self : Type _} (WriteInst : core.io.write.Write Self) :
     Self → List Std.U8 :=
   if h : ∃ view, core.io.write.Write.Law WriteInst view then Classical.choose h else fun _ => []
 
 open Classical in
 /-- The view of a lawful reader (a chosen one). -/
-noncomputable def alloc.io.read.Read.view {Self : Type} (ReadInst : alloc.io.read.Read Self) :
+noncomputable def alloc.io.read.Read.view {Self : Type _} (ReadInst : alloc.io.read.Read Self) :
     Self → List Std.U8 :=
   if h : ∃ view adv, alloc.io.read.Read.Law ReadInst view adv then Classical.choose h
   else fun _ => []
 
 open Classical in
 /-- The advance function of a lawful reader (chosen with `Read.view`). -/
-noncomputable def alloc.io.read.Read.adv {Self : Type} (ReadInst : alloc.io.read.Read Self) :
+noncomputable def alloc.io.read.Read.adv {Self : Type _} (ReadInst : alloc.io.read.Read Self) :
     Self → Nat → Self :=
   if h : ∃ view adv, alloc.io.read.Read.Law ReadInst view adv then
     Classical.choose (Classical.choose_spec h)
   else fun r _ => r
 
-theorem core.io.write.Write.Lawful.law' {Self : Type} {WriteInst : core.io.write.Write Self}
+theorem core.io.write.Write.Lawful.law' {Self : Type _} {WriteInst : core.io.write.Write Self}
     (h : core.io.write.Write.Lawful Self WriteInst) :
     core.io.write.Write.Law WriteInst (core.io.write.Write.view WriteInst) := by
   unfold core.io.write.Write.view
   rw [dif_pos h.law]
   exact Classical.choose_spec h.law
 
-theorem alloc.io.read.Read.Lawful.law' {Self : Type} {ReadInst : alloc.io.read.Read Self}
+theorem alloc.io.read.Read.Lawful.law' {Self : Type _} {ReadInst : alloc.io.read.Read Self}
     (h : alloc.io.read.Read.Lawful Self ReadInst) :
     alloc.io.read.Read.Law ReadInst (alloc.io.read.Read.view ReadInst)
       (alloc.io.read.Read.adv ReadInst) := by
@@ -686,14 +672,14 @@ theorem alloc.io.read.Read.Lawful.law' {Self : Type} {ReadInst : alloc.io.read.R
   rw [dif_pos h.law, dif_pos h.law]
   exact Classical.choose_spec (Classical.choose_spec h.law)
 
-theorem core.io.write.Write.view_le {Self : Type} (WriteInst : core.io.write.Write Self) (w : Self) :
+theorem core.io.write.Write.view_le {Self : Type _} (WriteInst : core.io.write.Write Self) (w : Self) :
     (core.io.write.Write.view WriteInst w).length ≤ Usize.max := by
   unfold core.io.write.Write.view
   split
   · rename_i h; exact (Classical.choose_spec h).view_le w
   · simp
 
-theorem alloc.io.read.Read.view_le {Self : Type} (ReadInst : alloc.io.read.Read Self) (r : Self) :
+theorem alloc.io.read.Read.view_le {Self : Type _} (ReadInst : alloc.io.read.Read Self) (r : Self) :
     (alloc.io.read.Read.view ReadInst r).length ≤ Usize.max := by
   unfold alloc.io.read.Read.view
   split
@@ -702,7 +688,7 @@ theorem alloc.io.read.Read.view_le {Self : Type} (ReadInst : alloc.io.read.Read 
 
 /-- [core::convert::{impl AsRef<U> for &T}] (`T: AsRef<U>`): aeneas represents `&T` as `T`. -/
 @[reducible]
-def core.Shared0T.Insts.CoreConvertAsRef {T U : Type} (AsRefInst : core.convert.AsRef T U) :
+def core.Shared0T.Insts.CoreConvertAsRef {T U : Type _} (AsRefInst : core.convert.AsRef T U) :
   core.convert.AsRef T U := AsRefInst
 
 end CoreModels

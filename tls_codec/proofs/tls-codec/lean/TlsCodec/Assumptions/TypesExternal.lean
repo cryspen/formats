@@ -2,8 +2,11 @@
 -- Seeded by hax from Extraction/TypesExternal_Template.lean: fill the holes.
 -- hax never modifies this file; after re-extraction, compare it against the
 -- regenerated template to see what changed.
-import Aeneas
-import CoreModels
+module
+
+public import Aeneas
+public import CoreModels
+@[expose] public section
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error

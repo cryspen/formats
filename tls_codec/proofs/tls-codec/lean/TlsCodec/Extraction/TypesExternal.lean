@@ -1,1 +1,3 @@
-import TlsCodec.Assumptions.TypesExternal
+module
+
+public import TlsCodec.Assumptions.TypesExternal

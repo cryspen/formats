@@ -1,16 +1,11 @@
 #!/bin/sh
-# WORKAROUND (tooling skew):
-# the installed cargo-hax (hax main 721d1a27) writes Lean-module wrappers
-# (`module` / `public import`), but the pinned aeneas library and TlsCodec are on
-# Lean v4.31 with non-module files, and a `module` cannot import a non-module.
-# Strip the module syntax from the three hax-written wrappers.
-# Run after every `cargo hax extract tls-codec`. Undo: delete this script once
-# the whole stack (TlsCodec, aeneas, Lean) moves to the module system.
 cd "$(dirname "$0")/.." || exit 1
-for f in TlsCodec/Extraction.lean TlsCodec/Extraction/FunsExternal.lean TlsCodec/Extraction/TypesExternal.lean; do
-  # `module` and the blank line hax puts after it, then `public import`
-  sed -i -e '/^module$/{N;d;}' -e 's/^public import /import /' "$f"
-done
+
+# The aeneas version string in `translation.json` depends on how the binary was
+# built (e.g. `38960402` / `3896040`): normalise it to the pinned revision of
+# `../../setup.sh`, so that re-extraction is byte-identical with any build.
+rev=$(sed -n 's/^AENEAS_REV=\([0-9a-f]\{8\}\).*/\1/p' ../../setup.sh)
+sed -i "s/^  \"aeneas_version\": \"[^\"]*\",$/  \"aeneas_version\": \"$rev\",/" translation.json
 
 # WORKAROUND (aeneas bug):
 # a generic trait method called at a type that contains a mutable borrow,

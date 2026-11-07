@@ -4,11 +4,13 @@
 -- from it, and that copy is yours to fill in. This file is regenerated on
 -- every extraction; diff it against your Assumptions file to see what the
 -- extraction now requires.
-import Aeneas
-import CoreModels
-import TlsCodec.Extraction.Types
-import TlsCodec.Assumptions.MissingCoreModels
-import TlsCodec.Assumptions.MissingThirdPartyModels
+module
+public import Aeneas
+public import CoreModels
+public import TlsCodec.Extraction.Types
+public import TlsCodec.Assumptions.MissingCoreModels
+public import TlsCodec.Assumptions.MissingThirdPartyModels
+@[expose] public section
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -19,6 +21,7 @@ set_option linter.unusedVariables false
 set_option linter.style.whitespace false
 set_option linter.style.setOption false
 set_option linter.style.longLine false
+set_option linter.internalConstructors false
 
 /- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/
 set_option maxHeartbeats 1000000
@@ -57,7 +60,7 @@ axiom append_bytes
     Source: 'tls_codec/src/spec.rs', lines 400:4-402:5
     Visibility: public -/
 axiom spec.io.sink
-  {W : Type} (coreiowriteWriteInst : core.io.write.Write W) :
+  {W : Type _} (coreiowriteWriteInst : core.io.write.Write W) :
   W → RustM (alloc.vec.Vec Std.U8)
 
 /-- [tls_codec::spec::io::is_concat]:
@@ -70,14 +73,14 @@ axiom spec.io.is_concat
     Source: 'tls_codec/src/spec.rs', lines 412:4-414:5
     Visibility: public -/
 axiom spec.io.advanced
-  {R : Type} (allocioreadReadInst : alloc.io.read.Read R) :
+  {R : Type _} (allocioreadReadInst : alloc.io.read.Read R) :
   R → R → RustM Bool
 
 /-- [tls_codec::spec::io::stream]:
     Source: 'tls_codec/src/spec.rs', lines 406:4-408:5
     Visibility: public -/
 axiom spec.io.stream
-  {R : Type} (allocioreadReadInst : alloc.io.read.Read R) :
+  {R : Type _} (allocioreadReadInst : alloc.io.read.Read R) :
   R → RustM (alloc.vec.Vec Std.U8)
 
 /-- [tls_codec::{impl core::fmt::Debug for tls_codec::U24}::fmt]:
@@ -93,14 +96,14 @@ axiom U24.Insts.CoreFmtDebug.fmt
     Source: 'tls_codec/src/primitives.rs', lines 441:4-443:5
     Visibility: public -/
 axiom Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) :
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) :
   Slice Std.U8 → RustM (core.result.Result (T × (Slice Std.U8)) Error)
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 [T]}::tls_serialize_bytes]:
     Source: 'tls_codec/src/quic_vec.rs', lines 189:4-223:5
     Visibility: public -/
 axiom Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
-  {T : Type} (SerializeBytesInst : SerializeBytes T) :
+  {T : Type _} (SerializeBytesInst : SerializeBytes T) :
   Slice T → RustM (core.result.Result (alloc.vec.Vec Std.U8) Error)
 
 /-- [tls_codec::quic_vec::write_hex]:
@@ -112,7 +115,7 @@ axiom quic_vec.write_hex
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLBytes}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13; this code is generated from a macro invocation at: 'tls_codec/src/quic_vec.rs', lines 364:0-364:31
     Visibility: public -/
 axiom quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
   :
@@ -121,55 +124,13 @@ axiom quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteVec}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13; this code is generated from a macro invocation at: 'tls_codec/src/quic_vec.rs', lines 471:0-471:33
     Visibility: public -/
 axiom quic_vec.VLByteVec.Insts.CoreFmtDebug.fmt
   :
   quic_vec.VLByteVec → core.fmt.Formatter → RustM ((core.result.Result Unit
     core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
-
-/-- [tls_codec::quic_vec::secret_bytes::{impl core::fmt::Debug for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
-    Visibility: public -/
-axiom quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.fmt
-  :
-  quic_vec.secret_bytes.SecretVLBytes → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
-
-/-- [tls_codec::quic_vec::secret_byte_vec::{impl core::fmt::Debug for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
-    Visibility: public -/
-axiom quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.fmt
-  :
-  quic_vec.secret_byte_vec.SecretVLByteVec → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
-
-/-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 916:8-918:9 -/
-axiom quic_vec.secret_bytes.SecretVLBytes.vec
-  : quic_vec.secret_bytes.SecretVLBytes → RustM (Slice Std.U8)
-
-/-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1002:8-1004:9 -/
-axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec
-  : quic_vec.secret_byte_vec.SecretVLByteVec → RustM (Slice Std.U8)
-
-/-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 920:8-922:9 -/
-axiom quic_vec.secret_bytes.SecretVLBytes.vec_mut
-  :
-  quic_vec.secret_bytes.SecretVLBytes → RustM ((alloc.vec.Vec Std.U8) ×
-    (alloc.vec.Vec Std.U8 → quic_vec.secret_bytes.SecretVLBytes))
-
-/-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1006:8-1008:9 -/
-axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec_mut
-  :
-  quic_vec.secret_byte_vec.SecretVLByteVec → RustM ((alloc.vec.Vec Std.U8) ×
-    (alloc.vec.Vec Std.U8 → quic_vec.secret_byte_vec.SecretVLByteVec))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteSlice<'_0>}::fmt]:
     Source: 'tls_codec/src/quic_vec.rs', lines 604:4-608:5
@@ -183,231 +144,145 @@ axiom quic_vec.VLByteSlice.Insts.CoreFmtDebug.fmt
 /-- [tls_codec::quic_vec::rw::checked_content_length]:
     Source: 'tls_codec/src/quic_vec.rs', lines 761:4-765:5 -/
 axiom quic_vec.rw.checked_content_length
-  {T : Type} (SizeInst : Size T) :
+  {T : Type _} (SizeInst : Size T) :
   Slice T → RustM (core.result.Result Std.Usize Error)
 
+/-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 916:8-918:9 -/
+axiom quic_vec.secret_bytes.SecretVLBytes.vec
+  : quic_vec.secret_bytes.SecretVLBytes → RustM (Slice Std.U8)
+
+/-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec_mut]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 920:8-922:9 -/
+axiom quic_vec.secret_bytes.SecretVLBytes.vec_mut
+  :
+  quic_vec.secret_bytes.SecretVLBytes → RustM ((alloc.vec.Vec Std.U8) ×
+    (alloc.vec.Vec Std.U8 → quic_vec.secret_bytes.SecretVLBytes))
+
+/-- [tls_codec::quic_vec::secret_bytes::{impl core::fmt::Debug for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::fmt]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13; this code is generated from a macro invocation at: 'tls_codec/src/quic_vec.rs', lines 925:4-925:41
+    Visibility: public -/
+axiom quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.fmt
+  :
+  quic_vec.secret_bytes.SecretVLBytes → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
+/-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 1002:8-1004:9 -/
+axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec
+  : quic_vec.secret_byte_vec.SecretVLByteVec → RustM (Slice Std.U8)
+
+/-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec_mut]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 1006:8-1008:9 -/
+axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec_mut
+  :
+  quic_vec.secret_byte_vec.SecretVLByteVec → RustM ((alloc.vec.Vec Std.U8) ×
+    (alloc.vec.Vec Std.U8 → quic_vec.secret_byte_vec.SecretVLByteVec))
+
+/-- [tls_codec::quic_vec::secret_byte_vec::{impl core::fmt::Debug for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::fmt]:
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13; this code is generated from a macro invocation at: 'tls_codec/src/quic_vec.rs', lines 1011:4-1011:43
+    Visibility: public -/
+axiom quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.fmt
+  :
+  quic_vec.secret_byte_vec.SecretVLByteVec → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
 /-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteVecU8}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1016:0-1016:39 -/
 axiom tls_vec.TlsByteVecU8.get_content_lengths
   :
   tls_vec.TlsByteVecU8 → RustM (core.result.Result (Std.Usize × Std.Usize)
     Error)
 
 /-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteVecU16}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1017:0-1017:41 -/
 axiom tls_vec.TlsByteVecU16.get_content_lengths
   :
   tls_vec.TlsByteVecU16 → RustM (core.result.Result (Std.Usize × Std.Usize)
     Error)
 
 /-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteVecU24}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1018:0-1018:41 -/
 axiom tls_vec.TlsByteVecU24.get_content_lengths
   :
   tls_vec.TlsByteVecU24 → RustM (core.result.Result (Std.Usize × Std.Usize)
     Error)
 
 /-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteVecU32}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1019:0-1019:41 -/
 axiom tls_vec.TlsByteVecU32.get_content_lengths
   :
   tls_vec.TlsByteVecU32 → RustM (core.result.Result (Std.Usize × Std.Usize)
     Error)
 
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU8<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsVecU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsVecU8 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU16<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsVecU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsVecU16 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU24<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsVecU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsVecU24 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU32<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsVecU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsVecU32 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU8<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.SecretTlsVecU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU8 T → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU16<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.SecretTlsVecU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU16 T → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU24<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.SecretTlsVecU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU24 T → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU32<T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.SecretTlsVecU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU32 T → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU8<'a, T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsSliceU8.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsSliceU8 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU16<'a, T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsSliceU16.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsSliceU16 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU24<'a, T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsSliceU24.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsSliceU24 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU32<'a, T>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsSliceU32.get_content_lengths
-  {T : Type} (SerializeInst : Serialize T) :
-  tls_vec.TlsSliceU32 T → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU8<'a>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsByteSliceU8.get_content_lengths
-  :
-  tls_vec.TlsByteSliceU8 → RustM (core.result.Result (Std.Usize × Std.Usize)
-    Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU16<'a>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsByteSliceU16.get_content_lengths
-  :
-  tls_vec.TlsByteSliceU16 → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU24<'a>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsByteSliceU24.get_content_lengths
-  :
-  tls_vec.TlsByteSliceU24 → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
-/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU32<'a>}::get_content_lengths]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13 -/
-axiom tls_vec.TlsByteSliceU32.get_content_lengths
-  :
-  tls_vec.TlsByteSliceU32 → RustM (core.result.Result (Std.Usize ×
-    Std.Usize) Error)
-
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsVecU8<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1011:0-1011:37
     Visibility: public -/
 axiom tls_vec.TlsVecU8.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU8 T → core.fmt.Formatter → RustM ((core.result.Result Unit
     core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
 
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU8<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1011:0-1011:37 -/
+axiom tls_vec.TlsVecU8.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsVecU8 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsVecU16<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1012:0-1012:39
     Visibility: public -/
 axiom tls_vec.TlsVecU16.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU16 T → core.fmt.Formatter → RustM ((core.result.Result
     Unit core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
 
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU16<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1012:0-1012:39 -/
+axiom tls_vec.TlsVecU16.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsVecU16 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsVecU24<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1013:0-1013:39
     Visibility: public -/
 axiom tls_vec.TlsVecU24.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU24 T → core.fmt.Formatter → RustM ((core.result.Result
     Unit core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
 
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU24<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1013:0-1013:39 -/
+axiom tls_vec.TlsVecU24.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsVecU24 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsVecU32<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1014:0-1014:39
     Visibility: public -/
 axiom tls_vec.TlsVecU32.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) :
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) :
   tls_vec.TlsVecU32 T → core.fmt.Formatter → RustM ((core.result.Result
     Unit core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
 
-/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU8<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
-    Visibility: public -/
-axiom tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU8 T → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
-
-/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU16<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
-    Visibility: public -/
-axiom tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU16 T → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
-
-/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU24<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
-    Visibility: public -/
-axiom tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU24 T → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
-
-/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU32<T>}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26
-    Visibility: public -/
-axiom tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.fmt
-  {T : Type} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T) :
-  tls_vec.SecretTlsVecU32 T → core.fmt.Formatter → RustM
-    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
-    (core.fmt.Formatter → core.fmt.Formatter))
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsVecU32<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1014:0-1014:39 -/
+axiom tls_vec.TlsVecU32.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsVecU32 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
 
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsByteVecU8}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33
+    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1016:0-1016:39
     Visibility: public -/
 axiom tls_vec.TlsByteVecU8.Insts.CoreFmtDebug.fmt
   :
@@ -416,7 +291,7 @@ axiom tls_vec.TlsByteVecU8.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsByteVecU16}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33
+    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1017:0-1017:41
     Visibility: public -/
 axiom tls_vec.TlsByteVecU16.Insts.CoreFmtDebug.fmt
   :
@@ -425,7 +300,7 @@ axiom tls_vec.TlsByteVecU16.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsByteVecU24}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33
+    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1018:0-1018:41
     Visibility: public -/
 axiom tls_vec.TlsByteVecU24.Insts.CoreFmtDebug.fmt
   :
@@ -434,13 +309,141 @@ axiom tls_vec.TlsByteVecU24.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::TlsByteVecU32}::fmt]:
-    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33
+    Source: 'tls_codec/src/tls_vec.rs', lines 765:28-765:33; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1019:0-1019:41
     Visibility: public -/
 axiom tls_vec.TlsByteVecU32.Insts.CoreFmtDebug.fmt
   :
   tls_vec.TlsByteVecU32 → core.fmt.Formatter → RustM ((core.result.Result
     Unit core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
+
+/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU8<T>}::fmt]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1022:0-1022:43
+    Visibility: public -/
+axiom tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU8 T → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU8<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1022:0-1022:43 -/
+axiom tls_vec.SecretTlsVecU8.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU8 T → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU16<T>}::fmt]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1023:0-1023:45
+    Visibility: public -/
+axiom tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU16 T → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU16<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1023:0-1023:45 -/
+axiom tls_vec.SecretTlsVecU16.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU16 T → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU24<T>}::fmt]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1024:0-1024:45
+    Visibility: public -/
+axiom tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU24 T → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU24<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1024:0-1024:45 -/
+axiom tls_vec.SecretTlsVecU24.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU24 T → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{impl core::fmt::Debug for tls_codec::tls_vec::SecretTlsVecU32<T>}::fmt]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 559:21-559:26; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1025:0-1025:45
+    Visibility: public -/
+axiom tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.fmt
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU32 T → core.fmt.Formatter → RustM
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter ×
+    (core.fmt.Formatter → core.fmt.Formatter))
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::SecretTlsVecU32<T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1025:0-1025:45 -/
+axiom tls_vec.SecretTlsVecU32.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) (zeroizeZeroizeInst :
+  zeroize.Zeroize T) :
+  tls_vec.SecretTlsVecU32 T → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU8<'a>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1077:0-1077:43 -/
+axiom tls_vec.TlsByteSliceU8.get_content_lengths
+  :
+  tls_vec.TlsByteSliceU8 → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU16<'a>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1078:0-1078:45 -/
+axiom tls_vec.TlsByteSliceU16.get_content_lengths
+  :
+  tls_vec.TlsByteSliceU16 → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU24<'a>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1079:0-1079:45 -/
+axiom tls_vec.TlsByteSliceU24.get_content_lengths
+  :
+  tls_vec.TlsByteSliceU24 → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsByteSliceU32<'a>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1080:0-1080:45 -/
+axiom tls_vec.TlsByteSliceU32.get_content_lengths
+  :
+  tls_vec.TlsByteSliceU32 → RustM (core.result.Result (Std.Usize ×
+    Std.Usize) Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU8<'a, T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1130:0-1130:34 -/
+axiom tls_vec.TlsSliceU8.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsSliceU8 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU16<'a, T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1131:0-1131:36 -/
+axiom tls_vec.TlsSliceU16.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsSliceU16 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU24<'a, T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1132:0-1132:36 -/
+axiom tls_vec.TlsSliceU24.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsSliceU24 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
+
+/-- [tls_codec::tls_vec::{tls_codec::tls_vec::TlsSliceU32<'a, T>}::get_content_lengths]:
+    Source: 'tls_codec/src/tls_vec.rs', lines 288:12-305:13; this code is generated from a macro invocation at: 'tls_codec/src/tls_vec.rs', lines 1133:0-1133:36 -/
+axiom tls_vec.TlsSliceU32.get_content_lengths
+  {T : Type _} (SerializeInst : Serialize T) :
+  tls_vec.TlsSliceU32 T → RustM (core.result.Result (Std.Usize × Std.Usize)
+    Error)
 
 /-- [tls_codec::varint::{impl core::fmt::Debug for tls_codec::varint::TlsVarInt}::fmt]:
     Source: 'tls_codec/src/varint.rs', lines 6:9-6:14

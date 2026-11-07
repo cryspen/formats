@@ -3,7 +3,10 @@ append helper with its ASSUMED bound). Crate-side:
 they mention crate types, so they cannot be in the `-extra-includes` modules (those are
 imported by `Types.lean`). Imported by `FunsExternal.lean`, hence visible from `Funs.lean`
 on. Every proof using one shows it in `#print axioms`. -/
-import TlsCodec.Extraction.Types
+module
+
+public import TlsCodec.Extraction.Types
+@[expose] public section
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM

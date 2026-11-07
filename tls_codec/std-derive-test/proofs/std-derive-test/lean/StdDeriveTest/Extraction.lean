@@ -1,3 +1,5 @@
 -- Imports the extraction modules. Rewritten by hax on every extraction.
-import StdDeriveTest.Extraction.Types
-import StdDeriveTest.Extraction.Funs
+module
+
+public import StdDeriveTest.Extraction.Types
+public import StdDeriveTest.Extraction.Funs

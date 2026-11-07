@@ -1,1 +1,3 @@
-import TlsCodec.Assumptions.FunsExternal
+module
+
+public import TlsCodec.Assumptions.FunsExternal

@@ -56,6 +56,7 @@ import Aeneas
 import Hax
 import TlsCodec.Assumptions.MissingCoreModels
 import TlsCodec.Assumptions.FmtAssumptions
+import TlsCodec.Tools.MvcgenUniv
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -63,6 +64,16 @@ open Std.Do
 
 set_option mvcgen.warning false
 set_option linter.unusedVariables false
+
+/- hax's `Seq T` (= extracted `alloc.vec.Vec T`, and `slice::Iter T` over it) is a plain `def` for `Slice T`, which is now a
+    structure: `Slice.val (v : Vec T)`, or an `ok (s : Slice T)` bound at type `Vec T`, are not
+    type-correct at `instances` transparency, so `simp` fails ("not type-correct under the
+    `implicit` transparency") and `mvcgen` leaves `wp⟦ok _⟧` VCs. Make it reducible (proofs only:
+    this module is not imported by the generated files). -/
+set_option allowUnsafeReducibility true in
+attribute [reducible] rust_primitives.sequence.Seq core.slice.iter.Iter
+
+
 
 /-! ## 1. `format!`: proved, from one ASSUMED `Display` axiom (`FmtAssumptions.lean`)
 
@@ -89,7 +100,7 @@ theorem alloc.fmt.format.no_fail_spec (args : core.fmt.Arguments) :
 /-- `new_display` succeeds when the instance's `fmt` returns `Ok`. Untagged: the tagged
     per-instance versions below discharge the hypothesis. -/
 theorem core.fmt.rt.Argument.new_display_spec
-    {T : Type} (DisplayInst : core.fmt.Display T) (x : T)
+    {T : Type _} (DisplayInst : core.fmt.Display T) (x : T)
     (h : ⦃ ⌜ True ⌝ ⦄ DisplayInst.fmt x () ⦃ ⇓ p => ⌜ p.1 = .Ok () ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.fmt.rt.Argument.new_display DisplayInst x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold core.fmt.rt.Argument.new_display
@@ -123,32 +134,34 @@ theorem core.fmt.rt.Argument.new_display_fromUtf8Error_spec (x : alloc.string.Fr
 /-! ### `alloc::vec::Vec` -/
 
 @[spec]
-theorem alloc.vec.Vec.len_spec {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.len_spec {T : Type _} (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.len v ⦃ ⇓ r => ⌜ r = Aeneas.Std.Slice.len v ⌝ ⦄ := by
   mvcgen [alloc.vec.Vec.len]
 
 @[spec]
-theorem alloc.vec.Vec.is_empty_spec {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.is_empty_spec {T : Type _} (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.is_empty v
     ⦃ ⇓ r => ⌜ r = decide (Aeneas.Std.Slice.len v = 0#usize) ⌝ ⦄ := by
   unfold alloc.vec.Vec.is_empty; mvcgen [rust_primitives.sequence.seq_len]
 
 @[spec]
-theorem alloc.vec.Vec.new_spec (T : Type) :
+theorem alloc.vec.Vec.new_spec (T : Type _) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.new T ⦃ ⇓ r => ⌜ (r : Slice T) = Aeneas.Std.Slice.new T ⌝ ⦄ := by
   unfold alloc.vec.Vec.new; mvcgen [rust_primitives.sequence.seq_empty]
 
 @[spec]
-theorem alloc.vec.Vec.push_spec {T : Type} (v : alloc.vec.Vec T) (x : T)
+theorem alloc.vec.Vec.push_spec {T : Type _} (v : alloc.vec.Vec T) (x : T)
     (h : (v : Slice T).val.length < Usize.max) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.push v x
     ⦃ ⇓ r => ⌜ (r : Slice T).val = (v : Slice T).val ++ [x] ⌝ ⦄ := by
   unfold alloc.vec.Vec.push rust_primitives.sequence.seq_push
   have : (v.val ++ [x]).length ≤ Usize.max := by simp; omega
   mvcgen [this]
+  simp only [Slice.from_val]
+  rfl
 
 @[spec]
-theorem alloc.vec.Vec.pop_spec {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.pop_spec {T : Type _} (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.pop v
     ⦃ ⇓ r => ⌜ r.1 = (v : Slice T).val.getLast? ∧
                (r.2 : Slice T).val = (v : Slice T).val.dropLast ⌝ ⦄ := by
@@ -160,7 +173,7 @@ theorem alloc.vec.Vec.pop_spec {T : Type} (v : alloc.vec.Vec T) :
     have hr' : r.val = v.val.length - 1 := by scalar_tac
     refine ⟨?_, ?_⟩
     · simp [List.getLast?_eq_getElem?, hr']
-    · rw [List.dropLast_eq_take, hr']
+    · rw [Slice.from_val, List.dropLast_eq_take, hr']
       simp
       omega
   · scalar_tac
@@ -172,7 +185,7 @@ theorem alloc.vec.Vec.pop_spec {T : Type} (v : alloc.vec.Vec T) :
     simp [this]
 
 @[spec]
-theorem alloc.vec.Vec.remove_spec {T : Type} (v : alloc.vec.Vec T) (i : Std.Usize)
+theorem alloc.vec.Vec.remove_spec {T : Type _} (v : alloc.vec.Vec T) (i : Std.Usize)
     (h : i.val < (v : Slice T).val.length) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.remove v i
     ⦃ ⇓ r => ⌜ r.1 = (v : Slice T).val[i.val] ∧
@@ -182,12 +195,12 @@ theorem alloc.vec.Vec.remove_spec {T : Type} (v : alloc.vec.Vec T) (i : Std.Usiz
   simp [List.eraseIdx_eq_take_drop_succ]
 
 @[spec]
-theorem alloc.vec.Vec.as_slice_spec {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.as_slice_spec {T : Type _} (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.as_slice v ⦃ ⇓ r => ⌜ r = (v : Slice T) ⌝ ⦄ := by
   unfold alloc.vec.Vec.as_slice; mvcgen [rust_primitives.sequence.seq_to_slice]
 
 @[spec]
-theorem alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref_spec {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref_spec {T : Type _} (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref v
     ⦃ ⇓ r => ⌜ r = (v : Slice T) ⌝ ⦄ := by
   unfold alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref
@@ -197,7 +210,7 @@ theorem alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref_spec {T : Type} (v : al
     (`out.extend(slice)`): appends the slice, given room for it. -/
 @[spec]
 theorem alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend_slice_spec
-    {T : Type} (CopyInst : core.marker.Copy T) (v : alloc.vec.Vec T) (s : Slice T)
+    {T : Type _} (CopyInst : core.marker.Copy T) (v : alloc.vec.Vec T) (s : Slice T)
     (h : (v : Slice T).val.length + s.val.length ≤ Usize.max) :
     ⦃ ⌜ True ⌝ ⦄
     alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend CopyInst
@@ -205,7 +218,7 @@ theorem alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend_slice_spe
     ⦃ ⇓ r => ⌜ (r : Slice T).val = (v : Slice T).val ++ s.val ⌝ ⦄ := by
   unfold alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend
   simp only [core.SharedASlice.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter,
-    core.slice.Slice.iter, rust_primitives.sequence.seq_from_slice]
+    core.slice.Slice.iter, rust_primitives.sequence.seq_from_slice, Aeneas.Std.bind_ok]
   apply Aeneas.Std.WP.spec_to_mvcgen
   apply Aeneas.Std.loop.spec_decr_nat
     (fun p : core.slice.iter.Iter T × alloc.vec.Vec T => (p.1 : Slice T).val.length)
@@ -230,32 +243,92 @@ theorem alloc.vec.Vec.Insts.CoreIterTraitsCollectExtendSharedAT.extend_slice_spe
 
 /-- `Default` for `Vec` (method of `alloc.vec.Vec.Insts.CoreDefaultDefault`, used by `mem::take`). -/
 @[spec]
-theorem alloc.vec.Vec.Insts.CoreDefaultDefault.default_spec (T : Type) :
+theorem alloc.vec.Vec.Insts.CoreDefaultDefault.default_spec (T : Type _) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreDefaultDefault.default T
     ⦃ ⇓ r => ⌜ (r : Slice T) = Aeneas.Std.Slice.new T ⌝ ⦄ := by
   unfold alloc.vec.Vec.Insts.CoreDefaultDefault.default; mvcgen
 
+/-! ### `[x; N]` (`core::array::repeat`, `u8`) -/
+
+/-- `vec![x; n]`-style `seq_create` for `u8` (`clone` is the identity). -/
+theorem rust_primitives.sequence.seq_create_U8 (x : Std.U8) (n : Std.Usize) :
+    rust_primitives.sequence.seq_create core.U8.Insts.CoreCloneClone x n =
+      ok (Slice.from (List.replicate n.val x) (by simp; scalar_tac)) := by
+  have hcl : ∀ l : List Std.U8, l.mapM core.U8.Insts.CoreCloneClone.clone = ok l := by
+    intro l; induction l with
+    | nil => rfl
+    | cons y ys ih => simp [List.mapM_cons, ih, core.U8.Insts.CoreCloneClone.clone, Functor.map]
+  unfold rust_primitives.sequence.seq_create
+  split
+  · rename_i h; congr 1; apply Slice.ext; simp [Slice.new_val, h]
+  · rename_i h
+    split
+    · rename_i cl hc
+      rw [hcl, RustM.match.ok] at hc
+      cases hc
+      rw [dif_pos (by simp; scalar_tac)]
+      congr 1; apply Slice.ext
+      simp only [Slice.from_val]
+      rw [← List.replicate_succ']; congr 1; omega
+    · rename_i hc; rw [hcl, RustM.match.ok] at hc; cases hc
+    · rename_i hc; rw [hcl, RustM.match.ok] at hc; cases hc
+
+/-- `array_from_fn` with `repeat`'s closure (pop the head of a `[x; m]` sequence) `n ≤ m` times. -/
+theorem rust_primitives.slice.array_from_fn_go_repeat {N : Std.Usize} (x : Std.U8)
+    (c : core.array.repeat.closure Std.U8 N) (m : Nat) (hc : c.val = List.replicate m x) :
+    ∀ n, n ≤ m → ∃ c' : core.array.repeat.closure Std.U8 N,
+      rust_primitives.slice.array_from_fn_go
+        (core.array.repeat.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT N
+          core.U8.Insts.CoreCloneClone) c n = ok (List.replicate n x, c') ∧
+      c'.val = List.replicate (m - n) x := by
+  intro n
+  induction n with
+  | zero => intro _; exact ⟨c, rfl, by simp [hc]⟩
+  | succ n ih =>
+    intro hn
+    obtain ⟨c', hgo, hc'⟩ := ih (by omega)
+    have hlen : 0 < c'.val.length := by simp [hc']; omega
+    refine ⟨Slice.from (c'.val.drop 1) (by have := c'.property; simp; omega), ?_, ?_⟩
+    · simp only [rust_primitives.slice.array_from_fn_go, hgo, Aeneas.Std.bind_ok]
+      simp only [core.array.repeat.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT,
+        core.array.repeat.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT.call_mut,
+        rust_primitives.sequence.seq_remove]
+      rw [dif_pos (by simpa using hlen)]
+      simp [hc', List.replicate_succ']
+    · simp [hc']; omega
+
+/-- `[x; N]` for `u8`. -/
+@[spec]
+theorem core.array.repeat_U8 (N : Std.Usize) (x : Std.U8) :
+    core.array.repeat N core.U8.Insts.CoreCloneClone x = ok (Aeneas.Std.Array.repeat N x) := by
+  unfold core.array.repeat rust_primitives.slice.array_from_fn
+  rw [rust_primitives.sequence.seq_create_U8, Aeneas.Std.bind_ok]
+  obtain ⟨c', hgo, -⟩ := rust_primitives.slice.array_from_fn_go_repeat (N := N) x
+    (Slice.from (List.replicate N.val x) (by simp; scalar_tac)) N.val (Slice.from_val _ _) N.val le_rfl
+  rw [hgo, Aeneas.Std.bind_ok, dif_pos (by simp)]
+  congr 1
+
 /-! ### `core::slice`, `str`, `AsRef` -/
 
 @[spec]
-theorem core.slice.Slice.len_spec {T : Type} (s : Slice T) :
+theorem core.slice.Slice.len_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.Slice.len s ⦃ ⇓ r => ⌜ r = Aeneas.Std.Slice.len s ⌝ ⦄ := by
   unfold core.slice.Slice.len; mvcgen
 
 @[spec]
-theorem core.slice.Slice.is_empty_spec {T : Type} (s : Slice T) :
+theorem core.slice.Slice.is_empty_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.Slice.is_empty s
     ⦃ ⇓ r => ⌜ r = decide (Aeneas.Std.Slice.len s = 0#usize) ⌝ ⦄ := by
   unfold core.slice.Slice.is_empty; mvcgen
   rename_i h; subst h; rfl
 
 @[spec]
-theorem core.slice.Slice.iter_spec {T : Type} (s : Slice T) :
+theorem core.slice.Slice.iter_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.Slice.iter s ⦃ ⇓ r => ⌜ (r : Slice T) = s ⌝ ⦄ := by
   unfold core.slice.Slice.iter rust_primitives.sequence.seq_from_slice; mvcgen
 
 @[spec]
-theorem core.Slice.Insts.CoreConvertAsRefSlice.as_ref_spec {T : Type} (s : Slice T) :
+theorem core.Slice.Insts.CoreConvertAsRefSlice.as_ref_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.Slice.Insts.CoreConvertAsRefSlice.as_ref s ⦃ ⇓ r => ⌜ r = s ⌝ ⦄ := by
   unfold core.Slice.Insts.CoreConvertAsRefSlice.as_ref; mvcgen
 
@@ -265,19 +338,19 @@ theorem core.str.Str.as_bytes_spec (s : Str) :
   unfold core.str.Str.as_bytes; mvcgen
 
 /-- Hand-filled def in `Assumptions/FunsExternal.lean`. -/
-theorem alloc.Box.Insts.CoreConvertAsRef.as_ref_spec {T : Type} (x : T) :
+theorem alloc.Box.Insts.CoreConvertAsRef.as_ref_spec {T : Type _} (x : T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.Box.Insts.CoreConvertAsRef.as_ref x ⦃ ⇓ r => ⌜ r = x ⌝ ⦄ := by
   unfold alloc.Box.Insts.CoreConvertAsRef.as_ref; mvcgen
 
 /-- `&[T]`'s `AsRef<[T]>` (the identity, through the `&T` blanket impl) is lawful. -/
-theorem core.Shared0T.Insts.CoreConvertAsRef.slice_lawful {T : Type} :
+theorem core.Shared0T.Insts.CoreConvertAsRef.slice_lawful {T : Type _} :
     core.convert.AsRef.Lawful (Slice T) (Slice T)
       (core.Shared0T.Insts.CoreConvertAsRef (core.Slice.Insts.CoreConvertAsRefSlice T)) :=
   ⟨fun x => by
     mvcgen [core.Shared0T.Insts.CoreConvertAsRef, core.Slice.Insts.CoreConvertAsRefSlice.as_ref]⟩
 
 /-- `slice::Iter::any` returns, for a closure that always returns. -/
-theorem core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any_spec {T F : Type}
+theorem core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any_spec {T F : Type _}
     (FI : core.ops.function.FnMut F T Bool) (h : ∀ f x, ∃ b f', FI.call_mut f x = ok (b, f'))
     (it : core.slice.iter.Iter T) (f : F) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any FI it f
@@ -312,7 +385,7 @@ BEFORE the exact specs so that, when both are `@[spec]`, `mvcgen` prefers the ex
 
 @[spec]
 theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_ok_spec
-    {T : Type} [Inhabited T] (r : core.ops.range.RangeTo Std.Usize) (s : Slice T) :
+    {T : Type _} [Inhabited T] (r : core.ops.range.RangeTo Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ ∀ t, o = some t → r.end.val ≤ s.val.length ∧ t.val.length = r.end.val ⌝ ⦄ := by
   mvcgen [core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get,
@@ -323,7 +396,7 @@ theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get
 
 @[spec]
 theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_some_spec
-    {T : Type} [Inhabited T] (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T) :
+    {T : Type _} [Inhabited T] (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ r.start.val ≤ s.val.length →
         ∃ t, o = some t ∧ t.val.length = s.val.length - r.start.val ⌝ ⦄ := by
@@ -377,7 +450,7 @@ theorem core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_fro
       simp only [BitVec.toNat_ofNat]
       exact Nat.mod_eq_of_lt (by omega)
     rw [Slice.getElem?_Usize_eq, hv, List.getElem?_eq_getElem hi]
-    rfl
+    simp
   unfold core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
   mvcgen [rust_primitives.slice.slice_length]
   · rename_i h k hk
@@ -414,7 +487,7 @@ theorem core.fmt.Arguments.new_spec {N M : Std.Usize} (t : Aeneas.Std.Array Std.
   unfold core.fmt.Arguments.new; mvcgen
 
 @[spec]
-theorem core.hint.must_use_spec {T : Type} (x : T) :
+theorem core.hint.must_use_spec {T : Type _} (x : T) :
     ⦃ ⌜ True ⌝ ⦄ core.hint.must_use x ⦃ ⇓ r => ⌜ r = x ⌝ ⦄ := by
   unfold core.hint.must_use; mvcgen
 
@@ -541,11 +614,11 @@ theorem core.U64.Insts.CoreCmpPartialEqU64.eq_spec (x y : Std.U64) :
 /-! ### `Option` / `Result` (non-generic in the instance) -/
 
 @[spec]
-theorem core.option.Option.is_some_spec {T : Type} (o : core.option.Option T) :
+theorem core.option.Option.is_some_spec {T : Type _} (o : core.option.Option T) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.is_some o ⦃ ⇓ r => ⌜ r = o.isSome ⌝ ⦄ := by
   unfold core.option.Option.is_some; cases o <;> mvcgen
 
-theorem core.option.Option.ok_or_spec {T E : Type} (o : core.option.Option T) (err : E) :
+theorem core.option.Option.ok_or_spec {T E : Type _} (o : core.option.Option T) (err : E) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.ok_or o err
     ⦃ ⇓ r => ⌜ r = match o with
                   | some v => core.result.Result.Ok v
@@ -553,7 +626,7 @@ theorem core.option.Option.ok_or_spec {T E : Type} (o : core.option.Option T) (e
   unfold core.option.Option.ok_or; cases o <;> mvcgen
 
 @[spec]
-theorem core.result.Result.unwrap_or_spec {T E : Type} (x : core.result.Result T E) (d : T) :
+theorem core.result.Result.unwrap_or_spec {T E : Type _} (x : core.result.Result T E) (d : T) :
     ⦃ ⌜ True ⌝ ⦄ core.result.Result.unwrap_or x d
     ⦃ ⇓ r => ⌜ r = match x with
                   | .Ok t => t
@@ -561,7 +634,7 @@ theorem core.result.Result.unwrap_or_spec {T E : Type} (x : core.result.Result T
   unfold core.result.Result.unwrap_or; cases x <;> mvcgen
 
 @[spec]
-theorem core.result.Result.is_err_spec {T E : Type} (x : core.result.Result T E) :
+theorem core.result.Result.is_err_spec {T E : Type _} (x : core.result.Result T E) :
     ⦃ ⌜ True ⌝ ⦄ core.result.Result.is_err x
     ⦃ ⇓ r => ⌜ r = match x with
                   | .Ok _ => false
@@ -570,7 +643,7 @@ theorem core.result.Result.is_err_spec {T E : Type} (x : core.result.Result T E)
 
 /-- `?` on a `Result` (the `Try::branch` abbrev of CoreModels unfolds to this). -/
 @[spec]
-theorem core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch_spec {T E : Type}
+theorem core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch_spec {T E : Type _}
     (x : core.result.Result T E) :
     ⦃ ⌜ True ⌝ ⦄ core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch x
     ⦃ ⇓ r => ⌜ r = match x with
@@ -584,14 +657,14 @@ The callee's behaviour is a hypothesis. With a schematic `Q`, `mvcgen` turns it 
 new verification condition about the instance method. -/
 
 @[spec]
-theorem core.convert.Into.Blanket.into_spec {T U : Type} (FromInst : core.convert.From U T)
+theorem core.convert.Into.Blanket.into_spec {T U : Type _} (FromInst : core.convert.From U T)
     (x : T) {Q : PostCond U RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ FromInst.from x ⦃ Q ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.convert.Into.Blanket.into FromInst x ⦃ Q ⦄ := by
   unfold core.convert.Into.Blanket.into; exact h
 
 @[spec]
-theorem core.slice.Slice.get_spec {T I O : Type}
+theorem core.slice.Slice.get_spec {T I O : Type _}
     (inst : core.slice.index.SliceIndex I (Slice T) O) (s : Slice T) (i : I)
     {Q : PostCond (core.option.Option O) RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ inst.get i s ⦃ Q ⦄) :
@@ -600,7 +673,7 @@ theorem core.slice.Slice.get_spec {T I O : Type}
 
 /-- `s[i]`: succeeds when `get` returns `Some`. -/
 @[spec]
-theorem core.Slice.Insts.CoreOpsIndexIndex.index_spec {T I O : Type}
+theorem core.Slice.Insts.CoreOpsIndexIndex.index_spec {T I O : Type _}
     (inst : core.slice.index.SliceIndex I (Slice T) O) (s : Slice T) (i : I)
     {Q : PostCond O RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ inst.get i s ⦃ ⇓ o => ⌜ ∃ r, o = some r ∧ Aeneas.Std.PostCond.ok Q r ⌝ ⦄) :
@@ -612,7 +685,7 @@ theorem core.Slice.Insts.CoreOpsIndexIndex.index_spec {T I O : Type}
 
 /-- `v[i]` on a `Vec`: indexes the underlying slice. -/
 @[spec]
-theorem alloc.vec.Vec.Insts.CoreOpsIndexIndex.index_spec {T I O : Type}
+theorem alloc.vec.Vec.Insts.CoreOpsIndexIndex.index_spec {T I O : Type _}
     (inst : core.slice.index.SliceIndex I (Slice T) O) (v : alloc.vec.Vec T) (i : I)
     {Q : PostCond O RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ inst.get i v ⦃ ⇓ o => ⌜ ∃ r, o = some r ∧ Aeneas.Std.PostCond.ok Q r ⌝ ⦄) :
@@ -624,7 +697,7 @@ theorem alloc.vec.Vec.Insts.CoreOpsIndexIndex.index_spec {T I O : Type}
 
 /-- `&mut v[i]` on a `Vec`: the slice's `index_mut`, the write-back is unchanged. -/
 @[spec]
-theorem alloc.vec.Vec.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type}
+theorem alloc.vec.Vec.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type _}
     (inst : core.slice.index.SliceIndex I (Slice T) O) (v : alloc.vec.Vec T) (i : I)
     {Q : PostCond (O × (O → alloc.vec.Vec T)) RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ core.Slice.Insts.CoreOpsIndexIndexMut.index_mut inst v i ⦃ Q ⦄) :
@@ -634,7 +707,7 @@ theorem alloc.vec.Vec.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type}
 
 /-- Reached through `Vec`'s `index_mut` only. The model uses `get_unchecked_mut`. -/
 @[spec]
-theorem core.Slice.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type}
+theorem core.Slice.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type _}
     (inst : core.slice.index.SliceIndex I (Slice T) O) (s : Slice T) (i : I)
     {Q : PostCond (O × (O → Slice T)) RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ inst.get_unchecked_mut i s ⦃ Q ⦄) :
@@ -643,7 +716,7 @@ theorem core.Slice.Insts.CoreOpsIndexIndexMut.index_mut_spec {T I O : Type}
 
 /-- `a[i]` on an array: the slice `Index` instance on `a` as a slice. -/
 @[spec]
-theorem core.Array.Insts.CoreOpsIndexIndex.index_spec {T I O : Type} {N : Std.Usize}
+theorem core.Array.Insts.CoreOpsIndexIndex.index_spec {T I O : Type _} {N : Std.Usize}
     (inst : core.ops.index.Index (Slice T) I O) (a : Aeneas.Std.Array T N) (i : I)
     {Q : PostCond O RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ inst.index (Aeneas.Std.Array.to_slice a) i ⦃ Q ⦄) :
@@ -653,7 +726,7 @@ theorem core.Array.Insts.CoreOpsIndexIndex.index_spec {T I O : Type} {N : Std.Us
   mvcgen [h]
 
 /-- `slice.to_vec()`: a copy, when `clone` is the identity (e.g. `Copy` types). -/
-theorem alloc.slice.Slice.to_vec_spec {T : Type} (CloneInst : core.clone.Clone T)
+theorem alloc.slice.Slice.to_vec_spec {T : Type _} (CloneInst : core.clone.Clone T)
     (s : Slice T)
     (hclone : ∀ x, ⦃ ⌜ True ⌝ ⦄ CloneInst.clone x ⦃ ⇓ y => ⌜ y = x ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ alloc.slice.Slice.to_vec CloneInst s ⦃ ⇓ r => ⌜ (r : Slice T) = s ⌝ ⦄ := by
@@ -667,16 +740,16 @@ theorem alloc.slice.Slice.to_vec_spec {T : Type} (CloneInst : core.clone.Clone T
     intro l
     induction l with
     | nil => rfl
-    | cons x xs ih => simp [List.mapM_cons, clone_eq, ih]; rfl
+    | cons x xs ih => simp [List.mapM_cons, clone_eq, ih, Functor.map]
   have hlen : s.val.length ≤ Usize.max := s.property
   unfold alloc.slice.Slice.to_vec alloc.slice.Dummy.to_vec
   simp [rust_primitives.sequence.seq_empty, rust_primitives.sequence.seq_extend, alloc.vec.from_seq,
-    Slice.new, mapM_eq, hlen]
+    Slice.new_val, mapM_eq, hlen]
   mvcgen
 
 /-- Hand-filled def in `Assumptions/FunsExternal.lean`. -/
 @[spec]
-theorem core.mem.take_spec {T : Type} (DefaultInst : core.default.Default T) (dest : T)
+theorem core.mem.take_spec {T : Type _} (DefaultInst : core.default.Default T) (dest : T)
     {Q : PostCond (T × T) RustM.postShape}
     (h : ⦃ ⌜ True ⌝ ⦄ DefaultInst.default ⦃ ⇓ d => ⌜ Aeneas.Std.PostCond.ok Q (dest, d) ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.mem.take DefaultInst dest ⦃ Q ⦄ := by
@@ -687,7 +760,7 @@ theorem core.mem.take_spec {T : Type} (DefaultInst : core.default.Default T) (de
 Rust, `Infallible` is modelled as `Unit`) panics, so it is excluded by hypothesis. -/
 @[spec]
 theorem core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual_spec
-    (T : Type) {E F : Type} (FromInst : core.convert.From F E)
+    (T : Type _) {E F : Type _} (FromInst : core.convert.From F E)
     (res : core.result.Result core.convert.Infallible E)
     {Q : PostCond (core.result.Result T F) RustM.postShape}
     (h : ∃ e, res = .Err e ∧ ⦃ ⌜ True ⌝ ⦄ FromInst.from e ⦃ ⇓ f => ⌜ Aeneas.Std.PostCond.ok Q (.Err f) ⌝ ⦄) :
@@ -698,7 +771,7 @@ theorem core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.f
   unfold core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
   mvcgen [h]
 
-theorem core.result.Result.is_ok_and_spec {T E F : Type}
+theorem core.result.Result.is_ok_and_spec {T E F : Type _}
     (FnInst : core.ops.function.FnOnce F T Bool) (x : core.result.Result T E) (f : F)
     {Q : PostCond Bool RustM.postShape}
     (hok : ∀ t, x = .Ok t → ⦃ ⌜ True ⌝ ⦄ FnInst.call_once f t ⦃ Q ⦄)
@@ -709,7 +782,7 @@ theorem core.result.Result.is_ok_and_spec {T E F : Type}
   | Ok t => have h := hok t rfl; mvcgen [h]
   | Err e => have h := herr e rfl; mvcgen
 
-theorem core.result.Result.map_spec {T E U F : Type}
+theorem core.result.Result.map_spec {T E U F : Type _}
     (FnInst : core.ops.function.FnOnce F T U) (x : core.result.Result T E) (op : F)
     {Q : PostCond (core.result.Result U E) RustM.postShape}
     (hok : ∀ t, x = .Ok t → ⦃ ⌜ True ⌝ ⦄ FnInst.call_once op t ⦃ ⇓ u => ⌜ Aeneas.Std.PostCond.ok Q (.Ok u) ⌝ ⦄)
@@ -720,7 +793,7 @@ theorem core.result.Result.map_spec {T E U F : Type}
   | Ok t => have h := hok t rfl; mvcgen [h]
   | Err e => have h := herr e rfl; mvcgen
 
-theorem core.result.Result.map_err_spec {T E F O : Type}
+theorem core.result.Result.map_err_spec {T E F O : Type _}
     (FnInst : core.ops.function.FnOnce O E F) (x : core.result.Result T E) (op : O)
     {Q : PostCond (core.result.Result T F) RustM.postShape}
     (hok : ∀ t, x = .Ok t → Aeneas.Std.PostCond.ok Q (.Ok t))
@@ -734,7 +807,7 @@ theorem core.result.Result.map_err_spec {T E F O : Type}
 /-! Equality through `PartialEq` instances. Stated for instances that decide `=`, which
 covers the concrete instances the obligations pass (integers, `()`, pairs, derived). -/
 
-theorem core.option.Option.Insts.CoreCmpPartialEqOption.eq_spec {T : Type} [DecidableEq T]
+theorem core.option.Option.Insts.CoreCmpPartialEqOption.eq_spec {T : Type _} [DecidableEq T]
     (inst : core.cmp.PartialEq T T) (a b : core.option.Option T)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.CoreCmpPartialEqOption.eq inst a b
@@ -746,7 +819,7 @@ theorem core.option.Option.Insts.CoreCmpPartialEqOption.eq_spec {T : Type} [Deci
     | none => mvcgen
     | some y => have h := heq x y; mvcgen [h]; intro h; subst h; simp
 
-theorem core.result.Result.Insts.CoreCmpPartialEqResult.eq_spec {T E : Type}
+theorem core.result.Result.Insts.CoreCmpPartialEqResult.eq_spec {T E : Type _}
     [DecidableEq T] [DecidableEq E]
     (instT : core.cmp.PartialEq T T) (instE : core.cmp.PartialEq E E)
     (a b : core.result.Result T E)
@@ -765,7 +838,7 @@ theorem core.result.Result.Insts.CoreCmpPartialEqResult.eq_spec {T E : Type}
 
 /-- `@[reducible]` in CoreModels, but its body is a loop without a spec. -/
 @[spec]
-theorem core.Array.Insts.CoreCmpPartialEqArray.eq_spec {T : Type} {N : Std.Usize}
+theorem core.Array.Insts.CoreCmpPartialEqArray.eq_spec {T : Type _} {N : Std.Usize}
     [DecidableEq T] (inst : core.cmp.PartialEq T T) (a b : Aeneas.Std.Array T N)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.Array.Insts.CoreCmpPartialEqArray.eq inst a b
@@ -836,7 +909,7 @@ theorem core.Array.Insts.CoreCmpPartialEqArray.eq_spec {T : Type} {N : Std.Usize
     (fun i : Std.Usize => i.val ≤ N.val ∧ ∀ j, j < i.val → a.val[j]? = b.val[j]?)
     (fun y => y = decide (a.val = b.val))
   · intro i hi
-    obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hbody i hi)
+    obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hbody i hi)
     rw [hv, Aeneas.Std.WP.spec_ok]
     cases v with
     | done y => exact hP
@@ -844,7 +917,7 @@ theorem core.Array.Insts.CoreCmpPartialEqArray.eq_spec {T : Type} {N : Std.Usize
   · exact ⟨by scalar_tac, fun j hj => by simp at hj⟩
 
 /-- Method of `core.Pair.Insts.CoreCmpPartialEqPair` (passed to generic `eq`s). -/
-theorem core.Pair.Insts.CoreCmpPartialEqPair.eq_spec {A B : Type} [DecidableEq A] [DecidableEq B]
+theorem core.Pair.Insts.CoreCmpPartialEqPair.eq_spec {A B : Type _} [DecidableEq A] [DecidableEq B]
     (instA : core.cmp.PartialEq A A) (instB : core.cmp.PartialEq B B) (a b : A × B)
     (heqA : ∀ x y, ⦃ ⌜ True ⌝ ⦄ instA.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄)
     (heqB : ∀ x y, ⦃ ⌜ True ⌝ ⦄ instB.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄) :
@@ -880,12 +953,12 @@ theorem core.U8.Insts.CoreCloneClone.clone_spec (x : Std.U8) :
   unfold core.U8.Insts.CoreCloneClone.clone; mvcgen
 
 @[spec]
-theorem core.convert.From.Blanket.from_spec {T : Type} (x : T) :
+theorem core.convert.From.Blanket.from_spec {T : Type _} (x : T) :
     ⦃ ⌜ True ⌝ ⦄ core.convert.From.Blanket.from x ⦃ ⇓ r => ⌜ r = x ⌝ ⦄ := by
   unfold core.convert.From.Blanket.from; mvcgen
 
 @[spec]
-theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_spec {T : Type}
+theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_spec {T : Type _}
     (i : Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get i s
     ⦃ ⇓ r => ⌜ r = s.val[i.val]? ⌝ ⦄ := by
@@ -896,7 +969,7 @@ theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_spec {T : Type}
   · simp_all [Slice.len]
 
 @[spec]
-theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.index_spec {T : Type}
+theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.index_spec {T : Type _}
     (i : Std.Usize) (s : Slice T) (h : i.val < s.val.length) :
     ⦃ ⌜ True ⌝ ⦄ core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.index i s
     ⦃ ⇓ r => ⌜ r = s.val[i.val] ⌝ ⦄ := by
@@ -907,7 +980,7 @@ theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.index_spec {T : Type}
 
 /-- The write-back replaces element `i`. -/
 @[spec]
-theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_unchecked_mut_spec {T : Type}
+theorem core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_unchecked_mut_spec {T : Type _}
     (i : Std.Usize) (s : Slice T) (h : i.val < s.val.length) :
     ⦃ ⌜ True ⌝ ⦄ core.Usize.Insts.CoreSliceIndexSliceIndexSliceT.get_unchecked_mut i s
     ⦃ ⇓ r => ⌜ r.1 = s.val[i.val] ∧ ∀ x, (r.2 x).val = s.val.set i.val x ⌝ ⦄ := by
@@ -980,7 +1053,7 @@ theorem core.ops.range.Range.next_Usize_some
     exact ⟨hlt, (Option.some.inj hr).symm, h2, h3⟩
   · rw [h.2 hlt] at hr; simp at hr
 
-theorem core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec {T : Type} [DecidableEq T]
+theorem core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec {T : Type _} [DecidableEq T]
     (inst : core.cmp.PartialEq T T) (a b : Slice T)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.Slice.Insts.CoreCmpPartialEqSlice.eq inst a b
@@ -1025,7 +1098,7 @@ theorem core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec {T : Type} [DecidableEq T
       obtain ⟨hyl, hye⟩ := hy
       have hxy : x = y := by subst hc; simpa using hdec.symm
       have hall := hres.mp hres1
-      refine ⟨⟨by omega, by omega, ⟨fun _ j hj => ?_, fun _ => trivial⟩⟩, by omega⟩
+      refine ⟨⟨by omega, by omega, ⟨fun _ j hj => ?_, fun _ => hres1⟩⟩, by omega⟩
       by_cases hji : j < it.start.val
       · exact hall j hji
       · have hj : j = it.start.val := by omega
@@ -1059,7 +1132,7 @@ theorem core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec {T : Type} [DecidableEq T
       obtain ⟨hlt, hii, hs, he⟩ := core.ops.range.Range.next_Usize_some it r i hi hnx
       subst hii
       have he' : r.2.end.val = it.end.val := by rw [he]
-      refine ⟨⟨by omega, by omega, ⟨fun h => absurd h (by simp), fun hall => ?_⟩⟩, by omega⟩
+      refine ⟨⟨by omega, by omega, ⟨fun h => absurd h hres1, fun hall => ?_⟩⟩, by omega⟩
       exfalso
       apply hres1
       apply hres.mpr
@@ -1081,7 +1154,7 @@ theorem core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec {T : Type} [DecidableEq T
       (fun y => y = decide (a.val = b.val))
     · rintro ⟨it', res'⟩ hp
       obtain ⟨hp1, hp2, hp3⟩ := hp
-      obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+      obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
         (hbody it' res' hp1 hlen hp2 hp3)
       show Aeneas.Std.WP.spec (core.Slice.Insts.CoreCmpPartialEqSlice.eq_loop.body inst a b it' res') _
       rw [hv, Aeneas.Std.WP.spec_ok]
@@ -1132,7 +1205,7 @@ theorem core.slice.Slice.ends_with_u8_spec (s needle : Slice Std.U8) :
     have hslice : List.slice r.val s.len.val s.val =
         s.val.drop (s.val.length - needle.val.length) := by
       rw [ha, hsl, hnl]; simp [List.slice]
-    simp only [hslice, decide_eq_decide, List.suffix_iff_eq_drop]
+    simp only [hslice, Slice.from_val, decide_eq_decide, List.suffix_iff_eq_drop]
     exact eq_comm
   · rename_i h; exfalso; apply h; scalar_tac
   · exfalso; scalar_tac
@@ -1143,13 +1216,13 @@ theorem core.slice.Slice.ends_with_u8_spec (s needle : Slice Std.U8) :
 theorem core.slice.Slice.ends_with_u8_eq (s needle : Slice Std.U8) :
     core.slice.Slice.ends_with core.U8.Insts.CoreCmpPartialEqU8 s needle =
       ok (decide (needle.val <:+ s.val)) := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (core.slice.Slice.ends_with_u8_spec s needle)
   rw [hv, hP]
 
 @[spec high]
 theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_spec
-    {T : Type} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ (r.start.val ≤ s.val.length → ∃ t : Slice T, o = some t ∧ t.val = s.val.drop r.start.val) ∧
                (s.val.length < r.start.val → o = none) ⌝ ⦄ := by
@@ -1170,7 +1243,7 @@ theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.g
 
 @[spec]
 theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.index_spec
-    {T : Type} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T)
+    {T : Type _} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T)
     (h : r.start.val ≤ s.val.length) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.index r s
     ⦃ ⇓ t => ⌜ t.val = s.val.drop r.start.val ⌝ ⦄ := by
@@ -1185,7 +1258,7 @@ theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.i
 
 @[spec high]
 theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_spec
-    {T : Type} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ (r.end.val ≤ s.val.length → ∃ t : Slice T, o = some t ∧ t.val = s.val.take r.end.val) ∧
                (s.val.length < r.end.val → o = none) ⌝ ⦄ := by
@@ -1205,21 +1278,22 @@ theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get
 
 @[spec]
 theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.index_spec
-    {T : Type} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T)
+    {T : Type _} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T)
     (h : r.end.val ≤ s.val.length) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.index r s
     ⦃ ⇓ t => ⌜ t.val = s.val.take r.end.val ⌝ ⦄ := by
   unfold core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.index
     rust_primitives.slice.slice_slice Slice.subslice
   mvcgen
-  rename_i h2
-  exfalso; apply h2; scalar_tac
+  · simp [List.slice]
+  · rename_i h2
+    exfalso; apply h2; scalar_tac
 
 /-- `&mut s[start..]`: the suffix, with a write-back that overwrites the suffix and keeps the rest
 (and the length). Reached through `Slice`'s `index_mut`. -/
 @[spec]
 theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_unchecked_mut_spec
-    {T : Type} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T)
+    {T : Type _} (r : core.ops.range.RangeFrom Std.Usize) (s : Slice T)
     (h : r.start.val ≤ s.val.length) :
     ⦃ ⌜ True ⌝ ⦄
     core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_unchecked_mut r s
@@ -1229,7 +1303,7 @@ theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.g
     rust_primitives.slice.slice_length rust_primitives.slice.slice_slice_mut Slice.subslice
   mvcgen
   · have hl' : (s.len).val = s.val.length := by simp
-    refine ⟨?_, fun x => trivial⟩
+    refine ⟨?_, fun x => by simp⟩
     simp [List.slice, hl']
   · rename_i h2
     exfalso; apply h2
@@ -1240,7 +1314,7 @@ theorem core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.g
 (and the length). Reached through `Slice`'s `index_mut`. -/
 @[spec]
 theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_unchecked_mut_spec
-    {T : Type} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T)
+    {T : Type _} (r : core.ops.range.RangeTo Std.Usize) (s : Slice T)
     (h : r.end.val ≤ s.val.length) :
     ⦃ ⌜ True ⌝ ⦄
     core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_unchecked_mut r s
@@ -1249,21 +1323,21 @@ theorem core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get
   unfold core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_unchecked_mut
     rust_primitives.slice.slice_slice_mut Slice.subslice
   mvcgen
-  · refine ⟨?_, fun x => rfl⟩
+  · refine ⟨?_, fun x => by simp⟩
     simp [List.slice]
   · rename_i h2
     exfalso; apply h2; constructor <;> scalar_tac
 
 @[spec]
 theorem core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.get_spec
-    {T : Type} (r : core.ops.range.RangeFull) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.RangeFull) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ o = some s ⌝ ⦄ := by
   unfold core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.get; mvcgen
 
 @[spec]
 theorem core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.index_spec
-    {T : Type} (r : core.ops.range.RangeFull) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.RangeFull) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.index r s
     ⦃ ⇓ t => ⌜ t = s ⌝ ⦄ := by
   unfold core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.index; mvcgen
@@ -1275,7 +1349,7 @@ crate instantiates (named `<instance>.Lawful`, as for the crate's own impls). Fa
 CoreModels definitions: `eq` decides `HEq`, `ne` does not fail. -/
 
 /-- A `PartialEq.Lawful` from `eq` deciding `=` and `ne` not failing. -/
-theorem core.cmp.PartialEq.Lawful.of_eq_iff {T : Type} {inst : core.cmp.PartialEq T T}
+theorem core.cmp.PartialEq.Lawful.of_eq_iff {T : Type _} {inst : core.cmp.PartialEq T T}
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = true ↔ x = y ⌝ ⦄)
     (hne : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.ne x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄) :
     core.cmp.PartialEq.Lawful T T inst where
@@ -1283,7 +1357,7 @@ theorem core.cmp.PartialEq.Lawful.of_eq_iff {T : Type} {inst : core.cmp.PartialE
   ne_spec := hne
 
 /-- The `decide` form of `eq` (classical decidability), from a `PartialEq.Lawful`. -/
-theorem core.cmp.PartialEq.Lawful.eq_decide {T : Type} {inst : core.cmp.PartialEq T T}
+theorem core.cmp.PartialEq.Lawful.eq_decide {T : Type _} {inst : core.cmp.PartialEq T T}
     (hl : core.cmp.PartialEq.Lawful T T inst) (x y : T) :
     ⦃ ⌜ True ⌝ ⦄ inst.eq x y
     ⦃ ⇓ r => ⌜ r = @decide (x = y) (Classical.propDecidable _) ⌝ ⦄ := by
@@ -1313,7 +1387,7 @@ theorem core.U64.Insts.CoreCmpPartialEqU64.Lawful :
   .of_eq_iff (fun x y => by simp only [core.U64.Insts.CoreCmpPartialEqU64]; mvcgen; simp [beq_iff_eq])
     (fun x y => by simp only [core.U64.Insts.CoreCmpPartialEqU64]; mvcgen)
 
-theorem core.option.Option.Insts.CoreCmpPartialEqOption.Lawful {T : Type}
+theorem core.option.Option.Insts.CoreCmpPartialEqOption.Lawful {T : Type _}
     (inst : core.cmp.PartialEq T T) (hl : core.cmp.PartialEq.Lawful T T inst) :
     core.cmp.PartialEq.Lawful (core.option.Option T) (core.option.Option T)
       (core.option.Option.Insts.CoreCmpPartialEqOption inst) := by
@@ -1331,7 +1405,7 @@ theorem core.option.Option.Insts.CoreCmpPartialEqOption.Lawful {T : Type}
   unfold core.option.Option.Insts.CoreCmpPartialEqOption.ne
   mvcgen [h]
 
-theorem core.Array.Insts.CoreCmpPartialEqArray.Lawful {T : Type} {N : Std.Usize}
+theorem core.Array.Insts.CoreCmpPartialEqArray.Lawful {T : Type _} {N : Std.Usize}
     (inst : core.cmp.PartialEq T T) (hl : core.cmp.PartialEq.Lawful T T inst) :
     core.cmp.PartialEq.Lawful (Aeneas.Std.Array T N) (Aeneas.Std.Array T N)
       (core.Array.Insts.CoreCmpPartialEqArray N inst) := by
@@ -1342,7 +1416,7 @@ theorem core.Array.Insts.CoreCmpPartialEqArray.Lawful {T : Type} {N : Std.Usize}
     have h := core.Array.Insts.CoreCmpPartialEqArray.eq_spec
       (inst := inst) (T := T) (N := N) (a := a) (b := b) (fun x y => hl.eq_decide x y)
     mvcgen [-core.Array.Insts.CoreCmpPartialEqArray.eq_spec, h]
-    intro hr; rw [hr, decide_eq_true_iff]; exact ⟨Subtype.ext, congrArg Subtype.val⟩
+    intro hr; rw [hr, decide_eq_true_iff]; exact (Aeneas.Std.Array.eq_iff a b).symm
   refine .of_eq_iff hs fun a b => ?_
   have h := hs a b
   show ⦃ ⌜ True ⌝ ⦄ core.Array.Insts.CoreCmpPartialEqArray.ne inst a b ⦃ ⇓ _ => ⌜ True ⌝ ⦄
@@ -1355,7 +1429,7 @@ end CoreModels
 theorem alloc.string.String.Insts.CoreCmpPartialEqString.eq_spec (a b : alloc.string.String) :
     ⦃ ⌜ True ⌝ ⦄ alloc.string.String.Insts.CoreCmpPartialEqString.eq a b
     ⦃ ⇓ r => ⌜ r = true ↔ a = b ⌝ ⦄ := by
-  unfold alloc.string.String.Insts.CoreCmpPartialEqString.eq; mvcgen; simp
+  unfold alloc.string.String.Insts.CoreCmpPartialEqString.eq; mvcgen; exact @decide_eq_true_iff _ (instDecidableEqString a b)
 
 /-- `String`'s `PartialEq.Lawful`: `eq` decides `=`, `ne` is `!eq`. -/
 theorem alloc.string.String.Insts.CoreCmpPartialEqString.Lawful :
@@ -1415,6 +1489,7 @@ theorem alloc.string.String.as_bytes_spec (s : alloc.string.String) :
     ⦃ ⌜ True ⌝ ⦄ alloc.string.String.as_bytes s
     ⦃ ⇓ r => ⌜ r.val = (alloc.string.String.utf8U8 s).take Usize.max ⌝ ⦄ := by
   unfold alloc.string.String.as_bytes; mvcgen
+  simp [alloc.string.String.utf8U8]
 
 /-- `from_utf8` succeeds iff some string has exactly these bytes, and returns it. -/
 @[spec]
@@ -1452,8 +1527,8 @@ obligations named in `PROOF_TARGETS.md`):
 
 - `MissingCoreModels.lean`: `core.mem.size_of` (values fixed by the `size_of_*` axioms),
   `alloc.vec.Vec.Insts.CoreHashHash.hash`, `alloc.vec.Vec.Insts.CoreCmpOrd.cmp`,
-  `alloc.vec.Vec.retain`, and the `….fmt` axioms of `FromUtf8Error`, `TryFromIntError`,
-  `Infallible`, `io::Error` (`Debug`);
+  `alloc.vec.Vec.retain`, and the `….fmt` axioms of `FromUtf8Error` (`Display`) and
+  `io::Error` (`Debug`);
 - `MissingThirdPartyModels.lean`: `zeroize.alloc.vec.Vec.Insts.ZeroizeZeroize.zeroize`;
 - crate side (`FunsExternal.lean`): the crate `….fmt` axioms (incl. `SecretVLBytes` /
   `SecretVLByteVec` `Debug`) and `quic_vec.write_hex`.

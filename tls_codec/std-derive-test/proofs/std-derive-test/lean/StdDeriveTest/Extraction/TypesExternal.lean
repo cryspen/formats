@@ -1,1 +1,3 @@
-import StdDeriveTest.Assumptions.TypesExternal
+module
+
+public import StdDeriveTest.Assumptions.TypesExternal
