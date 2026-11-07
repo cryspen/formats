@@ -51,7 +51,7 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     #[cfg_attr(hax, hax_lib::ensures(|res| if self.is_none() {
         res.is_ok_and(|out| out == vec![0u8] && out.len() == self.tls_serialized_len())
     } else {
-        res.is_err() || res.is_ok_and(|out| out.first() == Some(&1u8)
+        res.is_err() || res.is_ok_and(|out| out.first().is_some_and(|b| *b == 1u8)
             && out.len() == self.tls_serialized_len())
     }))]
     #[inline]
