@@ -78,7 +78,7 @@ theorem varint.ser_triple {W : Type} {WI : core.io.write.Write W} {v : W → Lis
     fun buf h => varint.TlsVarInt.write_bytes_content self buf ⟨hv, h⟩
   unfold varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize
   have hwa := fun s => write_all_law_spec law w s
-  mvcgen [hwb, hwa]
+  mvcgen [hwb, hwa, as_mut_slice_spec]
   · rename_i r hr
     have := varint.lenOf_mem self.val
     rw [hr.1]; simp; omega
@@ -86,7 +86,7 @@ theorem varint.ser_triple {W : Type} {WI : core.io.write.Write W} {v : W → Lis
     intro hget _
     have h8 : s1.2.val.length = 8 := by rw [hs1.2.1, hr.1]; simp
     have hfs : (((Array.repeat 8#usize 0#u8).from_slice s1.2).to_slice).val = s1.2.val := by
-      rw [Array.to_slice, Array.from_slice_val _ _ (by simpa using h8)]
+      rw [Array.val_to_slice, Array.from_slice_val _ _ (by simpa using h8)]
     obtain ⟨l, hl, hlv⟩ := hs1.1
     rw [continue_eq_tryCF, hl] at hcf
     simp at hcf
@@ -124,7 +124,7 @@ theorem varint.ser_triple_gt {W : Type} (WI : core.io.write.Write W)
     ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize WI self w
     ⦃ ⇓ p => ⌜ (∃ e, p.1 = .Err e) ∧ p.2 = w ⌝ ⦄ := by
   unfold varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize
-  mvcgen [varint.TlsVarInt.write_bytes_spec]
+  mvcgen [varint.TlsVarInt.write_bytes_spec, as_mut_slice_spec]
   · rename_i _ _ s1 hs1 _ _ _ hcf _
     rw [hs1.1 (Or.inl hv)] at hcf
     simp [tryCF] at hcf
@@ -290,7 +290,7 @@ theorem varint.eq_enc (n : Nat) (h : n ≤ 2 ^ 62 - 1) (b : List Std.U8)
   List.map_injective_iff.mpr (fun _ _ h => UScalar.eq_of_val_eq h) (hb.trans (varint.enc_map n h).symm)
 
 /-- `SerRuns` from a triple on every lawful writer, stated on the chosen view. -/
-theorem SerRuns_of_triple {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize)
+theorem SerRuns_of_triple {T : Type _} (SI : Serialize T) (x : T) (sz : Std.Usize)
     (out : Option (List Std.U8))
     (h : ∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
       ∀ w, (core.io.write.Write.view WI w).length + sz.val ≤ imax →
@@ -300,7 +300,7 @@ theorem SerRuns_of_triple {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize)
         (out = none → ∃ e, p.1 = .Err e) ⌝ ⦄) :
     SerRuns SI x sz out := by
   intro W WI hWI w hroom
-  obtain ⟨p, hp, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h W WI hWI w hroom)
+  obtain ⟨p, hp, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h W WI hWI w hroom)
   exact ⟨p.1, p.2, hp, hpost⟩
 
 theorem varint.ser_runs (x : varint.TlsVarInt) (hx : x.val ≤ 2 ^ 62 - 1) (sz : Std.Usize)
@@ -374,9 +374,9 @@ theorem VLBytes.ser_runs (x : quic_vec.VLBytes) (sz : Std.Usize)
   have hI' := imax_ge
   have hlen := quic_vec.VLBytes.serialized_len_char x
   refine triple_post_mono (VLBytes.ser_triple hWI.law' w x (fun hn => ?_)) ?_
-  · obtain ⟨r, hr, hrv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hlen hn)
+  · obtain ⟨r, hr, hrv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hlen hn)
     rw [hsz] at hr
-    cases hr
+    obtain rfl := RustM.ok_injective hr
     have := varint.lenOf_le x.vec.val.length
     omega
   · rintro p ⟨h1, h2⟩

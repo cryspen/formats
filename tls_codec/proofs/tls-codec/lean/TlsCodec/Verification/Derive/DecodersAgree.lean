@@ -31,7 +31,7 @@ open tls_codec
 /-! ## The predicates on functions -/
 
 /-- `Agree` for a `std` decoder and a byte-slice decoder given as functions. -/
-def AgreeF {T : Type}
+def AgreeF {T : Type _}
     (d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R))
     (b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
@@ -39,33 +39,33 @@ def AgreeF {T : Type}
     ⦃ ⇓ p => ⌜ ∀ s : Slice Std.U8, s.val = v r → ∃ res, b s = ok res ∧ AgreeRes v res p ⌝ ⦄
 
 /-- `BIndep` for a byte-slice decoder given as a function. -/
-def BIndepF {T : Type} (b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)) :
+def BIndepF {T : Type _} (b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)) :
     Prop :=
   ∀ s x t, b s = ok (.Ok (x, t)) →
     ∃ pre, s.val = pre ++ t.val ∧ ∀ (s' : Slice Std.U8) (rest : List Std.U8),
       s'.val = pre ++ rest → ∃ t', b s' = ok (.Ok (x, t')) ∧ t'.val = rest
 
-theorem Agree.of_F {T : Type} {DI : Deserialize T} {DB : DeserializeBytes T}
+theorem Agree.of_F {T : Type _} {DI : Deserialize T} {DB : DeserializeBytes T}
     (h : AgreeF (fun RI r => DI.tls_deserialize RI r) DB.tls_deserialize_bytes) : Agree DI DB := h
 
-theorem BIndep.of_F {T : Type} {DB : DeserializeBytes T} (h : BIndepF DB.tls_deserialize_bytes) :
+theorem BIndep.of_F {T : Type _} {DB : DeserializeBytes T} (h : BIndepF DB.tls_deserialize_bytes) :
     BIndep DB := h
 
-theorem AgreeF.of_agree {T : Type} {DI : Deserialize T} {DB : DeserializeBytes T}
+theorem AgreeF.of_agree {T : Type _} {DI : Deserialize T} {DB : DeserializeBytes T}
     (h : Agree DI DB) : AgreeF (fun RI r => DI.tls_deserialize RI r) DB.tls_deserialize_bytes := h
 
-theorem BIndepF.of_bindep {T : Type} {DB : DeserializeBytes T} (h : BIndep DB) :
+theorem BIndepF.of_bindep {T : Type _} {DB : DeserializeBytes T} (h : BIndep DB) :
     BIndepF DB.tls_deserialize_bytes := h
 
-theorem AgreeF.total {T : Type}
+theorem AgreeF.total {T : Type _}
     {d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)} (h : AgreeF d b)
     (s : Slice Std.U8) : ∃ res, b s = ok res := by
-  obtain ⟨p, -, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h _ _ _ _ StdIo.slice_law s)
+  obtain ⟨p, -, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h _ _ _ _ StdIo.slice_law s)
   obtain ⟨res, hres, -⟩ := hP s rfl
   exact ⟨res, hres⟩
 
-theorem AgreeF.congr {T : Type}
+theorem AgreeF.congr {T : Type _}
     {d d' : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {b b' : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (h : AgreeF d b) (hd : ∀ (R : Type) (RI : alloc.io.read.Read R) (r : R), d' RI r = d RI r)
@@ -78,7 +78,7 @@ theorem AgreeF.congr {T : Type}
   rw [hb]
   exact hp s hs
 
-theorem BIndepF.congr {T : Type}
+theorem BIndepF.congr {T : Type _}
     {b b' : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (h : BIndepF b) (hb : ∀ s, b' s = b s) : BIndepF b' := by
   intro s x t hs
@@ -89,7 +89,7 @@ theorem BIndepF.congr {T : Type}
 /-! ## Sequential composition (`?`) -/
 
 /-- A `std` decoder running `m`, then `k` on its value (the shape of a derived decoder). -/
-def seqStd {A T : Type}
+def seqStd {A T : Type _}
     (m : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result A Error × R))
     (k : A → ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R))
     {R : Type} (RI : alloc.io.read.Read R) (bytes : R) :
@@ -104,7 +104,7 @@ def seqStd {A T : Type}
     ok (r1, bytes1)
 
 /-- A byte-slice decoder running `m`, then `k` on its value and remainder. -/
-def seqB {A T : Type} (m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error))
+def seqB {A T : Type _} (m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error))
     (k : A → Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error))
     (bytes : Slice Std.U8) : RustM (core.result.Result (T × Slice Std.U8) Error) := do
   let r ← m bytes
@@ -117,7 +117,7 @@ def seqB {A T : Type} (m : Slice Std.U8 → RustM (core.result.Result (A × Slic
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
       (T × Slice Std.U8) (core.convert.From.Blanket Error) residual
 
-theorem rustm_bind_congr {α β : Type} {m : RustM α} {f g : α → RustM β} (h : ∀ x, f x = g x) :
+theorem rustm_bind_congr {α β : Type _} {m : RustM α} {f g : α → RustM β} (h : ∀ x, f x = g x) :
     (m >>= f) = (m >>= g) := by
   rw [funext h]
 
@@ -132,7 +132,7 @@ macro "seq_eq" : tactic => `(tactic| (
          | (obtain ⟨a, b⟩ := x; cases a)
          | cases x
        all_goals (try simp only [core.result.Result.Insts.CoreOpsTry_traitTry.branch,
-         core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch, bind_tc_ok]))
+         core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]))
     | (cases ‹core.result.Result _ _› <;> rfl))))
 
 /-- `d RI r = seqStd …` of an extracted `std` decoder `d` (its definition). -/
@@ -152,38 +152,46 @@ macro "seq_b_eq " b:ident : tactic => `(tactic| (
   seq_eq))
 
 /-- The end of a derived `std` decoder: the value. -/
-def retStd {T : Type} (x : T) {R : Type} (_RI : alloc.io.read.Read R) (bytes : R) :
+def retStd {T : Type _} (x : T) {R : Type} (_RI : alloc.io.read.Read R) (bytes : R) :
     RustM (core.result.Result T Error × R) := ok (.Ok x, bytes)
 
 /-- The end of a derived byte-slice decoder: the value and the remainder. -/
-def retB {T : Type} (x : T) (bytes : Slice Std.U8) :
+def retB {T : Type _} (x : T) (bytes : Slice Std.U8) :
     RustM (core.result.Result (T × Slice Std.U8) Error) := ok (.Ok (x, bytes))
 
-theorem seqStd_ok {A T R : Type}
+theorem seqStd_ok {A T : Type _} {R : Type}
     {m : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result A Error × R)}
     {k : A → ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {RI : alloc.io.read.Read R} {r r1 : R} {x : A} (h : m RI r = ok (.Ok x, r1)) :
     seqStd m k RI r = k x RI r1 := by
-  simp only [seqStd, h, bind_tc_ok]; rfl
+  simp [seqStd, h, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+    core.convert.From.Blanket, core.convert.From.Blanket.from]
 
-theorem seqStd_err {A T R : Type}
+theorem seqStd_err {A T : Type _} {R : Type}
     {m : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result A Error × R)}
     {k : A → ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {RI : alloc.io.read.Read R} {r r1 : R} {e : Error} (h : m RI r = ok (.Err e, r1)) :
     seqStd m k RI r = ok (.Err e, r1) := by
-  simp only [seqStd, h, bind_tc_ok]; rfl
+  simp [seqStd, h, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+    core.convert.From.Blanket, core.convert.From.Blanket.from]
 
-theorem seqB_ok {A T : Type} {m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
+theorem seqB_ok {A T : Type _} {m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
     {k : A → Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     {s t : Slice Std.U8} {x : A} (h : m s = ok (.Ok (x, t))) : seqB m k s = k x t := by
-  simp only [seqB, h, bind_tc_ok]; rfl
+  simp [seqB, h, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+    core.convert.From.Blanket, core.convert.From.Blanket.from]
 
-theorem seqB_err {A T : Type} {m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
+theorem seqB_err {A T : Type _} {m : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
     {k : A → Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     {s : Slice Std.U8} {e : Error} (h : m s = ok (.Err e)) : seqB m k s = ok (.Err e) := by
-  simp only [seqB, h, bind_tc_ok]; rfl
+  simp [seqB, h, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+    core.convert.From.Blanket, core.convert.From.Blanket.from]
 
-theorem AgreeF.seq {A T : Type}
+theorem AgreeF.seq {A T : Type _}
     {m : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result A Error × R)}
     {mb : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
     {k : A → ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
@@ -192,7 +200,7 @@ theorem AgreeF.seq {A T : Type}
     AgreeF (seqStd m k) (seqB mb kb) := by
   intro R RI v a law r
   dsimp only
-  obtain ⟨p1, hp1, hP1⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hm R RI v a law r)
+  obtain ⟨p1, hp1, hP1⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hm R RI v a law r)
   obtain ⟨res1, r1⟩ := p1
   cases res1 with
   | Ok x =>
@@ -221,7 +229,7 @@ theorem AgreeF.seq {A T : Type}
     | Err e' =>
       exact ⟨_, seqB_err hrb, e, rfl⟩
 
-theorem BIndepF.seq {A T : Type}
+theorem BIndepF.seq {A T : Type _}
     {mb : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
     {kb : A → Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (hm : BIndepF mb) (hk : ∀ x, BIndepF (kb x))
@@ -231,7 +239,7 @@ theorem BIndepF.seq {A T : Type}
   cases r1 with
   | Err e =>
     rw [seqB_err hr1] at h
-    cases h
+    ok_cases h
   | Ok xt =>
     obtain ⟨x, t1⟩ := xt
     rw [seqB_ok hr1] at h
@@ -242,34 +250,34 @@ theorem BIndepF.seq {A T : Type}
     rw [seqB_ok ht1']
     exact hall2 t1' rest ht1v
 
-theorem AgreeF.ret {T : Type} (x : T) : AgreeF (retStd x) (retB x) := by
+theorem AgreeF.ret {T : Type _} (x : T) : AgreeF (retStd x) (retB x) := by
   intro R RI v a law r
   exact ok_triple_of fun s hs => ⟨_, rfl, rfl, hs.symm⟩
 
-theorem BIndepF.ret {T : Type} (x : T) : BIndepF (retB x) := by
+theorem BIndepF.ret {T : Type _} (x : T) : BIndepF (retB x) := by
   intro s y t h
   simp only [retB] at h
-  cases h
+  ok_cases h
   exact ⟨[], rfl, fun s' rest hs' => ⟨s', rfl, hs'⟩⟩
 
 /-- The end of a decoder whose value comes from a total computation `f` (e.g. a `From`). -/
-theorem AgreeF.bindRet {A T : Type} (f : RustM A) (g : A → T) (hf : ∃ y, f = ok y) :
+theorem AgreeF.bindRet {A T : Type _} (f : RustM A) (g : A → T) (hf : ∃ y, f = ok y) :
     AgreeF (fun _ b => do let y ← f; ok (.Ok (g y), b)) (fun t => do let y ← f; ok (.Ok (g y, t))) := by
   obtain ⟨y, hy⟩ := hf
   intro R RI v a law r
-  simp only [hy, bind_tc_ok]
+  simp only [hy, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   exact ok_triple_of fun s hs => ⟨.Ok (g y, s), rfl, rfl, hs.symm⟩
 
-theorem BIndepF.bindRet {A T : Type} (f : RustM A) (g : A → T) (hf : ∃ y, f = ok y) :
+theorem BIndepF.bindRet {A T : Type _} (f : RustM A) (g : A → T) (hf : ∃ y, f = ok y) :
     BIndepF (fun t => do let y ← f; ok (.Ok (g y, t))) := by
   obtain ⟨y, hy⟩ := hf
   intro s x t h
-  simp only [hy, bind_tc_ok] at h
-  cases h
-  exact ⟨[], rfl, fun s' rest hs' => ⟨s', by simp only [hy, bind_tc_ok], hs'⟩⟩
+  simp only [hy, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok] at h
+  ok_cases h
+  exact ⟨[], rfl, fun s' rest hs' => ⟨s', by simp only [hy, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok], hs'⟩⟩
 
 /-- Both decoders reject the value (e.g. an unknown enum discriminant). -/
-theorem AgreeF.err {T : Type}
+theorem AgreeF.err {T : Type _}
     {d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (hd : ∀ (R : Type) (RI : alloc.io.read.Read R) r, ∃ e, d RI r = ok (.Err e, r))
@@ -282,19 +290,19 @@ theorem AgreeF.err {T : Type}
   obtain ⟨e', he'⟩ := hb s
   exact ⟨_, he', e, rfl⟩
 
-theorem BIndepF.err {T : Type} {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
+theorem BIndepF.err {T : Type _} {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (hb : ∀ s, ∃ e, b s = ok (.Err e)) : BIndepF b := by
   intro s x t h
   obtain ⟨e, he⟩ := hb s
   rw [he] at h
-  cases h
+  ok_cases h
 
-theorem AgreeF.total_of_ret {T : Type} (x : T) (s : Slice Std.U8) : ∃ res, retB x s = ok res :=
+theorem AgreeF.total_of_ret {T : Type _} (x : T) (s : Slice Std.U8) : ∃ res, retB x s = ok res :=
   ⟨_, rfl⟩
 
 /-! ## Derived enums -/
 
-theorem spec_of_eq {α : Type} {m : RustM α} {x : α} (h : m = ok x) :
+theorem spec_of_eq {α : Type _} {m : RustM α} {x : α} (h : m = ok x) :
     ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ r = x ⌝ ⦄ := by
   rw [h]; exact ok_triple_of rfl
 
@@ -358,14 +366,19 @@ macro "enum_agree_vcs " db:ident : tactic => `(tactic| (
          cases h1
          refine ⟨.Ok (?_, t), ?_, ?_⟩
          pick_goal 2
-         · simp only [$db:ident, hres, bind_tc_ok]
+         · simp only [$db:ident, hres, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+             core.result.Result.Insts.CoreOpsTry_traitTry.branch,
+             core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+             core.convert.From.Blanket, core.convert.From.Blanket.from]
            rfl
          all_goals exact ⟨rfl, h2⟩
        | Err e =>
          obtain ⟨e', he'⟩ := hrel
          rw [hq1] at he'
          cases he')
-    | (mvcgen
+    | (mvcgen [core.U64.Insts.CoreConvertFromU16.from]
        agree_obtain
        agree_cont
        cases res with
@@ -376,12 +389,12 @@ macro "enum_agree_vcs " db:ident : tactic => `(tactic| (
          cases h1
          have hb : ⦃ ⌜ True ⌝ ⦄ $db:ident s ⦃ ⇓ r => ⌜ ∃ e, r = .Err e ⌝ ⦄ := by
            have hU := spec_of_eq hres
-           mvcgen [$db:ident, hU]
+           mvcgen [$db:ident, hU, core.U64.Insts.CoreConvertFromU16.from]
            all_goals first
              | (exfalso; rename_i h1 _ _ _ hx hc; subst h1; simp [tryCF] at hc; subst hc; simp_all; done)
-             | (mvcgen; exact ⟨_, rfl⟩)
+             | (exact ⟨_, rfl⟩)
              | (intro hbr; rename_i h1 _ _ _; subst h1; simp [tryCF] at hbr)
-         obtain ⟨r0, hr0, e0, he0⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hb
+         obtain ⟨r0, hr0, e0, he0⟩ := Aeneas.Std.triple_iff_exists_ok.mp hb
          subst he0
          exact ⟨_, hr0, _, rfl⟩
        | Err e =>
@@ -403,14 +416,19 @@ macro "enum_agree_vcs " db:ident : tactic => `(tactic| (
        | Err e' =>
          refine ⟨.Err ?_, ?_, ?_⟩
          pick_goal 2
-         · simp only [$db:ident, hres, bind_tc_ok]
+         · simp only [$db:ident, hres, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+             core.result.Result.Insts.CoreOpsTry_traitTry.branch,
+             core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+             core.convert.From.Blanket, core.convert.From.Blanket.from]
            rfl
          all_goals exact ⟨_, rfl⟩)))
 
 /-- `BIndepF` of a byte-slice decoder `b` that runs a field decoder `mb` (with `BIndepF`) and then
 a continuation of the field's value alone: a success leaves the field's remainder, and any
 input on which `mb` gives the same value gives the same result. -/
-theorem BIndepF.of_field {A T : Type}
+theorem BIndepF.of_field {A T : Type _}
     {mb : Slice Std.U8 → RustM (core.result.Result (A × Slice Std.U8) Error)}
     {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (hm : BIndepF mb) (htot : ∀ s, ∃ res, mb s = ok res)
@@ -441,7 +459,7 @@ macro "enum_bindep " db:ident "," mb:term "," fa:term : tactic => `(tactic| (
     have hT : ⦃ ⌜ True ⌝ ⦄ $db:ident s ⦃ ⇓ r => ⌜ ∀ y u, r = .Ok (y, u) → u = t1 ∧
         ∀ (s' t' : Slice Std.U8), $mb s' = ok (.Ok (k, t')) → $db:ident s' = ok (.Ok (y, t')) ⌝ ⦄ := by
       have hU1 := spec_of_eq hr1
-      mvcgen [$db:ident, hU1]
+      mvcgen [$db:ident, hU1, core.U64.Insts.CoreConvertFromU16.from]
       all_goals first
         | (rename_i h1 _ p _ hx hc
            subst h1
@@ -453,20 +471,26 @@ macro "enum_bindep " db:ident "," mb:term "," fa:term : tactic => `(tactic| (
            simp only [core.result.Result.Ok.injEq, Prod.mk.injEq] at hyu
            obtain ⟨rfl, rfl⟩ := hyu
            refine ⟨rfl, fun s' t' hs' => ?_⟩
-           simp only [$db:ident, hs', bind_tc_ok]
+           simp only [$db:ident, hs', Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+             core.result.Result.Insts.CoreOpsTry_traitTry.branch,
+             core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultNeverE.from_residual,
+             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+             core.convert.From.Blanket, core.convert.From.Blanket.from]
            rfl)
-        | (mvcgen; intro y u hyu; cases hyu)
+        | (intro y u hyu; cases hyu)
         | (intro hbr; rename_i h1 _ _ _; subst h1; simp [tryCF] at hbr)
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hT
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp hT
     rw [hr] at h
-    cases h
+    ok_cases h
     exact hP y u rfl
   · change $db:ident s = _ at h
     have hT : ⦃ ⌜ True ⌝ ⦄ $db:ident s ⦃ ⇓ r => ⌜ ∃ e, r = .Err e ⌝ ⦄ := by
       have hU1 := spec_of_eq hr1
-      mvcgen [$db:ident, hU1]
+      mvcgen [$db:ident, hU1, core.U64.Insts.CoreConvertFromU16.from]
       all_goals first
         | (agree_cont; exfalso; simp_all; done)
+        | (exact ⟨_, rfl⟩)
         | (first | agree_break | (intro hbr; agree_break)
            refine triple_post_mono (core.convert.From.Blanket.from_spec _) ?_
            intro f hf
@@ -474,14 +498,14 @@ macro "enum_bindep " db:ident "," mb:term "," fa:term : tactic => `(tactic| (
            simp only [PostCond.ok]
            mvcgen
            exact ⟨_, rfl⟩)
-    obtain ⟨r, hr, e', he'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hT
+    obtain ⟨r, hr, e', he'⟩ := Aeneas.Std.triple_iff_exists_ok.mp hT
     rw [hr, he'] at h
-    cases h))
+    ok_cases h))
 
 /-! ## Byte-slice decoders running the `std` decoder on the slice -/
 
 /-- The byte-slice decoder that runs `d` on a slice reader and returns the reader left. -/
-def viaB {T : Type}
+def viaB {T : Type _}
     (d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R))
     (bytes : Slice Std.U8) : RustM (core.result.Result (T × Slice Std.U8) Error) := do
   let (r, bytes1) ← d alloc.Shared0SliceU8.Insts.AllocIoReadRead bytes
@@ -493,13 +517,13 @@ def viaB {T : Type}
       (T × Slice Std.U8) (core.convert.From.Blanket Error) residual
 
 /-- `viaB d` computes what any byte-slice decoder agreeing with `d` computes. -/
-theorem viaB_of_agree {T : Type}
+theorem viaB_of_agree {T : Type _}
     {d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)} (h : AgreeF d b)
     (s : Slice Std.U8) :
     (∃ res, b s = ok res ∧ viaB d s = ok res) ∨
       (∃ e e', b s = ok (.Err e) ∧ viaB d s = ok (.Err e')) := by
-  obtain ⟨p, hp, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h _ _ _ _ StdIo.slice_law s)
+  obtain ⟨p, hp, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h _ _ _ _ StdIo.slice_law s)
   obtain ⟨res, hres, hrel⟩ := hP s rfl
   obtain ⟨r1, s1⟩ := p
   cases res with
@@ -508,20 +532,26 @@ theorem viaB_of_agree {T : Type}
     obtain ⟨h1, h2⟩ := hrel
     simp only at h1 h2
     subst h1
-    have : s1 = t := Subtype.ext h2
+    have : s1 = t := Slice.ext _ _ h2
     subst this
     left
-    exact ⟨_, hres, by simp only [viaB, hp, bind_tc_ok]; rfl⟩
+    exact ⟨_, hres, by simp [viaB, hp, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+          core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+          core.convert.From.Blanket, core.convert.From.Blanket.from]⟩
   | Err e =>
     obtain ⟨e', he'⟩ := hrel
     simp only at he'
     subst he'
     right
-    exact ⟨e, e', hres, by simp only [viaB, hp, bind_tc_ok]; rfl⟩
+    exact ⟨e, e', hres, by simp [viaB, hp, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+          core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+          core.convert.From.Blanket, core.convert.From.Blanket.from]⟩
 
 /-- A hand-written byte-slice decoder running the `std` decoder on the slice agrees with it when
 the `std` decoder agrees with some byte-slice decoder `b`. -/
-theorem AgreeF.via {T : Type}
+theorem AgreeF.via {T : Type _}
     {d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     {b : Slice Std.U8 → RustM (core.result.Result (T × Slice Std.U8) Error)}
     (h : AgreeF d b) (hI : BIndepF b) : AgreeF d (viaB d) ∧ BIndepF (viaB d) := by
@@ -529,27 +559,27 @@ theorem AgreeF.via {T : Type}
   · refine triple_post_mono (h R RI v a law r) fun p hp s hs => ?_
     obtain ⟨res, hres, hrel⟩ := hp s hs
     rcases viaB_of_agree h s with ⟨res', hb, hv⟩ | ⟨e, e', hb, hv⟩
-    · rw [hres] at hb; cases hb
+    · rw [hres] at hb; ok_cases hb
       exact ⟨_, hv, hrel⟩
-    · rw [hres] at hb; cases hb
+    · rw [hres] at hb; ok_cases hb
       obtain ⟨e'', he''⟩ := hrel
       exact ⟨_, hv, e'', he''⟩
   · rcases viaB_of_agree h s with ⟨res', hb, hv⟩ | ⟨e, e', hb, hv⟩
-    · rw [hst] at hv; cases hv
+    · rw [hst] at hv; ok_cases hv
       obtain ⟨pre, hpre, hall⟩ := hI s x t hb
       refine ⟨pre, hpre, fun s' rest hs' => ?_⟩
       obtain ⟨t', ht', ht'v⟩ := hall s' rest hs'
       rcases viaB_of_agree h s' with ⟨res'', hb', hv'⟩ | ⟨e2, e2', hb', hv'⟩
-      · rw [ht'] at hb'; cases hb'
+      · rw [ht'] at hb'; ok_cases hb'
         exact ⟨t', hv', ht'v⟩
-      · rw [ht'] at hb'; cases hb'
-    · rw [hst] at hv; cases hv
+      · rw [ht'] at hb'; ok_cases hb'
+    · rw [hst] at hv; ok_cases hv
 
 /-! ## Fixed-size `std` decoders -/
 
 /-- A `std` decoder reading `N` bytes (failing when fewer are left) and mapping them with the
 total `g` (which may reject them). -/
-def FixedRunsM {T : Type}
+def FixedRunsM {T : Type _}
     (d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R))
     (N : Std.Usize) (g : Aeneas.Std.Array Std.U8 N → RustM (core.result.Result T Error)) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
@@ -559,7 +589,7 @@ def FixedRunsM {T : Type}
       ((v r).length < N.val → ∃ e, p.1 = .Err e) ⌝ ⦄
 
 /-- A fixed-size `std` decoder and the byte-slice decoder running it on the slice agree. -/
-theorem AgreeF.of_fixedM_via {T : Type}
+theorem AgreeF.of_fixedM_via {T : Type _}
     {d : ∀ {R : Type}, alloc.io.read.Read R → R → RustM (core.result.Result T Error × R)}
     (N : Std.Usize) (g : Aeneas.Std.Array Std.U8 N → RustM (core.result.Result T Error))
     (hF : FixedRunsM d N g) : AgreeF d (viaB d) ∧ BIndepF (viaB d) := by
@@ -571,7 +601,7 @@ theorem AgreeF.of_fixedM_via {T : Type}
           (∀ e, q = .Err e → ∃ e', res = .Err e')) ∧
       (s.val.length < N.val → ∃ e, res = .Err e) := by
     intro s
-    obtain ⟨p, hp, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hF _ _ _ _ StdIo.slice_law s)
+    obtain ⟨p, hp, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hF _ _ _ _ StdIo.slice_law s)
     obtain ⟨q, s1⟩ := p
     cases q with
     | Ok x =>
@@ -581,10 +611,17 @@ theorem AgreeF.of_fixedM_via {T : Type}
       have hs1 := hadv x rfl
       simp only at hs1
       subst hs1
-      refine ⟨_, by simp only [viaB, hp, bind_tc_ok]; rfl, fun _ => ⟨arr, harr, .Ok x, hg,
+      refine ⟨.Ok (x, StdIo.sliceAdv s N.val), by
+        simp [viaB, hp, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+          core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+          core.convert.From.Blanket, core.convert.From.Blanket.from], fun _ => ⟨arr, harr, .Ok x, hg,
         (fun y hy => by cases hy; rfl), (fun e he => by cases he)⟩, fun hc => by omega⟩
     | Err e =>
-      refine ⟨_, by simp only [viaB, hp, bind_tc_ok]; rfl, fun hN => ?_, fun _ => ⟨e, rfl⟩⟩
+      refine ⟨_, by simp [viaB, hp, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
+          core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+          core.convert.From.Blanket, core.convert.From.Blanket.from], fun hN => ?_, fun _ => ⟨e, rfl⟩⟩
       obtain ⟨arr, harr, hg, -⟩ := h1 hN
       exact ⟨arr, harr, .Err e, hg, (fun y hy => by cases hy), (fun e' _ => ⟨e, rfl⟩)⟩
   refine ⟨fun R RI v a law r => ?_, fun s x t hst => ?_⟩
@@ -594,10 +631,10 @@ theorem AgreeF.of_fixedM_via {T : Type}
     by_cases hN : N.val ≤ (v r).length
     · obtain ⟨arr, harr, hg, hadv⟩ := hp.1 hN
       obtain ⟨arr', harr', q, hq, hqok, hqerr⟩ := hb1 (by rw [hs]; exact hN)
-      have : arr' = arr := Subtype.ext (by rw [harr', harr, hs])
+      have : arr' = arr := Std.Array.ext _ _ (by rw [harr', harr, hs])
       subst this
       rw [hg] at hq
-      cases hq
+      ok_cases hq
       rcases hp1 : p.1 with x | e
       · rw [hqok x hp1]
         refine ⟨hp1, ?_⟩
@@ -612,7 +649,7 @@ theorem AgreeF.of_fixedM_via {T : Type}
       exact ⟨e, he⟩
   · obtain ⟨res, hres, hb1, hb2⟩ := hB s
     rw [hst] at hres
-    cases hres
+    ok_cases hres
     have hN : N.val ≤ s.val.length := by
       by_contra hc; obtain ⟨e, he⟩ := hb2 (by omega); cases he
     obtain ⟨arr, harr, q, hq, hqok, hqerr⟩ := hb1 hN
@@ -628,10 +665,10 @@ theorem AgreeF.of_fixedM_via {T : Type}
     · obtain ⟨res', hres', hb1', hb2'⟩ := hB s'
       have hN' : N.val ≤ s'.val.length := by rw [hs', List.length_append, hlen]; omega
       obtain ⟨arr', harr', q', hq', hqok', -⟩ := hb1' hN'
-      have : arr' = arr := Subtype.ext (by rw [harr', hs', List.take_left' (hlen arr)])
+      have : arr' = arr := Std.Array.ext _ _ (by rw [harr', hs', List.take_left' (hlen arr)])
       subst this
       rw [hq] at hq'
-      cases hq'
+      ok_cases hq'
       rw [hqok' x rfl] at hres'
       exact ⟨_, hres', by simp [StdIo.sliceAdv, hs', List.drop_left' (hlen arr')]⟩
 
@@ -645,7 +682,7 @@ macro "via_eq " b:ident : tactic => `(tactic| (
 
 /-- `DecodersAgree` of an impl whose decoders agree (`Agree` and `BIndep` given on the impl's
 decoders as functions). -/
-theorem DecodersAgree.lawful_of_facts {T : Type} (DA : spec.io.DecodersAgree T)
+theorem DecodersAgree.lawful_of_facts {T : Type _} (DA : spec.io.DecodersAgree T)
     (hD : Deserialize.Lawful T DA.DeserializeInst)
     (hDB : DeserializeBytes.Lawful T DA.DeserializeBytesInst)
     (hEq : core.cmp.PartialEq.Lawful T T DA.corecmpPartialEqInst)

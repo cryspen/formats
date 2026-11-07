@@ -103,7 +103,7 @@ theorem varint.deserialize_loop_total (remainder : Slice Std.U8) (len : Std.Usiz
     (fun y : Slice Std.U8 × Std.U64 × (core.option.Option Error) => y.2.2 = core.option.Option.None)
   · rintro ⟨b, v, j⟩ ⟨hj1, hjl, hjv, hjr⟩
     dsimp only at hj1 hjl hjv hjr
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (varint.deserialize_loop.body_total len b v j hj1 hjl hl hjv hjr)
     dsimp only
     rw [hr, Aeneas.Std.WP.spec_ok]
@@ -301,7 +301,7 @@ macro_rules
       have hp := hP p.1 p.2 h3
       have hy := htf.1 val h5
       have hv : val.val = 0 := by rw [hv0]; rfl
-      have hrl : rv.val = [] := by rw [hrv]; simp [Slice.new]
+      have hrl : rv.val = [] := by rw [hrv]; simp [Slice.new_val]
       refine ⟨by simp [hrl], ?_⟩
       rw [hp.2, hrl]
       simp [show p.1.val = 0 by omega]
@@ -366,8 +366,13 @@ theorem alloc.vec.Vec.resize_U8_content (v : alloc.vec.Vec Std.U8) (n : Std.Usiz
   unfold alloc.vec.Vec.resize rust_primitives.sequence.seq_create
   simp only [mapM_clone_replicate_U8]
   mvcgen
-  all_goals (simp_all +zetaDelta [Slice.new])
-  all_goals (first | scalar_tac | (rw [← List.replicate_succ']; congr 1; omega))
+  all_goals (simp_all +zetaDelta [Slice.new_val])
+  -- `simp_all` leaves the clone result as `replicate (n - 1) x = cloned`
+  all_goals (try (subst_vars; simp only [List.length_replicate] at *))
+  all_goals first
+    | scalar_tac
+    | (have h : List.replicate _ _ = _ := ‹_›
+       rw [← h, ← List.replicate_succ']; congr 1; omega)
 
 /-- The prefix `write_bytes` writes into `lenOf n` zero bytes is the varint encoding of `n`. -/
 theorem varint.write_prefix_content (n : Nat) (w : List Std.U8)
@@ -457,8 +462,8 @@ theorem quic_vec.VLByteSlice.serialize_content (self : quic_vec.VLByteSlice) :
     have hv2 : self.val.length ≤ 2 ^ 30 - 1 := hv.2
     have hlo : varint.lenOf val.val ≤ 8 := by unfold varint.lenOf; split_ifs <;> omega
     have := congrArg List.length hl
-    simp only [comb, List.length_append, List.length_map, List.length_range, Slice.new,
-      List.length_nil] at this ⊢
+    simp only [comb, List.length_append, List.length_map, List.length_range, Slice.new_val,
+      List.length_nil, Slice.from_val] at this ⊢
     scalar_tac
   case vc4 =>
     rename_i val r hr _ v1 out comb hcomb hout hv1 hv _
@@ -469,7 +474,7 @@ theorem quic_vec.VLByteSlice.serialize_content (self : quic_vec.VLByteSlice) :
     refine ⟨hv.2, ?_⟩
     have hlv : val.val = self.val.length := hv.1
     rw [hout, List.map_append]
-    simp only [comb, hl, varint.encList, hlv, Slice.new, List.nil_append]
+    simp only [comb, hl, varint.encList, hlv, Slice.new_val, List.nil_append, Slice.from_val]
   case vc5.hQ =>
     exfalso
     rename_i val r hr _ v1 comb hcomb hv1 hv _
@@ -479,8 +484,8 @@ theorem quic_vec.VLByteSlice.serialize_content (self : quic_vec.VLByteSlice) :
     have hlo : varint.lenOf val.val ≤ 8 := by unfold varint.lenOf; split_ifs <;> omega
     have := congrArg List.length hl
     apply hcomb
-    simp only [comb, List.length_append, List.length_map, List.length_range, Slice.new,
-      List.length_nil] at this ⊢
+    simp only [comb, List.length_append, List.length_map, List.length_range, Slice.new_val,
+      List.length_nil, Slice.from_val] at this ⊢
     scalar_tac
   try_vcs
   all_goals (try (intros; simp [PostCond.ok]))

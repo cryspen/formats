@@ -42,7 +42,7 @@ theorem U8_from_be_bytes_to_be_bytes (x : Std.U8) :
   have h := fromBEBytes_map_mk_toNat (by decide : 8 % 8 = 0) x.bv
   unfold Aeneas.Std.core.num.U8.from_be_bytes Aeneas.Std.core.num.U8.to_be_bytes
   unfold UScalar.val
-  rw [BitVec.toNat_cast]
+  rw [BitVec.toNat_cast, Aeneas.Std.Array.from_val]
   exact h
 
 theorem U16_from_be_bytes_to_be_bytes (x : Std.U16) :
@@ -51,7 +51,7 @@ theorem U16_from_be_bytes_to_be_bytes (x : Std.U16) :
   have h := fromBEBytes_map_mk_toNat (by decide : 16 % 8 = 0) x.bv
   unfold Aeneas.Std.core.num.U16.from_be_bytes Aeneas.Std.core.num.U16.to_be_bytes
   unfold UScalar.val
-  rw [BitVec.toNat_cast]
+  rw [BitVec.toNat_cast, Aeneas.Std.Array.from_val]
   exact h
 
 theorem U32_from_be_bytes_to_be_bytes (x : Std.U32) :
@@ -60,7 +60,7 @@ theorem U32_from_be_bytes_to_be_bytes (x : Std.U32) :
   have h := fromBEBytes_map_mk_toNat (by decide : 32 % 8 = 0) x.bv
   unfold Aeneas.Std.core.num.U32.from_be_bytes Aeneas.Std.core.num.U32.to_be_bytes
   unfold UScalar.val
-  rw [BitVec.toNat_cast]
+  rw [BitVec.toNat_cast, Aeneas.Std.Array.from_val]
   exact h
 
 theorem U64_from_be_bytes_to_be_bytes (x : Std.U64) :
@@ -69,7 +69,7 @@ theorem U64_from_be_bytes_to_be_bytes (x : Std.U64) :
   have h := fromBEBytes_map_mk_toNat (by decide : 64 % 8 = 0) x.bv
   unfold Aeneas.Std.core.num.U64.from_be_bytes Aeneas.Std.core.num.U64.to_be_bytes
   unfold UScalar.val
-  rw [BitVec.toNat_cast]
+  rw [BitVec.toNat_cast, Aeneas.Std.Array.from_val]
   exact h
 
 /-! The other direction: bytes → integer → bytes is the identity. -/
@@ -108,34 +108,38 @@ theorem be_bytes_roundtrip (l : List Std.U8) {m : ℕ} (h : 8 * (List.map U8.bv 
 
 theorem U8_to_be_bytes_from_be_bytes (a : Aeneas.Std.Array Std.U8 1#usize) :
     Aeneas.Std.core.num.U8.to_be_bytes (Aeneas.Std.core.num.U8.from_be_bytes a) = a := by
-  apply Subtype.ext
+  apply Aeneas.Std.Array.ext
   have ha : a.val.length = 1 := by simpa using a.property
   unfold Aeneas.Std.core.num.U8.to_be_bytes Aeneas.Std.core.num.U8.from_be_bytes
+  rw [Aeneas.Std.Array.from_val]
   exact be_bytes_roundtrip a.val (by simp [ha])
 
 theorem U16_to_be_bytes_from_be_bytes (a : Aeneas.Std.Array Std.U8 2#usize) :
     Aeneas.Std.core.num.U16.to_be_bytes (Aeneas.Std.core.num.U16.from_be_bytes a) = a := by
-  apply Subtype.ext
+  apply Aeneas.Std.Array.ext
   have ha : a.val.length = 2 := by simpa using a.property
   unfold Aeneas.Std.core.num.U16.to_be_bytes Aeneas.Std.core.num.U16.from_be_bytes
+  rw [Aeneas.Std.Array.from_val]
   exact be_bytes_roundtrip a.val (by simp [ha])
 
 theorem U32_to_be_bytes_from_be_bytes (a : Aeneas.Std.Array Std.U8 4#usize) :
     Aeneas.Std.core.num.U32.to_be_bytes (Aeneas.Std.core.num.U32.from_be_bytes a) = a := by
-  apply Subtype.ext
+  apply Aeneas.Std.Array.ext
   have ha : a.val.length = 4 := by simpa using a.property
   unfold Aeneas.Std.core.num.U32.to_be_bytes Aeneas.Std.core.num.U32.from_be_bytes
+  rw [Aeneas.Std.Array.from_val]
   exact be_bytes_roundtrip a.val (by simp [ha])
 
 theorem U64_to_be_bytes_from_be_bytes (a : Aeneas.Std.Array Std.U8 8#usize) :
     Aeneas.Std.core.num.U64.to_be_bytes (Aeneas.Std.core.num.U64.from_be_bytes a) = a := by
-  apply Subtype.ext
+  apply Aeneas.Std.Array.ext
   have ha : a.val.length = 8 := by simpa using a.property
   unfold Aeneas.Std.core.num.U64.to_be_bytes Aeneas.Std.core.num.U64.from_be_bytes
+  rw [Aeneas.Std.Array.from_val]
   exact be_bytes_roundtrip a.val (by simp [ha])
 
 /-- `Option::ok_or` result is `Ok v`: the option was `some v`. -/
-theorem ok_or_eq_ok {α E : Type} {o : core.option.Option α} {e : E}
+theorem ok_or_eq_ok {α E : Type _} {o : core.option.Option α} {e : E}
     {r : core.result.Result α E} {v : α}
     (h : r = match o with | some x => .Ok x | none => .Err e) (hv : r = .Ok v) : o = some v := by
   subst h
@@ -144,7 +148,7 @@ theorem ok_or_eq_ok {α E : Type} {o : core.option.Option α} {e : E}
   | some x => simp only [core.result.Result.Ok.injEq] at hv; rw [hv]
 
 /-- `Option::ok_or` result is an `Err`: the option was `none`. -/
-theorem ok_or_eq_err {α E : Type} {o : core.option.Option α} {e e' : E}
+theorem ok_or_eq_err {α E : Type _} {o : core.option.Option α} {e e' : E}
     {r : core.result.Result α E}
     (h : r = match o with | some x => .Ok x | none => .Err e) (hv : r = .Err e') :
     o = none ∧ e' = e := by
@@ -515,7 +519,7 @@ theorem prefixCheck_spec (c : Slice Std.U8) (out : alloc.vec.Vec Std.U8) (consum
     (heq := core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec)
   have hdec : ∀ x y : Slice Std.U8, decide (x = y) = decide (x.val = y.val) := by
     intro x y
-    have : x = y ↔ x.val = y.val := ⟨fun h => by rw [h], fun h => Subtype.ext h⟩
+    have : x = y ↔ x.val = y.val := Slice.eq_iff x y
     simp only [this]
   have hs1 : ∀ x y : Slice Std.U8, ⦃ ⌜ True ⌝ ⦄
       (core.Shared1A.Insts.CoreCmpPartialEqShared0B
@@ -542,7 +546,7 @@ theorem prefixCheck_spec (c : Slice Std.U8) (out : alloc.vec.Vec Std.U8) (consum
   · rintro ⟨hle, htk⟩
     obtain ⟨t, rfl, ht⟩ := ho.1 hle
     congr 1
-    exact Subtype.ext (ht.trans htk)
+    exact Slice.ext _ _ (ht.trans htk)
 
 /-- Exact behaviour of `U24::tls_deserialize_bytes`. -/
 theorem U24_deserialize_char (bytes : Slice Std.U8) :

@@ -45,7 +45,7 @@ b`: `Ok b.len`, the bytes `b` appended; `none`: an `Err`) meets the trait-level 
 `tls_serialize` (both halves), and `encode` is `out`. -/
 
 /-- The behaviour of `x`'s serializer on every lawful writer with room for `sz` bytes. -/
-def SerRuns {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize) (out : Option (List Std.U8)) :
+def SerRuns {T : Type _} (SI : Serialize T) (x : T) (sz : Std.Usize) (out : Option (List Std.U8)) :
     Prop :=
   ∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
     ∀ w, (core.io.write.Write.view WI w).length + sz.val ≤ imax →
@@ -54,49 +54,53 @@ def SerRuns {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize) (out : Option
         core.io.write.Write.view WI w' = core.io.write.Write.view WI w ++ b) ∧
       (out = none → ∃ e, r = .Err e)
 
-theorem encode_of_runs {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize)
+theorem encode_of_runs {T : Type _} (SI : Serialize T) (x : T) (sz : Std.Usize)
     (out : Option (List Std.U8)) (h : SerRuns SI x sz out) (hroom : sz.val ≤ imax) :
     ∃ e, spec.io.encode SI x = ok e ∧ (∀ b, out = some b → ∃ bv : alloc.vec.Vec Std.U8,
       e = .Ok bv ∧ (bv : Slice Std.U8).val = b) ∧ (out = none → ∃ err, e = .Err err) := by
   obtain ⟨r, w', hr, hs, hn⟩ := h _ alloc.vec.VecU8.Insts.CoreIoWriteWrite StdIo.vec_lawful
-    ⟨[], by simp⟩ (by rw [StdIo.vec_sink]; simpa using hroom)
-  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok ⟨[], by simp⟩ := rfl
+    (Slice.new _) (by rw [StdIo.vec_sink]; simpa using hroom)
+  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok (Slice.new _) := by
+    simp [CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty, Aeneas.Std.bind_ok,
+      Aeneas.Std.bind_tc_ok]
   unfold spec.io.encode
   rw [hnew]
-  simp only [bind_tc_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   rw [hr]
-  simp only [bind_tc_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   cases out with
   | none =>
     obtain ⟨err, rfl⟩ := hn rfl
-    exact ⟨_, rfl, fun b hb => (by cases hb), fun _ => ⟨err, rfl⟩⟩
+    exact ⟨_, by simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from, Aeneas.Std.bind_ok], fun b hb => (by cases hb), fun _ => ⟨err, rfl⟩⟩
   | some b =>
     obtain ⟨⟨n, rfl, _⟩, hv⟩ := hs b rfl
-    refine ⟨_, rfl, fun b' hb' => ⟨w', rfl, ?_⟩, fun h => (by cases h)⟩
+    refine ⟨_, by simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch], fun b' hb' => ⟨w', rfl, ?_⟩, fun h => (by cases h)⟩
     cases hb'
     rw [StdIo.vec_sink, StdIo.vec_sink] at hv
     simpa using hv
 
-theorem ok_triple_of {α : Type} {x : α} {P : α → Prop} (h : P x) :
+theorem ok_triple_of {α : Type _} {x : α} {P : α → Prop} (h : P x) :
     ⦃ ⌜ True ⌝ ⦄ (ok x : RustM α) ⦃ ⇓ r => ⌜ P r ⌝ ⦄ := RustM.ok_spec h
 
 /-- Using a `holds` fact through a triple whose post implies the goal. -/
 theorem holds_imp {m : RustM Prop} {B : Prop} (h : m.holds)
     (h2 : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ p => ⌜ p → B ⌝ ⦄) : B := by
-  obtain ⟨p1, e1, hp1⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
-  obtain ⟨p2, e2, hp2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h2
+  obtain ⟨p1, e1, hp1⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
+  obtain ⟨p2, e2, hp2⟩ := Aeneas.Std.triple_iff_exists_ok.mp h2
   rw [e1] at e2
-  cases e2
+  obtain rfl := RustM.ok_injective e2
   exact hp2 hp1
 
 /-- Using a `holds` fact through a partial triple whose post implies the goal. -/
 theorem holds_imp' {m : RustM Prop} {B : Prop} (h : m.holds)
     (h2 : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? p => ⌜ p → B ⌝ ⦄) : B := by
-  obtain ⟨p1, e1, hp1⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨p1, e1, hp1⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   exact ok_of_partial_triple h2 e1 hp1
 
 /-- The `requires` of `tls_serialize`: room for `sz` bytes in the writer's view. -/
-theorem Serialize.tls_serialize.pre_bound {T W : Type} (SI : Serialize T)
+theorem Serialize.tls_serialize.pre_bound {T : Type _} {W : Type} (SI : Serialize T)
     (WI : core.io.write.Write W) (x : T) (w : W) (sz : Std.Usize)
     (hsz : SI.SizeInst.tls_serialized_len x = ok sz)
     (h : (Serialize.tls_serialize.pre WI SI.SizeInst SI x w).holds) :
@@ -106,13 +110,13 @@ theorem Serialize.tls_serialize.pre_bound {T W : Type} (SI : Serialize T)
   mvcgen [hsz, spec.io.sink]
   rename_i m hm l hl d hd _
   intro hdec
-  have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]
+  have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]; simp
   simp only [decide_eq_true_eq] at hdec
   have : sz.val ≤ d.val := hdec
   unfold imax; rw [← hm]; omega
 
 /-- The trait-level contract of `tls_serialize`, from the behaviour on lawful writers. -/
-theorem Serialize.tls_serialize_spec_of_runs' {T : Type} (SI : Serialize T) (x : T)
+theorem Serialize.tls_serialize_spec_of_runs' {T : Type _} (SI : Serialize T) (x : T)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz)
     (out : Option (List Std.U8)) (hlen : sz.val ≤ imax → ∀ b, out = some b → b.length = sz.val)
     (h : SerRuns SI x sz out) {W : Type} (WI : core.io.write.Write W)
@@ -125,8 +129,8 @@ theorem Serialize.tls_serialize_spec_of_runs' {T : Type} (SI : Serialize T) (x :
   obtain ⟨e, he, hes, hen⟩ := encode_of_runs SI x sz out h (by omega)
   rw [hr]
   refine ok_triple_of ?_
-  have hsk : ∀ w0, spec.io.sink WI w0 = ok ⟨core.io.write.Write.view WI w0,
-      core.io.write.Write.view_le WI w0⟩ := fun _ => rfl
+  have hsk : ∀ w0, spec.io.sink WI w0 = ok (Slice.from (core.io.write.Write.view WI w0)
+      (core.io.write.Write.view_le WI w0)) := fun _ => rfl
   unfold Serialize.tls_serialize.post RustM.holds
   cases out with
   | none =>
@@ -148,7 +152,7 @@ theorem Serialize.tls_serialize_spec_of_runs' {T : Type} (SI : Serialize T) (x :
       exact absurd (UScalar.eq_of_val_eq (by
         rw [hl, Slice.len_val]; simp [Slice.length, hbv, hlen (by omega) b rfl])) hne
 
-theorem Serialize.tls_serialize_spec_of_runs {T : Type} (SI : Serialize T) (x : T)
+theorem Serialize.tls_serialize_spec_of_runs {T : Type _} (SI : Serialize T) (x : T)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz)
     (out : Option (List Std.U8)) (hlen : ∀ b, out = some b → b.length = sz.val)
     (h : SerRuns SI x sz out) {W : Type} (WI : core.io.write.Write W)
@@ -159,7 +163,7 @@ theorem Serialize.tls_serialize_spec_of_runs {T : Type} (SI : Serialize T) (x : 
   Serialize.tls_serialize_spec_of_runs' SI x sz hsz out (fun _ => hlen) h WI hWI w hpre
 
 /-- What the trait-level post of `tls_serialize` gives (used by generic callers). -/
-theorem Serialize.tls_serialize.post_elim {T W : Type} (SI : Serialize T)
+theorem Serialize.tls_serialize.post_elim {T : Type _} {W : Type} (SI : Serialize T)
     (WI : core.io.write.Write W) (x : T) (w : W)
     (r : core.result.Result Std.Usize Error × W)
     (h : (Serialize.tls_serialize.post WI SI.SizeInst SI x w r).holds) :
@@ -169,7 +173,7 @@ theorem Serialize.tls_serialize.post_elim {T W : Type} (SI : Serialize T)
         core.io.write.Write.view WI r.2 = core.io.write.Write.view WI w ++ b.val) ∧
       (∀ err, e = .Err err → ∃ err', r.1 = .Err err') := by
   obtain ⟨res, w'⟩ := r
-  obtain ⟨p, hp, hpt⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨p, hp, hpt⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   cases he : spec.io.encode SI x with
   | fail err => simp [Serialize.tls_serialize.post, he, Functor.map] at hp
   | div => simp [Serialize.tls_serialize.post, he, Functor.map] at hp
@@ -177,7 +181,7 @@ theorem Serialize.tls_serialize.post_elim {T W : Type} (SI : Serialize T)
     refine ⟨e, rfl, ?_⟩
     apply holds_imp' h
     have he' : ⦃ ⌜ True ⌝ ⦄ spec.io.encode SI x ⦃ ⇓? r => ⌜ r = e ⌝ ⦄ :=
-      partial_triple_of_ok fun r hr => by rw [he] at hr; cases hr; rfl
+      partial_triple_of_ok fun r hr => by rw [he] at hr; obtain rfl := RustM.ok_injective hr; rfl
     have hS : ⦃ ⌜ True ⌝ ⦄ SI.SizeInst.tls_serialized_len x
         ⦃ ⇓? n => ⌜ SI.SizeInst.tls_serialized_len x = ok n ⌝ ⦄ :=
       partial_triple_of_ok fun r hr => hr
@@ -191,14 +195,14 @@ theorem Serialize.tls_serialize.post_elim {T W : Type} (SI : Serialize T)
       simp only [decide_eq_true_eq] at hdec hcat
       refine ⟨fun b' hb' => ?_, fun _ h => by cases h⟩
       cases hb'
-      exact ⟨by rw [hsz, ← hll', hl], by rw [hdec, hl2], hcat⟩
+      exact ⟨by rw [hsz, ← hll', hl], by rw [hdec, hl2], by simpa using hcat⟩
     all_goals try (intro hf; cases hf)
     rename_i _ err _ e2 _ he1
     subst he1
     exact ⟨fun b hb => (by cases hb), fun _ _ => ⟨_, rfl⟩⟩
 
 /-- The `requires` of `tls_serialize` from room in the writer's view. -/
-theorem Serialize.tls_serialize.pre_of_bound {T W : Type} (SI : Serialize T)
+theorem Serialize.tls_serialize.pre_of_bound {T : Type _} {W : Type} (SI : Serialize T)
     (WI : core.io.write.Write W) (x : T) (w : W) (sz : Std.Usize)
     (hsz : SI.SizeInst.tls_serialized_len x = ok sz)
     (hb : (core.io.write.Write.view WI w).length + sz.val ≤ imax) :
@@ -207,12 +211,12 @@ theorem Serialize.tls_serialize.pre_of_bound {T W : Type} (SI : Serialize T)
   unfold Serialize.tls_serialize.pre RustM.holds
   mvcgen [hsz, spec.io.sink]
   · rename_i m hm l hl d hd _
-    have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]
+    have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]; simp
     simp only [decide_eq_true_eq]
     show sz.val ≤ d.val
     rw [← hm] at hb; omega
   · rename_i m hm l hl hlt
-    have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]
+    have hlv : l.val = (core.io.write.Write.view WI w).length := by rw [hl, Slice.len_val]; simp
     rw [← hm] at hb; omega
 
 theorem slice_eq_U8_spec (a b : Slice Std.U8) :
@@ -220,7 +224,7 @@ theorem slice_eq_U8_spec (a b : Slice Std.U8) :
     ⦃ ⇓ r => ⌜ r = decide (a.val = b.val) ⌝ ⦄ :=
   core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec _ a b core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec
 
-theorem Serialize.tls_serialize_detached.post_ok {T : Type} (SI : Serialize T) (x : T)
+theorem Serialize.tls_serialize_detached.post_ok {T : Type _} (SI : Serialize T) (x : T)
     (b w : alloc.vec.Vec Std.U8) (he : spec.io.encode SI x = ok (.Ok b))
     (hw : (w : Slice Std.U8).val = (b : Slice Std.U8).val) :
     (Serialize.tls_serialize_detached.post SI.SizeInst SI x (.Ok w)).holds := by
@@ -232,14 +236,16 @@ theorem Serialize.tls_serialize_detached.post_ok {T : Type} (SI : Serialize T) (
   rename_i _ r hr
   rw [hr, hw]; simp
 
-theorem Serialize.tls_serialize_detached.post_err {T : Type} (SI : Serialize T) (x : T) (e : Error) :
+theorem Serialize.tls_serialize_detached.post_err {T : Type _} (SI : Serialize T) (x : T) (e : Error) :
     (Serialize.tls_serialize_detached.post SI.SizeInst SI x (.Err e)).holds := by
   simp [Serialize.tls_serialize_detached.post, core.result.Result.is_err, RustM.holds]
   mvcgen
 
 /-- The default body of `tls_serialize_detached`, from the contract of the type's own
-`tls_serialize` at `Vec<u8>` (one generic proof for every impl that keeps the default). -/
-theorem Serialize.tls_serialize_detached.default_spec {T : Type} (SI : Serialize T) (x : T)
+`tls_serialize` at `Vec<u8>` (one generic proof for every impl that keeps the default).
+Elaborated without the expected type, as `SerSpec.detached` (`impl_def` fields). -/
+@[elab_without_expected_type]
+theorem Serialize.tls_serialize_detached.default_spec {T : Type _} (SI : Serialize T) (x : T)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz)
     (hser : ∀ w, (Serialize.tls_serialize.pre alloc.vec.VecU8.Insts.CoreIoWriteWrite
         SI.SizeInst SI x w).holds →
@@ -250,8 +256,8 @@ theorem Serialize.tls_serialize_detached.default_spec {T : Type} (SI : Serialize
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize_detached.post SI.SizeInst SI x r).holds ⌝ ⦄ := by
   by_cases hle : sz.val ≤ imax
   · have hrun := hser (Slice.new Std.U8) (Serialize.tls_serialize.pre_of_bound SI _ x _ sz hsz
-      (by rw [StdIo.vec_sink]; simpa [Slice.new] using hle))
-    obtain ⟨⟨res, w'⟩, hr, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hrun
+      (by rw [StdIo.vec_sink]; simpa [Slice.new_val] using hle))
+    obtain ⟨⟨res, w'⟩, hr, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp hrun
     obtain ⟨e, he, hok, herr⟩ := Serialize.tls_serialize.post_elim SI _ x _ _ hpost
     have key : ∀ v, res = .Ok v → ∃ b, e = .Ok b ∧ v = Slice.len b ∧
         (w' : Slice Std.U8).val = (b : Slice Std.U8).val := by
@@ -263,7 +269,7 @@ theorem Serialize.tls_serialize_detached.default_spec {T : Type} (SI : Serialize
         rw [hv] at h2
         refine ⟨b, rfl, by cases h2; rfl, ?_⟩
         rw [StdIo.vec_sink, StdIo.vec_sink] at h3
-        simpa [Slice.new] using h3
+        simpa [Slice.new_val] using h3
     unfold Serialize.tls_serialize_detached.default
     mvcgen [hsz, checked_capacity, CoreModels.alloc.vec.Vec.with_capacity,
       CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty, hr]
@@ -290,7 +296,7 @@ theorem Serialize.tls_serialize_detached.default_spec {T : Type} (SI : Serialize
 /-! ### `u8`, `u16` -/
 
 /-- A serializer that writes one fixed buffer `bs` with `write_all` (the integer serializers). -/
-theorem ser_runs_of_write_all {T : Type} (SI : Serialize T) (x : T) (bs : Slice Std.U8)
+theorem ser_runs_of_write_all {T : Type _} (SI : Serialize T) (x : T) (bs : Slice Std.U8)
     (sz : Std.Usize) (hsz : sz.val = bs.val.length)
     (hser : ∀ {W : Type} (WI : core.io.write.Write W) (w w' : W),
       WI.write_all w bs = ok (.Ok (), w') → SI.tls_serialize WI x w = ok (.Ok sz, w')) :
@@ -307,19 +313,20 @@ theorem U8.ser_runs (x : Std.U8) : SerRuns U8.Insts.Tls_codecSerialize x 1#usize
   rw [← hs]
   apply ser_runs_of_write_all U8.Insts.Tls_codecSerialize x _ 1#usize (by rw [hs]; rfl)
   intro W WI w w' hw
-  obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U8.to_be_bytes_spec x)
-  simp only [U8.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
-  rfl
+  obtain ⟨_, he, rfl⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.num.U8.to_be_bytes_spec x)
+  simp [U8.Insts.Tls_codecSerialize.tls_serialize, he, lift, core.array.Array.as_slice,
+    rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hw, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 theorem U16.ser_runs (x : Std.U16) : SerRuns U16.Insts.Tls_codecSerialize x 2#usize
     (some (Aeneas.Std.core.num.U16.to_be_bytes x).val) := by
+  rw [← Array.val_to_slice]
   apply ser_runs_of_write_all U16.Insts.Tls_codecSerialize x
     (Array.to_slice (Aeneas.Std.core.num.U16.to_be_bytes x)) 2#usize
     (by simpa [Array.to_slice] using (Aeneas.Std.core.num.U16.to_be_bytes x).property.symm)
   intro W WI w w' hw
-  obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U16.to_be_bytes_spec x)
-  simp only [U16.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
-  rfl
+  obtain ⟨_, he, rfl⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.num.U16.to_be_bytes_spec x)
+  simp [U16.Insts.Tls_codecSerialize.tls_serialize, he, lift, core.array.Array.as_slice,
+    rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hw, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 /-! ### Deserializers
 
@@ -327,25 +334,25 @@ A deserializer whose `Ok` results on lawful readers consume exactly the size of 
 the trait-level contract of `tls_deserialize`. `P` (the bytes before, the value, the bytes
 consumed) carries what a round trip needs. -/
 
-def DeRuns {T : Type} (DI : Deserialize T) (P : List Std.U8 → T → Nat → Prop) : Prop :=
+def DeRuns {T : Type _} (DI : Deserialize T) (P : List Std.U8 → T → Nat → Prop) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
     StdIo.RLaw RI v a → ∀ r, ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r
       ⦃ ⇓ p => ⌜ ∀ val, p.1 = .Ok val → ∃ n sz, n ≤ (v r).length ∧ p.2 = a r n ∧
         DI.SizeInst.tls_serialized_len val = ok sz ∧ sz.val = n ∧ P (v r) val n ⌝ ⦄
 
 /-- Decoding gives back `x` from any lawful reader yielding `b ++ rest`, leaving `rest`. -/
-def DecodesTo {T : Type} (DI : Deserialize T) (b : List Std.U8) (x : T) : Prop :=
+def DecodesTo {T : Type _} (DI : Deserialize T) (b : List Std.U8) (x : T) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
     StdIo.RLaw RI v a → ∀ r rest, v r = b ++ rest →
     ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r ⦃ ⇓ p => ⌜ p.1 = .Ok x ∧ v p.2 = rest ⌝ ⦄
 
-theorem Deserialize.tls_deserialize_spec_of_runs {T : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize_spec_of_runs {T : Type _} (DI : Deserialize T)
     {P : List Std.U8 → T → Nat → Prop} (h : DeRuns DI P) {R : Type}
     (RI : alloc.io.read.Read R) (hRI : alloc.io.read.Read.Lawful R RI) (r : R) :
     ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r
     ⦃ ⇓ p => ⌜ (Deserialize.tls_deserialize.post RI DI.SizeInst DI r p).holds ⌝ ⦄ := by
   have law := hRI.law'
-  obtain ⟨⟨res, r'⟩, hr, hok⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h _ RI _ _ law r)
+  obtain ⟨⟨res, r'⟩, hr, hok⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h _ RI _ _ law r)
   rw [hr]
   refine ok_triple_of ?_
   unfold Deserialize.tls_deserialize.post RustM.holds
@@ -361,17 +368,17 @@ theorem Deserialize.tls_deserialize_spec_of_runs {T : Type} (DI : Deserialize T)
       simp only [decide_eq_true_eq]
       apply UScalar.eq_of_val_eq
       rw [hs, hl2, hl1, Slice.len_val, Slice.len_val]
-      simp only [Slice.length, hv, List.length_drop]
+      simp only [Slice.length, Slice.from_val, hv, List.length_drop]
       omega
     · rename_i _ _ l hl1 l' hl2 hov
       rw [hl2, Slice.len_val] at hov
-      simp only [Slice.length, hv, List.length_drop] at hov
+      simp only [Slice.length, Slice.from_val, hv, List.length_drop] at hov
       scalar_tac
     · rename_i _ hne
       exfalso; apply hne; simp only [decide_eq_true_eq]; exact ⟨n, hn, rfl⟩
 
 /-- What the trait-level post of `tls_deserialize` gives on `Ok`. -/
-theorem Deserialize.tls_deserialize.post_elim {T R : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize.post_elim {T : Type _} {R : Type} (DI : Deserialize T)
     (RI : alloc.io.read.Read R) (r : R) (p : core.result.Result T Error × R) (val : T)
     (hv : p.1 = .Ok val)
     (h : (Deserialize.tls_deserialize.post RI DI.SizeInst DI r p).holds) :
@@ -383,25 +390,25 @@ theorem Deserialize.tls_deserialize.post_elim {T R : Type} (DI : Deserialize T)
   subst hv
   cases hsz : DI.SizeInst.tls_serialized_len val with
   | fail _ =>
-    obtain ⟨q, hq, hqt⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+    obtain ⟨q, hq, hqt⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
     simp [Deserialize.tls_deserialize.post, core.result.Result.is_err, core.result.Result.is_ok_and,
       __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once, spec.io.advanced,
       spec.io.stream, hsz, Functor.map] at hq
     split at hq
     · simp [CoreModels.alloc.vec.Vec.len, rust_primitives.sequence.seq_len] at hq
-    · cases hq; cases hqt
+    · simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, RustM.ok.injEq] at hq; subst hq; simp at hqt
   | div =>
-    obtain ⟨q, hq, hqt⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+    obtain ⟨q, hq, hqt⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
     simp [Deserialize.tls_deserialize.post, core.result.Result.is_err, core.result.Result.is_ok_and,
       __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once, spec.io.advanced,
       spec.io.stream, hsz, Functor.map] at hq
     split at hq
     · simp [CoreModels.alloc.vec.Vec.len, rust_primitives.sequence.seq_len] at hq
-    · cases hq; cases hqt
+    · simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, RustM.ok.injEq] at hq; subst hq; simp at hqt
   | ok sz =>
     apply holds_imp' h
     have hS : ⦃ ⌜ True ⌝ ⦄ DI.SizeInst.tls_serialized_len val ⦃ ⇓? n => ⌜ n = sz ⌝ ⦄ :=
-      partial_triple_of_ok fun n hn => by rw [hsz] at hn; cases hn; rfl
+      partial_triple_of_ok fun n hn => by rw [hsz] at hn; obtain rfl := RustM.ok_injective hn; rfl
     simp only [Deserialize.tls_deserialize.post, core.result.Result.is_err]
     mvcgen [core.result.Result.is_ok_and, spec.io.advanced, spec.io.stream, hS,
       __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once]
@@ -414,13 +421,13 @@ theorem Deserialize.tls_deserialize.post_elim {T R : Type} (DI : Deserialize T)
       simpa [Slice.length] using this
     · intro hf; cases hf
 
-theorem Deserialize.tls_deserialize_exact.post_err {T T1 : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize_exact.post_err {T : Type _} {T1 : Type} (DI : Deserialize T)
     (AI : core.convert.AsRef T1 (Slice Std.U8)) (bytes : T1) (e : Error) :
     (Deserialize.tls_deserialize_exact.post DI.SizeInst DI AI bytes (.Err e)).holds := by
   simp [Deserialize.tls_deserialize_exact.post, core.result.Result.is_err, RustM.holds]
   mvcgen
 
-theorem Deserialize.tls_deserialize_exact.post_ok {T T1 : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize_exact.post_ok {T : Type _} {T1 : Type} (DI : Deserialize T)
     (AI : core.convert.AsRef T1 (Slice Std.U8)) (bytes : T1) (val : T) (s : Slice Std.U8)
     (sz : Std.Usize) (hsz : DI.SizeInst.tls_serialized_len val = ok sz)
     (hs : AI.as_ref bytes = ok s) (hl : s.val.length = sz.val) :
@@ -435,7 +442,7 @@ theorem Deserialize.tls_deserialize_exact.post_ok {T T1 : Type} (DI : Deserializ
 
 /-- The default body of `tls_deserialize_exact`, from the contract of the type's own
 `tls_deserialize` at `&[u8]` (one generic proof for every impl that keeps the default). -/
-theorem Deserialize.tls_deserialize_exact.default_spec {T T1 : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize_exact.default_spec {T : Type _} {T1 : Type} (DI : Deserialize T)
     (AI : core.convert.AsRef T1 (Slice Std.U8)) (hAI : core.convert.AsRef.Lawful T1 (Slice Std.U8) AI)
     (bytes : T1)
     (hde : ∀ s, ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize alloc.Shared0SliceU8.Insts.AllocIoReadRead s
@@ -443,8 +450,8 @@ theorem Deserialize.tls_deserialize_exact.default_spec {T T1 : Type} (DI : Deser
         DI.SizeInst DI s p).holds ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ Deserialize.tls_deserialize_exact.default DI AI bytes
     ⦃ ⇓ r => ⌜ (Deserialize.tls_deserialize_exact.post DI.SizeInst DI AI bytes r).holds ⌝ ⦄ := by
-  obtain ⟨s, hs, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hAI.as_ref_spec bytes)
-  obtain ⟨⟨res, s'⟩, hr, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hde s)
+  obtain ⟨s, hs, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hAI.as_ref_spec bytes)
+  obtain ⟨⟨res, s'⟩, hr, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hde s)
   have hv := StdIo.view_eq StdIo.slice_law
   unfold Deserialize.tls_deserialize_exact.default
   mvcgen [hs, hr, core.slice.Slice.is_empty_spec]
@@ -454,7 +461,7 @@ theorem Deserialize.tls_deserialize_exact.default_spec {T T1 : Type} (DI : Deser
     obtain ⟨-, sz, hsz, hlen⟩ := Deserialize.tls_deserialize.post_elim DI _ s _ val hres hpost
     rw [hv, hv] at hlen
     subst hbe
-    simp only [decide_eq_true_eq] at hb
+    simp only [eq_comm (a := true), decide_eq_true_eq] at hb
     have h0 : s'.val.length = 0 := by
       have := congrArg UScalar.val hb; simpa [Slice.len_val, Slice.length] using this
     exact Deserialize.tls_deserialize_exact.post_ok DI AI bytes val s sz hsz hs (by simp at hlen; omega)
@@ -462,8 +469,8 @@ theorem Deserialize.tls_deserialize_exact.default_spec {T T1 : Type} (DI : Deser
   · intro _; exact Deserialize.tls_deserialize_exact.post_err DI AI bytes _
 
 theorem from_io_eof :
-    Error.Insts.CoreConvertFromError.from core.io.error.Error.READ_EXACT_EOF = ok Error.EndOfStream :=
-  rfl
+    Error.Insts.CoreConvertFromError.from core.io.error.Error.READ_EXACT_EOF = ok Error.EndOfStream := by
+  rw [Error.Insts.CoreConvertFromError.from, core.io.error.Error.kind, Aeneas.Std.bind_ok]; rfl
 
 /-- `read_exact` on a lawful reader, as a triple. -/
 theorem read_exact_spec {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
@@ -493,13 +500,21 @@ theorem to_slice_mut_len {N : Std.Usize} (arr : Aeneas.Std.Array Std.U8 N) :
     (arr.to_slice_mut).1.val.length = N.val := by
   simpa [Array.to_slice_mut, Array.to_slice] using arr.property
 
+/-- `arr.as_mut_slice()` (extracted as `core.array.Array.as_mut_slice`, formerly
+`lift (Array.to_slice_mut arr)`), with the post of `Array.to_slice_mut_spec`. Pass it to `mvcgen`. -/
+theorem as_mut_slice_spec {α : Type _} {N : Std.Usize} (arr : Aeneas.Std.Array α N) :
+    ⦃ ⌜ True ⌝ ⦄ core.array.Array.as_mut_slice arr
+    ⦃ ⇓ r => ⌜ r.1.val = arr.val ∧ r.2 = Aeneas.Std.Array.from_slice arr ⌝ ⦄ := by
+  unfold core.array.Array.as_mut_slice rust_primitives.slice.array_as_mut_slice
+  exact ok_triple_of (by simp [Array.to_slice_mut, Array.to_slice])
+
 /-- What a fixed-width integer deserializer (`N` bytes, decoded by `fromb`) gives. -/
-def FixedDe {T : Type} (N : Std.Usize) (fromb : Aeneas.Std.Array Std.U8 N → T)
+def FixedDe {T : Type _} (N : Std.Usize) (fromb : Aeneas.Std.Array Std.U8 N → T)
     (l : List Std.U8) (val : T) (n : Nat) : Prop :=
   n = N.val ∧ ∃ arr : Aeneas.Std.Array Std.U8 N, arr.val = l.take N.val ∧ val = fromb arr
 
 /-- The behaviour of a fixed-width integer deserializer on a lawful reader. -/
-def FixedRuns {T : Type} (DI : Deserialize T) (N : Std.Usize)
+def FixedRuns {T : Type _} (DI : Deserialize T) (N : Std.Usize)
     (fromb : Aeneas.Std.Array Std.U8 N → T) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
     StdIo.RLaw RI v a → ∀ r, ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r
@@ -507,7 +522,7 @@ def FixedRuns {T : Type} (DI : Deserialize T) (N : Std.Usize)
         arr.val = (v r).take N.val ∧ p = (.Ok (fromb arr), a r N.val)) ∧
       ((v r).length < N.val → ∃ e, p.1 = .Err e) ⌝ ⦄
 
-theorem DeRuns_of_fixed {T : Type} (DI : Deserialize T) (N : Std.Usize)
+theorem DeRuns_of_fixed {T : Type _} (DI : Deserialize T) (N : Std.Usize)
     (fromb : Aeneas.Std.Array Std.U8 N → T) (hsz : ∀ val, DI.SizeInst.tls_serialized_len val = ok N)
     (h : FixedRuns DI N fromb) : DeRuns DI (FixedDe N fromb) := by
   intro R RI v a law r
@@ -519,14 +534,14 @@ theorem DeRuns_of_fixed {T : Type} (DI : Deserialize T) (N : Std.Usize)
   · obtain ⟨e, he⟩ := hp.2 (by omega)
     rw [he] at hval; cases hval
 
-theorem DecodesTo_of_fixed {T : Type} (DI : Deserialize T) (N : Std.Usize)
+theorem DecodesTo_of_fixed {T : Type _} (DI : Deserialize T) (N : Std.Usize)
     (fromb : Aeneas.Std.Array Std.U8 N → T) (h : FixedRuns DI N fromb)
     (arr : Aeneas.Std.Array Std.U8 N) : DecodesTo DI arr.val (fromb arr) := by
   intro R RI v a law r rest hv
   have hl : arr.val.length = N.val := by simpa using arr.property
   refine triple_post_mono (h _ RI v a law r) fun p hp => ?_
   obtain ⟨arr', harr, rfl⟩ := hp.1 (by rw [hv]; simp)
-  have : arr' = arr := Subtype.ext (by rw [harr, hv, List.take_left' hl])
+  have : arr' = arr := Std.Array.ext _ _ (by rw [harr, hv, List.take_left' hl])
   subst this
   refine ⟨rfl, ?_⟩
   rw [law.adv_view r _ (by rw [hv]; simp), hv, List.drop_left' hl]
@@ -537,7 +552,8 @@ buffer of `default`, then `from_be_bytes` (the impl's function, its `default`, i
 macro "fixed_runs" f:ident dflt:ident tob:ident fromb:ident N:term : tactic => `(tactic| (
   intro R RI v a law r
   have hre := read_exact_spec law r
-  mvcgen [$f:ident, hre, $dflt:ident, $tob:ident, $fromb:ident]
+  mvcgen [$f:ident, hre, $dflt:ident, $tob:ident, $fromb:ident, core.array.Array.as_mut_slice,
+    rust_primitives.slice.array_as_mut_slice]
   · rename_i arr _ p hp _ _ _ x1 hcf x hx
     have hl : (arr.to_slice_mut).1.val.length = ($N : Std.Usize).val := to_slice_mut_len arr
     by_cases h1 : ($N : Std.Usize).val ≤ (v r).length
@@ -619,12 +635,12 @@ theorem U16.de_spec {R : Type} (RI : alloc.io.read.Read R) (hRI : alloc.io.read.
 From two per-type facts: the encoding (`encode x = Ok b`) and decoding of `b ++ rest` on every
 lawful reader (`DecodesTo`). -/
 
-theorem PartialEq.eq_self {T : Type} {PI : core.cmp.PartialEq T T}
+theorem PartialEq.eq_self {T : Type _} {PI : core.cmp.PartialEq T T}
     (h : core.cmp.PartialEq.Lawful T T PI) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ PI.eq x x ⦃ ⇓ r => ⌜ r = true ⌝ ⦄ :=
   triple_post_mono (h.eq_spec x x) fun r hr => hr.mpr HEq.rfl
 
-theorem spec.io.RoundTripStd.round_trip_std.pre_elim {T R : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_std.pre_elim {T : Type _} {R : Type} (RT : spec.io.RoundTripStd T)
     (RI : alloc.io.read.Read R) (x : T) (bv : alloc.vec.Vec Std.U8) (reader : R)
     (rest : Slice Std.U8) (henc : spec.io.encode RT.SerializeInst x = ok (.Ok bv))
     (h : (spec.io.RoundTripStd.round_trip_std.pre RI RT.SerializeInst RT.DeserializeInst
@@ -632,7 +648,7 @@ theorem spec.io.RoundTripStd.round_trip_std.pre_elim {T R : Type} (RT : spec.io.
     alloc.io.read.Read.view RI reader = (bv : Slice Std.U8).val ++ rest.val := by
   apply holds_imp' h
   have he' : ⦃ ⌜ True ⌝ ⦄ spec.io.encode RT.SerializeInst x ⦃ ⇓? r => ⌜ r = .Ok bv ⌝ ⦄ :=
-    partial_triple_of_ok fun r hr => by rw [henc] at hr; cases hr; rfl
+    partial_triple_of_ok fun r hr => by rw [henc] at hr; obtain rfl := RustM.ok_injective hr; rfl
   unfold spec.io.RoundTripStd.round_trip_std.pre
   mvcgen [he', core.result.Result.is_ok_and, spec.io.stream, spec.io.is_concat,
     spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
@@ -641,7 +657,7 @@ theorem spec.io.RoundTripStd.round_trip_std.pre_elim {T R : Type} (RT : spec.io.
   cases ht
   simp
 
-theorem spec.io.RoundTripStd.round_trip_std_of {T : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_std_of {T : Type _} (RT : spec.io.RoundTripStd T)
     (hEq : core.cmp.PartialEq.Lawful T T RT.corecmpPartialEqInst) (x : T)
     (bv : alloc.vec.Vec Std.U8) (henc : spec.io.encode RT.SerializeInst x = ok (.Ok bv))
     (hdec : DecodesTo RT.DeserializeInst (bv : Slice Std.U8).val x) {R : Type}
@@ -665,12 +681,12 @@ theorem spec.io.RoundTripStd.round_trip_std_of {T : Type} (RT : spec.io.RoundTri
     rw [hp.1] at ht; cases ht
     mvcgen [heq, slice_eq_U8_spec]
     rename_i _ _ q hq
-    rw [hq]; exact decide_eq_true hp.2
+    rw [hq]; exact decide_eq_true (by simpa using hp.2)
   · rename_i p hp e he _
     rw [hp.1] at he; cases he
 
 /-- The default `tls_deserialize_exact` on a slice holding exactly an encoding of `x`. -/
-theorem Deserialize.tls_deserialize_exact.default_decodes {T : Type} (DI : Deserialize T)
+theorem Deserialize.tls_deserialize_exact.default_decodes {T : Type _} (DI : Deserialize T)
     (b : List Std.U8) (x : T) (hdec : DecodesTo DI b x) (s : Slice Std.U8) (hs : s.val = b) :
     ⦃ ⌜ True ⌝ ⦄ Deserialize.tls_deserialize_exact.default DI
       (core.Shared0T.Insts.CoreConvertAsRef (core.Slice.Insts.CoreConvertAsRefSlice Std.U8)) s
@@ -683,14 +699,14 @@ theorem Deserialize.tls_deserialize_exact.default_decodes {T : Type} (DI : Deser
   mvcgen [hd, core.slice.Slice.is_empty_spec]
   · rename_i p hp _ v _ hcf _ _ _
     rw [hp.1] at hcf; simp [tryCF] at hcf; rw [hcf]
-  · rename_i p hp _ v _ hcf q hq hqe
+  · rename_i p hp _ v _ hcf q hqe hq
     exfalso; apply hq; rw [hqe]; simp only [decide_eq_true_eq]
     apply UScalar.eq_of_val_eq; simp [Slice.len_val, Slice.length, hp.2]
   · rename_i p hp _ _ _
     intro hcf; rw [hp.1] at hcf; simp [tryCF] at hcf
 
 /-- `round_trip_exact` of a type whose `tls_deserialize_exact` is the default. -/
-theorem spec.io.RoundTripStd.round_trip_exact_of {T : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_exact_of {T : Type _} (RT : spec.io.RoundTripStd T)
     (hEq : core.cmp.PartialEq.Lawful T T RT.corecmpPartialEqInst) (x : T)
     (bv : alloc.vec.Vec Std.U8) (henc : spec.io.encode RT.SerializeInst x = ok (.Ok bv))
     (hex : ∀ s : Slice Std.U8, s.val = (bv : Slice Std.U8).val →
@@ -709,12 +725,13 @@ theorem spec.io.RoundTripStd.round_trip_exact_of {T : Type} (RT : spec.io.RoundT
   mvcgen [core.result.Result.is_ok_and, alloc.vec.Vec.as_slice, hx, heq,
     spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
     spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once]
-  intro ht
-  cases ht
+  all_goals subst_vars
+  all_goals simp only [core.result.Result.Ok.injEq, reduceCtorEq] at *
+  subst_vars
   mvcgen [heq]
 
 /-- `nonempty_std` from a non-empty encoding. -/
-theorem spec.io.NonEmptyStd.nonempty_std_of {T : Type} (NE : spec.io.NonEmptyStd T) (x : T)
+theorem spec.io.NonEmptyStd.nonempty_std_of {T : Type _} (NE : spec.io.NonEmptyStd T) (x : T)
     (bv : alloc.vec.Vec Std.U8)
     (henc : spec.io.encode NE.RoundTripStdInst.SerializeInst x = ok (.Ok bv))
     (hne : (bv : Slice Std.U8).val ≠ []) :
@@ -731,7 +748,7 @@ theorem spec.io.NonEmptyStd.nonempty_std_of {T : Type} (NE : spec.io.NonEmptyStd
   simpa [Slice.length, List.length_pos_iff] using hne
 
 /-- `same_bytes` from equal `Ok` outputs of both serializers. -/
-theorem spec.io.SameBytes.same_bytes_of {T : Type} (SB : spec.io.SameBytes T) (x : T)
+theorem spec.io.SameBytes.same_bytes_of {T : Type _} (SB : spec.io.SameBytes T) (x : T)
     (bv bv' : alloc.vec.Vec Std.U8)
     (henc : spec.io.encode SB.SerializeInst x = ok (.Ok bv))
     (hbytes : SB.SerializeBytesInst.tls_serialize_bytes x = ok (.Ok bv'))
@@ -797,7 +814,7 @@ theorem U8.same_bytes (x : Std.U8) :
     ⦃ ⇓ r => ⌜ (spec.io.SameBytes.same_bytes.post U8.Insts.Tls_codecSpecIoSameBytes.SerializeInst
       U8.Insts.Tls_codecSpecIoSameBytes.SerializeBytesInst U8.Insts.Tls_codecSpecIoSameBytes x r).holds ⌝ ⦄ := by
   obtain ⟨bv, he, hbv⟩ := U8.encode x
-  obtain ⟨_, hb, bv', rfl, hbv'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U8_serialize_char x)
+  obtain ⟨_, hb, bv', rfl, hbv'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U8_serialize_char x)
   exact spec.io.SameBytes.same_bytes_of _ x bv bv' he hb (by rw [hbv, hbv', U8_to_be_bytes_val])
 
 end tls_codec

@@ -28,10 +28,10 @@ namespace tls_codec
 
 /-- The remaining elements of a slice iterator (a function, so that `rw` / `simp` see a
 type-correct term at `instances` transparency). -/
-def iterList {T : Type} (it : core.slice.iter.Iter T) : List T := (it : Slice T).val
+def iterList {T : Type _} (it : core.slice.iter.Iter T) : List T := (it : Slice T).val
 
 /-- One step of a slice iterator. -/
-theorem slice_iter_next {T : Type} (it : core.slice.iter.Iter T) :
+theorem slice_iter_next {T : Type _} (it : core.slice.iter.Iter T) :
     ∃ o it', core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.next it = ok (o, it') ∧
       ((iterList it = [] ∧ o = core.option.Option.None) ∨
       ∃ x l, iterList it = x :: l ∧ o = core.option.Option.Some x ∧ iterList it' = l) := by
@@ -49,7 +49,7 @@ theorem slice_iter_next {T : Type} (it : core.slice.iter.Iter T) :
       | cons y l => exact ⟨y, l, rfl⟩
     simp [hz, hl]
 
-theorem slice_iter_next_spec {T : Type} (it : core.slice.iter.Iter T) :
+theorem slice_iter_next_spec {T : Type _} (it : core.slice.iter.Iter T) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.next it
     ⦃ ⇓ p => ⌜ (iterList it = [] ∧ p.1 = core.option.Option.None) ∨
       ∃ x l, iterList it = x :: l ∧ p.1 = core.option.Option.Some x ∧ iterList p.2 = l ⌝ ⦄ := by
@@ -58,15 +58,15 @@ theorem slice_iter_next_spec {T : Type} (it : core.slice.iter.Iter T) :
   exact ok_triple_of hp
 
 /-- The checked fold of a slice with exact size sum `N`: `Ok N` when `N` fits, an `Err` otherwise. -/
-theorem checked_len_fold_spec {T : Type} {S : Size T} (hS : Size.Lawful T S) (xs : Slice T)
+theorem checked_len_fold_spec {T : Type _} {S : Size T} (hS : Size.Lawful T S) (xs : Slice T)
     {N : Nat} (hN : SizeNat S xs.val N) :
     ⦃ ⌜ True ⌝ ⦄ tls_codec.HandTranslated.checked_len_fold S.tls_serialized_len xs
     ⦃ ⇓ r => ⌜ (N ≤ Usize.max → ∃ c, r = .Ok c ∧ c.val = N) ∧
       (Usize.max < N → ∃ e, r = .Err e) ⌝ ⦄ := by
   unfold tls_codec.HandTranslated.checked_len_fold
   nth_rewrite 1 [slice_iter_ok]
-  erw [bind_tc_ok]
-  refine triple_post_mono (loop_total_spec (α := core.slice.iter.Iter T × Std.Usize) _ (⟨xs.val, xs.property⟩, 0#usize)
+  erw [Aeneas.Std.bind_ok]
+  refine triple_post_mono (loop_total_spec (α := core.slice.iter.Iter T × Std.Usize) _ ((xs : core.slice.iter.Iter T), 0#usize)
     (fun p => ∃ R, SizeNat S (iterList p.1) R ∧ p.2.val + R = N)
     (fun p => (iterList p.1).length)
     (fun y => (∀ c, y = .Ok c → N ≤ Usize.max ∧ c.val = N) ∧ (∀ e, y = .Err e → Usize.max < N))
@@ -75,7 +75,8 @@ theorem checked_len_fold_spec {T : Type} {S : Size T} (hS : Size.Lawful T S) (xs
     simp only at hR hsum
     have hlen := Size.len_char S hS
     mvcgen [slice_iter_next_spec, hlen, checked_len_add_triple, tls_codec.Copied.checked_len_add_triple]
-    · rename_i p e hpe hcase n hn r1 hr1 cf acc hcfe hcf
+    · rename_i p e hpe hcase n hn r1 hr1 cf htry acc hcv
+      have hcf := hcv.symm.trans htry
       rcases hcase with ⟨-, h1⟩ | ⟨x, l, h0, h1, h2⟩
       · rw [h1] at hpe; cases hpe
       · rw [h1] at hpe
@@ -93,7 +94,8 @@ theorem checked_len_fold_spec {T : Type} {S : Size T} (hS : Size.Lawful T S) (xs
             exact ⟨⟨R', by rw [h2]; exact hR', by omega⟩, by rw [h2, h0]; simp⟩
           · rw [hr1] at hcf
             simp [checkedLenAddRes, hfit, tryCF] at hcf
-    · rename_i p e hpe hcase n hn r1 hr1 cf res hcfe hcf
+    · rename_i p e hpe hcase n hn r1 hr1 cf htry res hcv
+      have hcf := hcv.symm.trans htry
       rcases hcase with ⟨-, h1⟩ | ⟨x, l, h0, h1, h2⟩
       · rw [h1] at hpe; cases hpe
       · rw [h1] at hpe
@@ -136,7 +138,7 @@ theorem lenAddVal_min (a b : Std.Usize) : (lenAddVal a b).val = min (a.val + b.v
   · rw [lenAddVal_sat _ _ (by omega)]; omega
 
 /-- The (saturating) size fold is the exact sum, capped at `Usize.max`. -/
-theorem SizeFoldRel.val_min {T : Type} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
+theorem SizeFoldRel.val_min {T : Type _} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
     (h : SizeFoldRel S a l r) {N : Nat} (hN : SizeNat S l N) :
     r.val = min (a.val + N) Usize.max := by
   induction h generalizing N with
@@ -150,11 +152,11 @@ theorem SizeFoldRel.val_min {T : Type} {S : Size T} {a : Std.Usize} {l : List T}
 /-! ### `serialize_elements`: the element loop -/
 
 /-- The concatenated encodings of a list of elements (`none`: one of them is not encodable). -/
-noncomputable def encAll {T : Type} (SI : Serialize T) : List T → Option (List Std.U8)
+noncomputable def encAll {T : Type _} (SI : Serialize T) : List T → Option (List Std.U8)
   | [] => some []
   | x :: l => (encOut SI x).bind fun b => (encAll SI l).map (b ++ ·)
 
-theorem encAll_append {T : Type} (SI : Serialize T) (l1 l2 : List T) :
+theorem encAll_append {T : Type _} (SI : Serialize T) (l1 l2 : List T) :
     encAll SI (l1 ++ l2) = (encAll SI l1).bind fun a => (encAll SI l2).map (a ++ ·) := by
   induction l1 with
   | nil => cases h : encAll SI l2 <;> simp [encAll, h]
@@ -168,7 +170,7 @@ theorem encAll_append {T : Type} (SI : Serialize T) (l1 l2 : List T) :
       | some a => cases encAll SI l2 <;> simp
 
 /-- An element's serializer as a triple with its room as precondition (for `mvcgen`). -/
-theorem Serialize.Lawful.elem_spec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
+theorem Serialize.Lawful.elem_spec {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI)
     {W : Type} (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI)
     (x : T) (w : W) :
     ⦃ ⌜ ∀ sz, SI.SizeInst.tls_serialized_len x = ok sz →
@@ -181,7 +183,7 @@ theorem Serialize.Lawful.elem_spec {T : Type} {SI : Serialize T} (hL : Serialize
   exact SerRuns.spec' (hL.runs x sz hsz) WI hWI w (hroom sz hsz)
 
 /-- The postcondition of an element's serializer (`Serialize.Lawful.elem_spec`). -/
-def ElemPost {T W : Type} (SI : Serialize T) (WI : core.io.write.Write W) (x : T) (w : W)
+def ElemPost {T W : Type _} (SI : Serialize T) (WI : core.io.write.Write W) (x : T) (w : W)
     (q : core.result.Result Std.Usize Error × W) : Prop :=
   (∀ b, encOut SI x = some b → (∃ n : Std.Usize, q.1 = .Ok n ∧ n.val = b.length) ∧
     core.io.write.Write.view WI q.2 = core.io.write.Write.view WI w ++ b) ∧
@@ -189,27 +191,27 @@ def ElemPost {T W : Type} (SI : Serialize T) (WI : core.io.write.Write W) (x : T
 
 /-- Loop invariant of `serialize_elements`: the first `i` elements are written (`bs` their
 encodings), `R` is the size of the others, `N` the total size. -/
-def ElemsInv {T W : Type} (SI : Serialize T) (WI : core.io.write.Write W) (w : W) (s : List T)
+def ElemsInv {T W : Type _} (SI : Serialize T) (WI : core.io.write.Write W) (w : W) (s : List T)
     (N : Nat) (p : W × Std.Usize × Std.Usize) : Prop :=
   p.2.2.val ≤ s.length ∧ ∃ bs R, encAll SI (s.take p.2.2.val) = some bs ∧
     core.io.write.Write.view WI p.1 = core.io.write.Write.view WI w ++ bs ∧
     p.2.1.val = bs.length ∧ SizeNat SI.SizeInst (s.drop p.2.2.val) R ∧ bs.length + R = N
 
-theorem encAll_take_succ {T : Type} (SI : Serialize T) (s : List T) (i : Nat) (hlt : i < s.length) :
+theorem encAll_take_succ {T : Type _} (SI : Serialize T) (s : List T) (i : Nat) (hlt : i < s.length) :
     encAll SI (s.take (i + 1)) =
       (encAll SI (s.take i)).bind fun a => (encOut SI s[i]).map (a ++ ·) := by
   rw [List.take_add_one, List.getElem?_eq_getElem hlt, encAll_append]
   cases h1 : encAll SI (s.take i) <;> cases h2 : encOut SI s[i] <;> simp [encAll, h2]
 
 /-- Once the written prefix is encodable and the next element is not, the whole list is not. -/
-theorem encAll_none_of_elem {T : Type} (SI : Serialize T) (s : List T) (i : Nat) (hlt : i < s.length)
+theorem encAll_none_of_elem {T : Type _} (SI : Serialize T) (s : List T) (i : Nat) (hlt : i < s.length)
     (bs : List Std.U8) (hbs : encAll SI (s.take i) = some bs) (hn : encOut SI s[i] = none) :
     encAll SI s = none := by
   rw [← List.take_append_drop i s, encAll_append, hbs, List.drop_eq_getElem_cons hlt]
   simp [encAll, hn]
 
 section ElemsLoop
-variable {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) {W : Type}
+variable {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) {W : Type}
   (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI)
 
 include hL hWI in
@@ -328,7 +330,7 @@ theorem ser_elems_loop (w : W) (s : Slice T) (N : Nat) (hN : SizeNat SI.SizeInst
     (ElemsInv SI WI w s.val N)
   · rintro ⟨wr, wn, i⟩ hq
     have := ser_elems_body hL WI hWI w s N _ hq hroom
-    obtain ⟨y, hy, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp this
+    obtain ⟨y, hy, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp this
     show Aeneas.Std.WP.spec (tls_vec.serialize_elements_loop.body SI WI s wr wn i) _
     rw [hy, Aeneas.Std.WP.spec_ok]
     cases y with
@@ -375,18 +377,18 @@ def WriteLengthRuns (enc : Nat → List Std.U8) : Prop :=
 
 /-- The encoding of a vector whose elements have total size `N`: the length prefix, then the
 elements (`none`: the content length is not encodable, or an element is not). -/
-noncomputable def vecOut {T : Type} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
+noncomputable def vecOut {T : Type _} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
     (N : Nat) : Option (List Std.U8) :=
   if N ≤ 2 ^ 30 - 1 then (encAll SI l).map (enc N ++ ·) else none
 
 /-- The size of a vector, from its exact content size `N`, when the writer has room for it. -/
-theorem Vec.size_exact {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
+theorem Vec.size_exact {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI)
     (v : alloc.vec.Vec T) (sz : Std.Usize)
     (hsz : (alloc.vec.Vec.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len v = ok sz)
     {N : Nat} (hN : SizeNat SI.SizeInst v.val N) :
     ∃ c, SizeFoldRel SI.SizeInst 0#usize v.val c ∧ c.val = min N Usize.max ∧
       sz.val = min (c.val + (if c.val ≤ 2 ^ 30 - 1 then varint.lenOf c.val else 0)) Usize.max := by
-  obtain ⟨sz', hsz', c, ll, hrel, hr, hll⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz', hsz', c, ll, hrel, hr, hll⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.size_rel SI.SizeInst hL.SizeInstLawful v)
   obtain rfl : sz' = sz := ok.inj (hsz'.symm.trans hsz)
   refine ⟨c, hrel, by simpa using hrel.val_min hN, ?_⟩
@@ -403,12 +405,12 @@ theorem vec_room (L : Nat → Nat) {N c sz vl : Nat} (hc : c = min N Usize.max)
   rw [if_pos hN] at hsz
   omega
 
-theorem vecOut_none_big {T : Type} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
+theorem vecOut_none_big {T : Type _} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
     {N : Nat} (h : 2 ^ 30 - 1 < N) : vecOut enc SI l N = none := by
   unfold vecOut
   rw [if_neg (by omega)]
 
-theorem vecOut_none_enc {T : Type} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
+theorem vecOut_none_enc {T : Type _} (enc : Nat → List Std.U8) (SI : Serialize T) (l : List T)
     (N : Nat) (h : encAll SI l = none) : vecOut enc SI l N = none := by
   simp [vecOut, h]
 
@@ -448,7 +450,7 @@ theorem vec_prefix {W : Type} {WI : core.io.write.Write W} {enc : Nat → List S
   rw [hwr'] at hl; cases hl
   exact ⟨hval, hval ▸ hv30, hval ▸ hlv⟩
 
-theorem Vec.ser_runs {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T : Type}
+theorem Vec.ser_runs {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T : Type _}
     {SI : Serialize T} (DbgI : core.fmt.Debug T) (hL : Serialize.Lawful T SI)
     (v : alloc.vec.Vec T) (sz : Std.Usize)
     (hsz : (alloc.vec.Vec.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len v = ok sz)
@@ -463,7 +465,7 @@ theorem Vec.ser_runs {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T :
           (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
           core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         (vecOut enc SI v.val N = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   have hcc : ∀ s : Slice T, ⦃ ⌜ s = (v : Slice T) ⌝ ⦄ quic_vec.rw.checked_content_length SI.SizeInst s
       ⦃ ⇓ r => ⌜ (N ≤ Usize.max → ∃ c, r = .Ok c ∧ c.val = N) ∧
@@ -565,7 +567,7 @@ theorem Vec.ser_runs {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T :
     mvcgen
     exact ⟨fun b hb' => (by rw [hvn] at hb'; cases hb'), fun _ => ⟨_, rfl⟩⟩
 
-theorem SizeNat.exists {T : Type} {S : Size T} (hS : Size.Lawful T S) (l : List T) :
+theorem SizeNat.exists {T : Type _} {S : Size T} (hS : Size.Lawful T S) (l : List T) :
     ∃ N, SizeNat S l N := by
   induction l with
   | nil => exact ⟨0, .nil⟩
@@ -575,7 +577,7 @@ theorem SizeNat.exists {T : Type} {S : Size T} (hS : Size.Lawful T S) (l : List 
     exact ⟨_, .cons x l n N hn hN⟩
 
 /-- The concatenated encodings of elements of total size `N` (with room for it) have length `N`. -/
-theorem encAll_length {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) {l : List T}
+theorem encAll_length {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) {l : List T}
     {N : Nat} (hN : SizeNat SI.SizeInst l N) (hroom : N ≤ imax) :
     ∀ bs, encAll SI l = some bs → bs.length = N := by
   induction hN with
@@ -595,7 +597,7 @@ theorem encAll_length {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
         simp only [List.length_append]
         omega
 
-theorem Vec.ser_spec {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T : Type}
+theorem Vec.ser_spec {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T : Type _}
     {SI : Serialize T} (DbgI : core.fmt.Debug T) (hL : Serialize.Lawful T SI) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI)
     (v : alloc.vec.Vec T) (w : W)
@@ -606,7 +608,7 @@ theorem Vec.ser_spec {enc : Nat → List Std.U8} (hW : WriteLengthRuns enc) {T :
       (alloc.vec.Vec.Insts.Tls_codecSerialize SI DbgI).SizeInst
       (alloc.vec.Vec.Insts.Tls_codecSerialize SI DbgI) v w r).holds ⌝ ⦄ := by
   obtain ⟨N, hN⟩ := SizeNat.exists hL.SizeInstLawful v.val
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.size_rel SI.SizeInst hL.SizeInstLawful v)
   have hsz' : (alloc.vec.Vec.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len v = ok sz := hsz
   refine Serialize.tls_serialize_spec_of_runs' _ v sz hsz' (vecOut enc SI v.val N) ?_

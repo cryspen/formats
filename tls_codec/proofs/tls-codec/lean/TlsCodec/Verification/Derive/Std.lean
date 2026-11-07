@@ -48,7 +48,7 @@ def SerPost {W : Type} (WI : core.io.write.Write W) (o : Option (List Std.U8)) (
   simp [SerPost]
 
 /-- A field serializer call (from the field type's `Serialize.Lawful`). -/
-theorem ser_std_spec {T : Type} {SI : Serialize T} (h : Serialize.Lawful T SI) {W : Type}
+theorem ser_std_spec {T : Type _} {SI : Serialize T} (h : Serialize.Lawful T SI) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI) (x : T) (w : W) :
     ⦃ ⌜ (core.io.write.Write.view WI w).length + (szv SI.SizeInst x).val ≤ imax ⌝ ⦄
       SI.tls_serialize WI x w
@@ -132,7 +132,7 @@ elab "derive_size_eqs " h:ident " [" ls:term,* "]" : tactic => withMainContext d
     let (_, g) ← g.intro1P
     replaceMainGoal [g]
     names := names.push (mkIdent n)
-  let extra := #[mkIdent ``tls_codec.len_add_ok, mkIdent ``bind_tc_ok, mkIdent ``ok.injEq,
+  let extra := #[mkIdent ``tls_codec.len_add_ok, mkIdent ``Aeneas.Std.bind_ok, mkIdent ``Aeneas.Std.bind_tc_ok, mkIdent ``ok.injEq,
     mkIdent ``CoreModels.core.mem.size_of_U8, mkIdent ``CoreModels.core.mem.size_of_U16]
   let args ← (names ++ extra).mapM fun n => do
     let l ← `(Lean.Parser.Tactic.simpLemma| $n:term)
@@ -141,7 +141,7 @@ elab "derive_size_eqs " h:ident " [" ls:term,* "]" : tactic => withMainContext d
 
 /-- The contract of a derived serializer on `x`, from its flat post on every lawful writer with
 room (for some writer-independent encoding `out`). -/
-theorem SerSpec.of_post {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst) (x : T)
+theorem SerSpec.of_post {T : Type _} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst) (x : T)
     (h : ∃ out : Option (List Std.U8), ∀ (W : Type) (WI : core.io.write.Write W),
       core.io.write.Write.Lawful W WI → ∀ w : W,
       (core.io.write.Write.view WI w).length + (szv SI.SizeInst x).val ≤ imax →
@@ -152,7 +152,7 @@ theorem SerSpec.of_post {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.Siz
   have hsz := size_ok hS x
   have hr : SerRuns SI x (szv SI.SizeInst x) out := by
     intro W WI hWI w hroom
-    obtain ⟨⟨r, w'⟩, hrun, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h W WI hWI w hroom)
+    obtain ⟨⟨r, w'⟩, hrun, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h W WI hWI w hroom)
     refine ⟨r, w', hrun, fun b hb => ?_, fun hn => ?_⟩
     · cases r with
       | Ok n =>
@@ -165,8 +165,8 @@ theorem SerSpec.of_post {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.Siz
       | Err e => exact ⟨e, rfl⟩
   intro W WI hWI w hpre
   refine Serialize.tls_serialize_spec_of_runs' SI x _ hsz out (fun hle b hb => ?_) hr WI hWI w hpre
-  obtain ⟨⟨r, w'⟩, -, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (h _ _ StdIo.vec_lawful ⟨[], by simp⟩ (by rw [StdIo.vec_sink]; simpa using hle))
+  obtain ⟨⟨r, w'⟩, -, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (h _ _ StdIo.vec_lawful (Slice.new _) (by rw [StdIo.vec_sink]; simpa [Slice.new_val] using hle))
   cases r with
   | Ok n => obtain ⟨-, b', hb', hl, -⟩ := hp.1 n rfl; rw [hb] at hb'; cases hb'; exact hl
   | Err e => have := hp.2 e rfl; rw [hb] at this; cases this
@@ -231,21 +231,21 @@ A field deserializer call, in flat form: an `Ok v` consumed `szv v` bytes of the
 (a lawful reader with view `v` and advance `a`). -/
 
 /-- The flat post of a deserializer call on a law `(v, a)`. -/
-def DePost {T R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R) (r : R)
+def DePost {T : Type _} {R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R) (r : R)
     (p : core.result.Result T Error × R) : Prop :=
   ∀ val, p.1 = .Ok val → (szv S val).val ≤ (v r).length ∧ p.2 = a r (szv S val).val
 
-@[simp] theorem DePost_ok {T R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R)
+@[simp] theorem DePost_ok {T : Type _} {R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R)
     (r r' : R) (val : T) :
     DePost S v a r (.Ok val, r') ↔ (szv S val).val ≤ (v r).length ∧ r' = a r (szv S val).val := by
   simp [DePost]
 
-@[simp] theorem DePost_err {T R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R)
+@[simp] theorem DePost_err {T : Type _} {R : Type} (S : Size T) (v : R → List Std.U8) (a : R → Nat → R)
     (r r' : R) (e : Error) : DePost S v a r (.Err e, r') ↔ True := by
   simp [DePost]
 
 /-- A field deserializer call (from the field type's `Deserialize.Lawful`). -/
-theorem de_std_spec {T : Type} {DI : Deserialize T} (h : Deserialize.Lawful T DI) {R : Type}
+theorem de_std_spec {T : Type _} {DI : Deserialize T} (h : Deserialize.Lawful T DI) {R : Type}
     {RI : alloc.io.read.Read R} {v : R → List Std.U8} {a : R → Nat → R} (law : StdIo.RLaw RI v a)
     (r : R) :
     ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r ⦃ ⇓ p => ⌜ DePost DI.SizeInst v a r p ⌝ ⦄ := by
@@ -256,7 +256,7 @@ theorem de_std_spec {T : Type} {DI : Deserialize T} (h : Deserialize.Lawful T DI
   exact ⟨hn, hp2⟩
 
 /-- The contract of a derived deserializer, from its flat post on every lawful reader. -/
-theorem DeSpec.of_post {T : Type} (DI : Deserialize T) (hS : Size.Lawful T DI.SizeInst)
+theorem DeSpec.of_post {T : Type _} (DI : Deserialize T) (hS : Size.Lawful T DI.SizeInst)
     (h : ∀ (R : Type) (RI : alloc.io.read.Read R) (v : R → List Std.U8) (a : R → Nat → R),
       StdIo.RLaw RI v a → ∀ r, ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r
       ⦃ ⇓ p => ⌜ DePost DI.SizeInst v a r p ⌝ ⦄) : DeSpec DI := by
@@ -385,14 +385,14 @@ macro_rules
 
 /-! ## Whole `Lawful`s (what the generated obligations call) -/
 
-theorem Serialize.Lawful.of_serSpec {T : Type} {SI : Serialize T} (hS : Size.Lawful T SI.SizeInst)
+theorem Serialize.Lawful.of_serSpec {T : Type _} {SI : Serialize T} (hS : Size.Lawful T SI.SizeInst)
     (h : ∀ x, SerSpec SI x)
     (hdet : ∀ x, SI.tls_serialize_detached x = Serialize.tls_serialize_detached.default SI x) :
     Serialize.Lawful T SI :=
   ⟨hS, fun WI hWI x w hpre => h x _ WI hWI w hpre,
     fun x _ => by rw [hdet]; exact SerSpec.detached (h x) ⟨_, size_ok hS x⟩⟩
 
-theorem Deserialize.Lawful.of_deSpec {T : Type} {DI : Deserialize T} (hS : Size.Lawful T DI.SizeInst)
+theorem Deserialize.Lawful.of_deSpec {T : Type _} {DI : Deserialize T} (hS : Size.Lawful T DI.SizeInst)
     (h : DeSpec DI)
     (hex : ∀ {T1 : Type} (AI : core.convert.AsRef T1 (Slice Std.U8)) b,
       DI.tls_deserialize_exact AI b = Deserialize.tls_deserialize_exact.default DI AI b) :
@@ -429,7 +429,7 @@ hand-written `u16`-coded enums (`ser_some_of_write_u16`), derived newtypes (`new
 
 /-- `Serialize.Lawful` of an impl that keeps the default `tls_serialize_detached`, from its
 `Size.Lawful` and its behaviour on lawful writers (`SerRuns`) with an encoding of the right length. -/
-theorem ser_lawful_of_runs {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst)
+theorem ser_lawful_of_runs {T : Type _} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst)
     (out : T → Option (List Std.U8))
     (h : ∀ x, ∃ sz, SI.SizeInst.tls_serialized_len x = ok sz ∧
       (sz.val ≤ imax → ∀ b, out x = some b → b.length = sz.val) ∧ SerRuns SI x sz (out x))
@@ -447,7 +447,7 @@ theorem ser_lawful_of_runs {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.
 
 /-- `Deserialize.Lawful` of an impl that keeps the default `tls_deserialize_exact`, from its
 `Size.Lawful` and its behaviour on lawful readers (`DeRuns`). -/
-theorem de_lawful_of_runs {T : Type} (DI : Deserialize T) (hS : Size.Lawful T DI.SizeInst)
+theorem de_lawful_of_runs {T : Type _} (DI : Deserialize T) (hS : Size.Lawful T DI.SizeInst)
     {P : List Std.U8 → T → Nat → Prop} (h : DeRuns DI P)
     (hex : ∀ {T1 : Type} (AI : core.convert.AsRef T1 (Slice Std.U8)) (bytes : T1),
       DI.tls_deserialize_exact AI bytes = Deserialize.tls_deserialize_exact.default DI AI bytes) :
@@ -460,14 +460,14 @@ theorem de_lawful_of_runs {T : Type} (DI : Deserialize T) (hS : Size.Lawful T DI
       Deserialize.tls_deserialize_spec_of_runs DI h _ StdIo.slice_lawful s
 
 /-- A run with one `Ok` output determines `encOut`. -/
-theorem encOut_of_runs {T : Type} (SI : Serialize T) (x : T) (sz : Std.Usize) (b : List Std.U8)
+theorem encOut_of_runs {T : Type _} (SI : Serialize T) (x : T) (sz : Std.Usize) (b : List Std.U8)
     (h : SerRuns SI x sz (some b)) (hroom : sz.val ≤ imax) : encOut SI x = some b := by
   obtain ⟨e, he, hs, -⟩ := encode_of_runs SI x sz _ h hroom
   obtain ⟨bv, rfl, hbv⟩ := hs b rfl
   rw [encOut_ok he, hbv]
 
 /-- `ser_lawful_of_runs` for serializers that always succeed with `sz ≤ isize::MAX` bytes. -/
-theorem ser_lawful_of_some {T : Type} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst)
+theorem ser_lawful_of_some {T : Type _} (SI : Serialize T) (hS : Size.Lawful T SI.SizeInst)
     (h : ∀ x, ∃ sz b, SI.SizeInst.tls_serialized_len x = ok sz ∧ sz.val ≤ imax ∧
       b.length = sz.val ∧ SerRuns SI x sz (some b))
     (hdet : ∀ x, SI.tls_serialize_detached x = Serialize.tls_serialize_detached.default SI x) :
@@ -488,10 +488,12 @@ theorem try_reroll {W : Type} (m : RustM (core.result.Result Std.Usize tls_codec
         let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
           Std.Usize (core.convert.From.Blanket tls_codec.Error) residual
         ok (r1, w1)) = m := by
-  rcases m with ⟨⟨r, w1⟩⟩ | e | _
-  · cases r <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok p => obtain ⟨r, w1⟩ := p; cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from, Aeneas.Std.bind_ok]
+  | fail e => simp
+  | div => simp
 
 /-- `0 + i` (the `written` accumulator of the derived serializers). -/
 theorem zero_add_ok (i : Std.Usize) : (0#usize + i : RustM Std.Usize) = ok i := by
@@ -528,7 +530,7 @@ theorem add_zero_u16 (a : Std.U16) : (a + 0#u16 : RustM Std.U16) = ok a := by
   | div => rw [hc] at this; exact this.elim
 
 /-- A serializer that delegates to `u16`'s (the unit-variant enums): it writes 2 bytes. -/
-theorem ser_some_of_u16 {T : Type} (SI : Serialize T) (x : T)
+theorem ser_some_of_u16 {T : Type _} (SI : Serialize T) (x : T)
     (hsz : SI.SizeInst.tls_serialized_len x = ok 2#usize)
     (h : ∃ c : Std.U16, ∀ {W : Type} (WI : core.io.write.Write W) (w : W),
       SI.tls_serialize WI x w = U16.Insts.Tls_codecSerialize.tls_serialize WI c w) :
@@ -543,7 +545,7 @@ theorem ser_some_of_u16 {T : Type} (SI : Serialize T) (x : T)
 
 /-- A serializer that writes the 2 big-endian bytes of `k` with `write_all` (hand-written
 `u16`-coded enums of OpenMLS). -/
-theorem ser_some_of_write_u16 {T : Type} (SI : Serialize T) (x : T) (k : Std.U16)
+theorem ser_some_of_write_u16 {T : Type _} (SI : Serialize T) (x : T) (k : Std.U16)
     (hsz : SI.SizeInst.tls_serialized_len x = ok 2#usize)
     (h : ∀ {W : Type} (WI : core.io.write.Write W) (w w' : W),
       WI.write_all w (Array.to_slice (Aeneas.Std.core.num.U16.to_be_bytes k)) = ok (.Ok (), w') →
@@ -557,7 +559,7 @@ theorem ser_some_of_write_u16 {T : Type} (SI : Serialize T) (x : T) (k : Std.U16
 theorem u16_enum_size : (do let l ← core.mem.size_of Std.U16; len_add l 0#usize : RustM Std.Usize)
     = ok 2#usize := by
   rw [core.mem.size_of_U16]
-  simp only [bind_tc_ok, len_add_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, len_add_ok]
   congr 1
   exact UScalar.eq_of_val_eq (by rw [lenAddVal_val _ _ (by scalar_tac)]; rfl)
 
@@ -573,7 +575,7 @@ value, `ds` the serializer and its discriminant constants to unfold. -/
 macro "u16_enum_ser" SI:term "," x:ident "[" ds:ident,* "]" : tactic => `(tactic| (
   refine ser_some_of_u16 $SI $x u16_enum_size ?_
   cases $x:ident <;> refine ⟨?_, fun WI w => ?_⟩ <;> try (
-    simp only [$[$ds:ident],*, add_zero_u16, bind_tc_ok]
+    simp only [$[$ds:ident],*, add_zero_u16, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
     exact try_reroll _)))
 
 /-- `DeRuns` of a unit-variant enum with a `u16` discriminant: `ds` the deserializer to unfold. -/
@@ -593,7 +595,7 @@ macro "u16_enum_de" "[" ds:ident,* "]" : tactic => `(tactic| (
     | (rename_i p hp _ _ _ _ hcf
        intro val' hval'
        obtain ⟨n, sz, hn, h2, hsz, hszn, -⟩ := hp _ (continue_eq_tryCF.mp hcf)
-       rw [u16_size] at hsz; cases hsz
+       rw [u16_size] at hsz; ok_cases hsz
        exact ⟨n, 2#usize, hn, h2, u16_enum_size, hszn⟩)))
 
 theorem lenAdd_0 (s : Std.Usize) : lenAddVal 0#usize s = s :=
@@ -615,7 +617,7 @@ macro "newtype_ser" FS:term "," fx:term "," x:term "," hL:term "," s:term "," hs
           core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
           (encOut $FS $fx = none →
             ∃ e, p.1 = .Err e) ⌝ ⦄ by
-      obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+      obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
       exact ⟨r, w', h1, h2⟩
     have hle : ($s : Std.Usize).val ≤ imax := by omega
     have hel := Serialize.Lawful.enc_len

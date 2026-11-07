@@ -681,10 +681,10 @@ theorem spec.string_decode_encode.spec.panic_freedom (bytes : Slice Std.U8) :
   rename_i r hP _ p _ hp _ hb _ hr hlt
   rw [continue_eq_tryCF] at hp
   obtain ⟨raw, hraw, _⟩ := hP p.1 p.2 hp
-  obtain ⟨r0, hr0, hQ⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r0, hr0, hQ⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLByteVec.deserialize_char bytes)
   rw [hraw] at hr0
-  cases hr0
+  obtain rfl := RustM.ok_injective hr0
   have := (hQ raw p.2 rfl).2
   subst hb hr
   simp only [Slice.len_val, Slice.length] at hlt
@@ -711,7 +711,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.
   ⦃ ⌜ True ⌝ ⦄
   varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨r, hr, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.serialize_len_char self)
   rw [hr]
   apply RustM.ok_spec
@@ -746,7 +746,7 @@ theorem varint.TlsVarInt.write_bytes.spec.panic_freedom (self : varint.TlsVarInt
   ⦃ ⌜ True ⌝ ⦄
   varint.TlsVarInt.write_bytes self buf
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.write_bytes_spec self buf)
   rw [hv]
   apply RustM.ok_spec
@@ -787,22 +787,22 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.panic_freedom (value : U24) :
     core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     tls_codec.core.slice.Slice.copy_from_slice_U8_total, core.num.Usize.from_be_bytes,
     rust_primitives.arithmetic.from_be_bytes_usize]
-  · rename_i bytes0 n hn i1 hi1 hle
+  · rename_i n hn i1 hi1 hle
     have hnb := System.Platform.numBits_eq
-    have : (Std.Array.to_slice_mut bytes0).1.length = 8 := by
-      simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+    have : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.length = 8 := by
+      simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     scalar_tac
-  · rename_i bytes0 n hn i1 hi1 hle p back hp
+  · rename_i n hn i1 hi1 hle p back hp
     have hnb := System.Platform.numBits_eq
     obtain ⟨hp1, _⟩ := hp
     have hl2 : (Std.Array.to_slice value).val.length = 3 := by
       simp [Std.Array.to_slice]
     have hl1 : p.1.val.length = 8 - i1.val := by
-      rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+      rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     rw [hl1, hl2]
     have := numBits_eq_64
     scalar_tac
-  · rename_i bytes0 n hn hlt
+  · rename_i n hn hlt
     have hnb := System.Platform.numBits_eq
     simp at hlt
     omega
@@ -842,7 +842,7 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_free
   ⦃ ⌜ True ⌝ ⦄
   U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
@@ -851,7 +851,7 @@ theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_fre
   ⦃ ⌜ True ⌝ ⦄
   U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
@@ -860,7 +860,7 @@ theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_fre
   ⦃ ⌜ True ⌝ ⦄
   U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
@@ -869,7 +869,7 @@ theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_fre
   ⦃ ⌜ True ⌝ ⦄
   U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
@@ -878,38 +878,38 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_fre
   ⦃ ⌜ True ⌝ ⦄
   U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.new.spec.panic_freedom {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU8.new.spec.panic_freedom {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.new vec
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.new]
 
-theorem tls_vec.TlsVecU8.len.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.len.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.len self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.len]
 
-theorem tls_vec.TlsVecU8.is_empty.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.is_empty.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.is_empty self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.is_empty]
 
-theorem tls_vec.TlsVecU8.into_vec.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.into_vec.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.into_vec self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.into_vec]
 
-theorem tls_vec.TlsVecU8.push.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.push.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T)
   (value : T) :
   (tls_vec.TlsVecU8.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -918,13 +918,13 @@ theorem tls_vec.TlsVecU8.push.spec.panic_freedom {T : Type} (self : tls_vec.TlsV
   hax_mvcgen [tls_vec.TlsVecU8.push, tls_vec.TlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU8.pop.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.pop.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.pop self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.pop]
 
-theorem tls_vec.TlsVecU8.remove.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.remove.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU8.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -933,20 +933,20 @@ theorem tls_vec.TlsVecU8.remove.spec.panic_freedom {T : Type} (self : tls_vec.Tl
   hax_mvcgen [tls_vec.TlsVecU8.remove, tls_vec.TlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU8.get.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.get.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU8 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.get self index
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.get]
 
-theorem tls_vec.TlsVecU8.len_len.spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU8.len_len.spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.len_len T
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.len_len]
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
   (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -955,7 +955,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom 
   hax_mvcgen [tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T : Type _}
   (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -965,31 +965,31 @@ theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_f
   hax_mvcgen [tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU16.new.spec.panic_freedom {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU16.new.spec.panic_freedom {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.new vec
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.new]
 
-theorem tls_vec.TlsVecU16.len.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.len.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.len self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.len]
 
-theorem tls_vec.TlsVecU16.is_empty.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.is_empty.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.is_empty self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.is_empty]
 
-theorem tls_vec.TlsVecU16.into_vec.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.into_vec.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.into_vec self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.into_vec]
 
-theorem tls_vec.TlsVecU16.push.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.push.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T)
   (value : T) :
   (tls_vec.TlsVecU16.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -998,13 +998,13 @@ theorem tls_vec.TlsVecU16.push.spec.panic_freedom {T : Type} (self : tls_vec.Tls
   hax_mvcgen [tls_vec.TlsVecU16.push, tls_vec.TlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU16.pop.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.pop.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.pop self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.pop]
 
-theorem tls_vec.TlsVecU16.remove.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.remove.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU16.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1013,20 +1013,20 @@ theorem tls_vec.TlsVecU16.remove.spec.panic_freedom {T : Type} (self : tls_vec.T
   hax_mvcgen [tls_vec.TlsVecU16.remove, tls_vec.TlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU16.get.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.get.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU16 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.get self index
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.get]
 
-theorem tls_vec.TlsVecU16.len_len.spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU16.len_len.spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.len_len T
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.len_len]
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
   (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1035,7 +1035,8 @@ theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom
   hax_mvcgen [tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -1045,31 +1046,31 @@ theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_
   hax_mvcgen [tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU24.new.spec.panic_freedom {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU24.new.spec.panic_freedom {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.new vec
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.new]
 
-theorem tls_vec.TlsVecU24.len.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.len.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.len self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.len]
 
-theorem tls_vec.TlsVecU24.is_empty.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.is_empty.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.is_empty self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.is_empty]
 
-theorem tls_vec.TlsVecU24.into_vec.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.into_vec.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.into_vec self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.into_vec]
 
-theorem tls_vec.TlsVecU24.push.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.push.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T)
   (value : T) :
   (tls_vec.TlsVecU24.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1078,13 +1079,13 @@ theorem tls_vec.TlsVecU24.push.spec.panic_freedom {T : Type} (self : tls_vec.Tls
   hax_mvcgen [tls_vec.TlsVecU24.push, tls_vec.TlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU24.pop.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.pop.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.pop self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.pop]
 
-theorem tls_vec.TlsVecU24.remove.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.remove.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU24.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1093,20 +1094,20 @@ theorem tls_vec.TlsVecU24.remove.spec.panic_freedom {T : Type} (self : tls_vec.T
   hax_mvcgen [tls_vec.TlsVecU24.remove, tls_vec.TlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU24.get.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.get.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU24 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.get self index
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.get]
 
-theorem tls_vec.TlsVecU24.len_len.spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU24.len_len.spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.len_len T
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.len_len]
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
   (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1115,7 +1116,8 @@ theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom
   hax_mvcgen [tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -1125,31 +1127,31 @@ theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_
   hax_mvcgen [tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU32.new.spec.panic_freedom {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU32.new.spec.panic_freedom {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.new vec
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.new]
 
-theorem tls_vec.TlsVecU32.len.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.len.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.len self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.len]
 
-theorem tls_vec.TlsVecU32.is_empty.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.is_empty.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.is_empty self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.is_empty]
 
-theorem tls_vec.TlsVecU32.into_vec.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.into_vec.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.into_vec self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.into_vec]
 
-theorem tls_vec.TlsVecU32.push.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.push.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T)
   (value : T) :
   (tls_vec.TlsVecU32.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1158,13 +1160,13 @@ theorem tls_vec.TlsVecU32.push.spec.panic_freedom {T : Type} (self : tls_vec.Tls
   hax_mvcgen [tls_vec.TlsVecU32.push, tls_vec.TlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU32.pop.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.pop.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.pop self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.pop]
 
-theorem tls_vec.TlsVecU32.remove.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.remove.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU32.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1173,20 +1175,20 @@ theorem tls_vec.TlsVecU32.remove.spec.panic_freedom {T : Type} (self : tls_vec.T
   hax_mvcgen [tls_vec.TlsVecU32.remove, tls_vec.TlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU32.get.spec.panic_freedom {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.get.spec.panic_freedom {T : Type _} (self : tls_vec.TlsVecU32 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.get self index
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.get]
 
-theorem tls_vec.TlsVecU32.len_len.spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU32.len_len.spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.len_len T
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.len_len]
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
   (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -1195,7 +1197,8 @@ theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom
   hax_mvcgen [tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -1707,25 +1710,28 @@ theorem tls_vec.TlsByteSliceU32.tls_serialized_byte_length.spec.panic_freedom   
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem tls_vec.TlsSliceU8.as_slice.spec.panic_freedom {T : Type} (self : tls_vec.TlsSliceU8 T) :
+theorem tls_vec.TlsSliceU8.as_slice.spec.panic_freedom {T : Type _} (self : tls_vec.TlsSliceU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU8.as_slice self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU8.as_slice]
 
-theorem tls_vec.TlsSliceU16.as_slice.spec.panic_freedom {T : Type} (self : tls_vec.TlsSliceU16 T) :
+theorem tls_vec.TlsSliceU16.as_slice.spec.panic_freedom {T : Type _}
+  (self : tls_vec.TlsSliceU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU16.as_slice self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU16.as_slice]
 
-theorem tls_vec.TlsSliceU24.as_slice.spec.panic_freedom {T : Type} (self : tls_vec.TlsSliceU24 T) :
+theorem tls_vec.TlsSliceU24.as_slice.spec.panic_freedom {T : Type _}
+  (self : tls_vec.TlsSliceU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU24.as_slice self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU24.as_slice]
 
-theorem tls_vec.TlsSliceU32.as_slice.spec.panic_freedom {T : Type} (self : tls_vec.TlsSliceU32 T) :
+theorem tls_vec.TlsSliceU32.as_slice.spec.panic_freedom {T : Type _}
+  (self : tls_vec.TlsSliceU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU32.as_slice self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -1738,7 +1744,7 @@ Function specs over trait instances. Since the trait-level specs, the instance a
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.panic_freedom    {T : Type} (SerializeBytesInst : SerializeBytes T)
+theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.panic_freedom    {T : Type _} (SerializeBytesInst : SerializeBytes T)
   (self : core.option.Option T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1748,7 +1754,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spe
   have h := Option_serialize_char SerializeBytesInst SerializeBytesInstLawful self
   mvcgen [h]
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_freedom    {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.panic_freedom    {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1760,7 +1766,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.from_slice.spec.panic_freedom {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU8.from_slice.spec.panic_freedom {T : Type _} (corecloneCloneInst :
                                   core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1769,7 +1775,7 @@ theorem tls_vec.TlsVecU8.from_slice.spec.panic_freedom {T : Type} (corecloneClon
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.TlsVecU8.from_slice, h]
 
-theorem tls_vec.TlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                             Serialize T)
   (self : tls_vec.TlsVecU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -1780,14 +1786,14 @@ theorem tls_vec.TlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type} (Ser
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.assert_written_bytes]
 
-theorem tls_vec.TlsVecU8.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU8.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU8.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type _} (DeserializeBytesInst :
                                          DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -1796,7 +1802,7 @@ theorem tls_vec.TlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type} (Deseri
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU8.deserialize_bytes_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU16.from_slice.spec.panic_freedom {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU16.from_slice.spec.panic_freedom {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1805,7 +1811,7 @@ theorem tls_vec.TlsVecU16.from_slice.spec.panic_freedom {T : Type} (corecloneClo
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.TlsVecU16.from_slice, h]
 
-theorem tls_vec.TlsVecU16.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU16.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -1816,14 +1822,14 @@ theorem tls_vec.TlsVecU16.assert_written_bytes.spec.panic_freedom {T : Type} (Se
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.assert_written_bytes]
 
-theorem tls_vec.TlsVecU16.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU16.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU16.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -1832,7 +1838,7 @@ theorem tls_vec.TlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type} (Deser
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU16.deserialize_bytes_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU24.from_slice.spec.panic_freedom {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU24.from_slice.spec.panic_freedom {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1841,7 +1847,7 @@ theorem tls_vec.TlsVecU24.from_slice.spec.panic_freedom {T : Type} (corecloneClo
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.TlsVecU24.from_slice, h]
 
-theorem tls_vec.TlsVecU24.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU24.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -1852,14 +1858,14 @@ theorem tls_vec.TlsVecU24.assert_written_bytes.spec.panic_freedom {T : Type} (Se
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.assert_written_bytes]
 
-theorem tls_vec.TlsVecU24.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU24.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU24.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -1868,7 +1874,7 @@ theorem tls_vec.TlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type} (Deser
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU24.deserialize_bytes_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU32.from_slice.spec.panic_freedom {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU32.from_slice.spec.panic_freedom {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1877,7 +1883,7 @@ theorem tls_vec.TlsVecU32.from_slice.spec.panic_freedom {T : Type} (corecloneClo
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.TlsVecU32.from_slice, h]
 
-theorem tls_vec.TlsVecU32.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU32.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -1888,14 +1894,14 @@ theorem tls_vec.TlsVecU32.assert_written_bytes.spec.panic_freedom {T : Type} (Se
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.assert_written_bytes]
 
-theorem tls_vec.TlsVecU32.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU32.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU32.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsVecU32.deserialize_bytes.spec.panic_freedom {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU32.deserialize_bytes.spec.panic_freedom {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -1913,7 +1919,8 @@ theorem tls_vec.TlsByteVecU8.from_slice.spec.panic_freedom (corecloneCloneU8Inst
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsByteVecU8.from_slice corecloneCloneU8Inst slice
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU8.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU8.from_slice, h]
 
 theorem tls_vec.TlsByteVecU16.from_slice.spec.panic_freedom (corecloneCloneU8Inst :
                                        core.clone.Clone Std.U8)
@@ -1923,7 +1930,8 @@ theorem tls_vec.TlsByteVecU16.from_slice.spec.panic_freedom (corecloneCloneU8Ins
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsByteVecU16.from_slice corecloneCloneU8Inst slice
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU16.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU16.from_slice, h]
 
 theorem tls_vec.TlsByteVecU24.from_slice.spec.panic_freedom (corecloneCloneU8Inst :
                                        core.clone.Clone Std.U8)
@@ -1933,7 +1941,8 @@ theorem tls_vec.TlsByteVecU24.from_slice.spec.panic_freedom (corecloneCloneU8Ins
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsByteVecU24.from_slice corecloneCloneU8Inst slice
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU24.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU24.from_slice, h]
 
 theorem tls_vec.TlsByteVecU32.from_slice.spec.panic_freedom (corecloneCloneU8Inst :
                                        core.clone.Clone Std.U8)
@@ -1943,11 +1952,12 @@ theorem tls_vec.TlsByteVecU32.from_slice.spec.panic_freedom (corecloneCloneU8Ins
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsByteVecU32.from_slice corecloneCloneU8Inst slice
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU32.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU32.from_slice, h]
 
 /-! ### tls_vec: SecretTlsVecU* -/
 
-theorem tls_vec.SecretTlsVecU8.new.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.new.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -1955,7 +1965,7 @@ theorem tls_vec.SecretTlsVecU8.new.spec.panic_freedom {T : Type} (zeroizeZeroize
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.new]
 
-theorem tls_vec.SecretTlsVecU8.from_slice.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.from_slice.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T) (corecloneCloneInst
                                         : core.clone.Clone T) (slice : Slice T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
@@ -1966,7 +1976,7 @@ theorem tls_vec.SecretTlsVecU8.from_slice.spec.panic_freedom {T : Type} (zeroize
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.SecretTlsVecU8.from_slice, h]
 
-theorem tls_vec.SecretTlsVecU8.len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1975,7 +1985,7 @@ theorem tls_vec.SecretTlsVecU8.len.spec.panic_freedom {T : Type} (zeroizeZeroize
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.len]
 
-theorem tls_vec.SecretTlsVecU8.is_empty.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.is_empty.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1984,7 +1994,7 @@ theorem tls_vec.SecretTlsVecU8.is_empty.spec.panic_freedom {T : Type} (zeroizeZe
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.is_empty]
 
-theorem tls_vec.SecretTlsVecU8.into_vec.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.into_vec.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1993,7 +2003,7 @@ theorem tls_vec.SecretTlsVecU8.into_vec.spec.panic_freedom {T : Type} (zeroizeZe
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.into_vec]
 
-theorem tls_vec.SecretTlsVecU8.push.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.push.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2004,7 +2014,7 @@ theorem tls_vec.SecretTlsVecU8.push.spec.panic_freedom {T : Type} (zeroizeZeroiz
   hax_mvcgen [tls_vec.SecretTlsVecU8.push, tls_vec.SecretTlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.pop.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.pop.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2013,7 +2023,7 @@ theorem tls_vec.SecretTlsVecU8.pop.spec.panic_freedom {T : Type} (zeroizeZeroize
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.pop]
 
-theorem tls_vec.SecretTlsVecU8.remove.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.remove.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                     zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2024,7 +2034,7 @@ theorem tls_vec.SecretTlsVecU8.remove.spec.panic_freedom {T : Type} (zeroizeZero
   hax_mvcgen [tls_vec.SecretTlsVecU8.remove, tls_vec.SecretTlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.get.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.get.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2033,7 +2043,7 @@ theorem tls_vec.SecretTlsVecU8.get.spec.panic_freedom {T : Type} (zeroizeZeroize
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.get]
 
-theorem tls_vec.SecretTlsVecU8.len_len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.len_len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2041,7 +2051,7 @@ theorem tls_vec.SecretTlsVecU8.len_len.spec.panic_freedom {T : Type} (zeroizeZer
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.len_len]
 
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
                                                                  (zeroizeZeroizeInst
                                                                  :
                                                                  zeroize.Zeroize
@@ -2057,7 +2067,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_fr
   hax_mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -2069,8 +2079,8 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.p
   hax_mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU8.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
-                                                  Serialize T)
+theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst
+                                                  : Serialize T)
                                                   (zeroizeZeroizeInst :
                                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (tls_serialized_len : Std.Usize)
@@ -2083,9 +2093,9 @@ theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.panic_freedom {T : Type
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.assert_written_bytes]
 
-theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size
-                                                   T) (zeroizeZeroizeInst :
-                                                   zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst :
+                                                   Size T) (zeroizeZeroizeInst
+                                                   : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2093,7 +2103,7 @@ theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.panic_freedom {T : Typ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU8.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful self
 
-theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type _}
                                                (DeserializeBytesInst :
                                                DeserializeBytes T)
                                                (zeroizeZeroizeInst :
@@ -2107,7 +2117,7 @@ theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.panic_freedom {T : Type}
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU8.deserialize_bytes_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU16.new.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.new.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2115,7 +2125,7 @@ theorem tls_vec.SecretTlsVecU16.new.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.new]
 
-theorem tls_vec.SecretTlsVecU16.from_slice.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.from_slice.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -2128,7 +2138,7 @@ theorem tls_vec.SecretTlsVecU16.from_slice.spec.panic_freedom {T : Type} (zeroiz
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.SecretTlsVecU16.from_slice, h]
 
-theorem tls_vec.SecretTlsVecU16.len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2137,7 +2147,7 @@ theorem tls_vec.SecretTlsVecU16.len.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.len]
 
-theorem tls_vec.SecretTlsVecU16.is_empty.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.is_empty.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2146,7 +2156,7 @@ theorem tls_vec.SecretTlsVecU16.is_empty.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.is_empty]
 
-theorem tls_vec.SecretTlsVecU16.into_vec.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.into_vec.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2155,7 +2165,7 @@ theorem tls_vec.SecretTlsVecU16.into_vec.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.into_vec]
 
-theorem tls_vec.SecretTlsVecU16.push.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.push.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2166,7 +2176,7 @@ theorem tls_vec.SecretTlsVecU16.push.spec.panic_freedom {T : Type} (zeroizeZeroi
   hax_mvcgen [tls_vec.SecretTlsVecU16.push, tls_vec.SecretTlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.pop.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.pop.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2175,7 +2185,7 @@ theorem tls_vec.SecretTlsVecU16.pop.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.pop]
 
-theorem tls_vec.SecretTlsVecU16.remove.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.remove.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2186,7 +2196,7 @@ theorem tls_vec.SecretTlsVecU16.remove.spec.panic_freedom {T : Type} (zeroizeZer
   hax_mvcgen [tls_vec.SecretTlsVecU16.remove, tls_vec.SecretTlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.get.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.get.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2195,7 +2205,7 @@ theorem tls_vec.SecretTlsVecU16.get.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.get]
 
-theorem tls_vec.SecretTlsVecU16.len_len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.len_len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2203,7 +2213,7 @@ theorem tls_vec.SecretTlsVecU16.len_len.spec.panic_freedom {T : Type} (zeroizeZe
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.len_len]
 
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -2219,7 +2229,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_f
   hax_mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -2231,8 +2241,8 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU16.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (tls_serialized_len : Std.Usize)
@@ -2245,7 +2255,7 @@ theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.panic_freedom {T : Typ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.assert_written_bytes]
 
-theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2256,7 +2266,7 @@ theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.panic_freedom {T : Ty
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU16.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful self
 
-theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -2270,7 +2280,7 @@ theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.panic_freedom {T : Type}
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU16.deserialize_bytes_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU24.new.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.new.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2278,7 +2288,7 @@ theorem tls_vec.SecretTlsVecU24.new.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.new]
 
-theorem tls_vec.SecretTlsVecU24.from_slice.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.from_slice.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -2291,7 +2301,7 @@ theorem tls_vec.SecretTlsVecU24.from_slice.spec.panic_freedom {T : Type} (zeroiz
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.SecretTlsVecU24.from_slice, h]
 
-theorem tls_vec.SecretTlsVecU24.len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2300,7 +2310,7 @@ theorem tls_vec.SecretTlsVecU24.len.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.len]
 
-theorem tls_vec.SecretTlsVecU24.is_empty.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.is_empty.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2309,7 +2319,7 @@ theorem tls_vec.SecretTlsVecU24.is_empty.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.is_empty]
 
-theorem tls_vec.SecretTlsVecU24.into_vec.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.into_vec.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2318,7 +2328,7 @@ theorem tls_vec.SecretTlsVecU24.into_vec.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.into_vec]
 
-theorem tls_vec.SecretTlsVecU24.push.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.push.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2329,7 +2339,7 @@ theorem tls_vec.SecretTlsVecU24.push.spec.panic_freedom {T : Type} (zeroizeZeroi
   hax_mvcgen [tls_vec.SecretTlsVecU24.push, tls_vec.SecretTlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.pop.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.pop.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2338,7 +2348,7 @@ theorem tls_vec.SecretTlsVecU24.pop.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.pop]
 
-theorem tls_vec.SecretTlsVecU24.remove.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.remove.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2349,7 +2359,7 @@ theorem tls_vec.SecretTlsVecU24.remove.spec.panic_freedom {T : Type} (zeroizeZer
   hax_mvcgen [tls_vec.SecretTlsVecU24.remove, tls_vec.SecretTlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.get.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.get.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2358,7 +2368,7 @@ theorem tls_vec.SecretTlsVecU24.get.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.get]
 
-theorem tls_vec.SecretTlsVecU24.len_len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.len_len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2366,7 +2376,7 @@ theorem tls_vec.SecretTlsVecU24.len_len.spec.panic_freedom {T : Type} (zeroizeZe
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.len_len]
 
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -2382,7 +2392,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_f
   hax_mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -2394,8 +2404,8 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU24.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (tls_serialized_len : Std.Usize)
@@ -2408,7 +2418,7 @@ theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.panic_freedom {T : Typ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.assert_written_bytes]
 
-theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2419,7 +2429,7 @@ theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.panic_freedom {T : Ty
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU24.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful self
 
-theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -2433,7 +2443,7 @@ theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.panic_freedom {T : Type}
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU24.deserialize_bytes_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU32.new.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.new.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2441,7 +2451,7 @@ theorem tls_vec.SecretTlsVecU32.new.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.new]
 
-theorem tls_vec.SecretTlsVecU32.from_slice.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.from_slice.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -2454,7 +2464,7 @@ theorem tls_vec.SecretTlsVecU32.from_slice.spec.panic_freedom {T : Type} (zeroiz
   have h := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec slice
   mvcgen [tls_vec.SecretTlsVecU32.from_slice, h]
 
-theorem tls_vec.SecretTlsVecU32.len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2463,7 +2473,7 @@ theorem tls_vec.SecretTlsVecU32.len.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.len]
 
-theorem tls_vec.SecretTlsVecU32.is_empty.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.is_empty.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2472,7 +2482,7 @@ theorem tls_vec.SecretTlsVecU32.is_empty.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.is_empty]
 
-theorem tls_vec.SecretTlsVecU32.into_vec.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.into_vec.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2481,7 +2491,7 @@ theorem tls_vec.SecretTlsVecU32.into_vec.spec.panic_freedom {T : Type} (zeroizeZ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.into_vec]
 
-theorem tls_vec.SecretTlsVecU32.push.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.push.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2492,7 +2502,7 @@ theorem tls_vec.SecretTlsVecU32.push.spec.panic_freedom {T : Type} (zeroizeZeroi
   hax_mvcgen [tls_vec.SecretTlsVecU32.push, tls_vec.SecretTlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.pop.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.pop.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2501,7 +2511,7 @@ theorem tls_vec.SecretTlsVecU32.pop.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.pop]
 
-theorem tls_vec.SecretTlsVecU32.remove.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.remove.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2512,7 +2522,7 @@ theorem tls_vec.SecretTlsVecU32.remove.spec.panic_freedom {T : Type} (zeroizeZer
   hax_mvcgen [tls_vec.SecretTlsVecU32.remove, tls_vec.SecretTlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.get.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.get.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2521,7 +2531,7 @@ theorem tls_vec.SecretTlsVecU32.get.spec.panic_freedom {T : Type} (zeroizeZeroiz
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.get]
 
-theorem tls_vec.SecretTlsVecU32.len_len.spec.panic_freedom {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.len_len.spec.panic_freedom {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2529,7 +2539,7 @@ theorem tls_vec.SecretTlsVecU32.len_len.spec.panic_freedom {T : Type} (zeroizeZe
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.len_len]
 
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_freedom {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -2545,7 +2555,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.panic_f
   hax_mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -2557,8 +2567,8 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU32.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (tls_serialized_len : Std.Usize)
@@ -2571,7 +2581,7 @@ theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.panic_freedom {T : Typ
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.assert_written_bytes]
 
-theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2582,7 +2592,7 @@ theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.panic_freedom {T : Ty
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU32.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful self
 
-theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.panic_freedom {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -2598,14 +2608,15 @@ theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.panic_freedom {T : Type}
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem tls_vec.TlsSliceU8.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
-  (self : tls_vec.TlsSliceU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem tls_vec.TlsSliceU8.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size
+                                               T) (self : tls_vec.TlsSliceU8 T)
+  (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU8.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsSliceU8.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                               Serialize T)
   (self : tls_vec.TlsSliceU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -2616,14 +2627,15 @@ theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.panic_freedom {T : Type} (S
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU8.assert_written_bytes]
 
-theorem tls_vec.TlsSliceU16.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU16.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU16.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsSliceU16.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -2634,14 +2646,15 @@ theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.panic_freedom {T : Type} (
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU16.assert_written_bytes]
 
-theorem tls_vec.TlsSliceU24.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU24.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU24.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsSliceU24.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -2652,14 +2665,15 @@ theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.panic_freedom {T : Type} (
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsSliceU24.assert_written_bytes]
 
-theorem tls_vec.TlsSliceU32.tls_serialized_length.spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU32.tls_serialized_length.spec.panic_freedom {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU32.tls_serialized_length SizeInst self
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsSliceU32.tls_serialized_length_pf SizeInst SizeInstLawful self
 
-theorem tls_vec.TlsSliceU32.assert_written_bytes.spec.panic_freedom {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU32.assert_written_bytes.spec.panic_freedom {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -2697,7 +2711,7 @@ theorem ArrayU8LEN.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2706,7 +2720,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spe
   have h := Option_serialize_char SerializeBytesInst SerializeBytesInstLawful self_
   mvcgen [h]
 
-theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type}
+theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2715,7 +2729,7 @@ theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.pan
   have h := Option_serialize_char SerializeBytesInst SerializeBytesInstLawful self_
   mvcgen [Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, h]
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2724,7 +2738,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   have h := Option_deserialize_char DeserializeBytesInst DeserializeBytesInstLawful bytes
   mvcgen [h]
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2732,7 +2746,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) (fun b => core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom DeserializeBytesInst DeserializeBytesInstLawful b) bytes
 
-theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _} {U : Type _}
   (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1 :
   DeserializeBytes U)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -2745,7 +2759,7 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_fr
     DeserializeBytesInst1Lawful bytes
   mvcgen [h]
 
-theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _} {U : Type _}
   (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1 :
   DeserializeBytes U)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -2756,9 +2770,10 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pa
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1) (fun b => Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInstLawful DeserializeBytesInst1Lawful b) bytes
 
-theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type} {U : Type}
-  {V : Type} (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1
-  : DeserializeBytes U) (DeserializeBytesInst2 : DeserializeBytes V)
+theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _} {U :
+  Type _} {V : Type _} (DeserializeBytesInst : DeserializeBytes T)
+  (DeserializeBytesInst1 : DeserializeBytes U) (DeserializeBytesInst2 :
+  DeserializeBytes V)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   (DeserializeBytesInst1Lawful : DeserializeBytes.Lawful U
   DeserializeBytesInst1)
@@ -2771,9 +2786,10 @@ theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.pani
     DeserializeBytesInstLawful DeserializeBytesInst1Lawful DeserializeBytesInst2Lawful bytes
   mvcgen [h]
 
-theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type} {U : Type}
-  {V : Type} (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1
-  : DeserializeBytes U) (DeserializeBytesInst2 : DeserializeBytes V)
+theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _} {U :
+  Type _} {V : Type _} (DeserializeBytesInst : DeserializeBytes T)
+  (DeserializeBytesInst1 : DeserializeBytes U) (DeserializeBytesInst2 :
+  DeserializeBytes V)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   (DeserializeBytesInst1Lawful : DeserializeBytes.Lawful U
   DeserializeBytesInst1)
@@ -2797,27 +2813,28 @@ theorem Tuple.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.p
   exact DeserializeBytes.exact_default_pf Tuple.Insts.Tls_codecDeserializeBytes (fun b => Tuple.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom b) bytes
 
 theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom (T :
-  Type) (bytes : Slice Std.U8) :
+  Type _) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes T) bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes]
 
 theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom (T :
-  Type) (bytes : Slice Std.U8) :
+  Type _) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T).tls_deserialize_exact_bytes bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T) (fun b => core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom T b) bytes
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (T : Type) (self_ : (core.marker.PhantomData T)) :
+theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (T :
+  Type _) (self_ : (core.marker.PhantomData T)) :
   ⦃ ⌜ True ⌝ ⦄
     core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
 
-theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type} (SerializeBytesInst
-  : SerializeBytes T)
+theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
+  (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : T) :
   ⦃ ⌜ True ⌝ ⦄
     (Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes SerializeBytesInst) self_
@@ -2826,7 +2843,7 @@ theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom
   rw [Box_serialize_eq]
   mvcgen [hs]
 
-theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2836,7 +2853,7 @@ theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_fre
   rw [Box_deserialize_eq]
   mvcgen [hd]
 
-theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2858,6 +2875,18 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pani
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf U8.Insts.Tls_codecDeserializeBytes U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom bytes
 
+theorem Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U8.to_be_bytes_spec]
+
+theorem U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
+
 theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
@@ -2869,6 +2898,18 @@ theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pan
     U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf U16.Insts.Tls_codecDeserializeBytes U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom bytes
+
+theorem Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U16.to_be_bytes_spec]
+
+theorem U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
 
 theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2882,6 +2923,18 @@ theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pan
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf U24.Insts.Tls_codecDeserializeBytes U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom bytes
 
+theorem Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, U24.to_be_bytes]
+
+theorem U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
+
 theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
@@ -2893,6 +2946,18 @@ theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pan
     U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf U32.Insts.Tls_codecDeserializeBytes U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom bytes
+
+theorem Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U32.to_be_bytes_spec]
+
+theorem U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
 
 theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2906,59 +2971,11 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.pan
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf U64.Insts.Tls_codecDeserializeBytes U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom bytes
 
-theorem Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U8.to_be_bytes_spec]
-
-theorem Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U16.to_be_bytes_spec]
-
-theorem Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, U24.to_be_bytes]
-
-theorem Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U32.to_be_bytes_spec]
-
 theorem Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U64) :
   ⦃ ⌜ True ⌝ ⦄
     Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, CoreModels.core.num.U64.to_be_bytes_spec]
-
-theorem U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
-
-theorem U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
-
-theorem U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
-
-theorem U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom]
 
 theorem U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom (self_ : Std.U64) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2980,7 +2997,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_e
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes (fun b => quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom b) bytes
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2988,7 +3005,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.trait_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3009,7 +3026,7 @@ theorem Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.pa
   mvcgen [Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes,
     quic_vec.VLBytes.serialize_char]
 
-theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type}
+theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3017,7 +3034,7 @@ theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.pani
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact Shared0Slice.serialize_pf SerializeBytesInst SerializeBytesInstLawful self_
 
-theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type}
+theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3025,7 +3042,7 @@ theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact Shared0Vec.serialize_pf SerializeBytesInst SerializeBytesInstLawful self_
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3061,7 +3078,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   ⦃ ⌜ True ⌝ ⦄
     quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨r, hr, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.serialize_len_char self_)
   unfold quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   rw [hr]
@@ -3237,7 +3254,7 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_ex
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3245,7 +3262,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_s
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU8.trait_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3253,7 +3270,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_b
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) (fun b => tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom DeserializeBytesInst DeserializeBytesInstLawful b) bytes
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3261,7 +3278,7 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU16.trait_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3269,7 +3286,7 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) (fun b => tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom DeserializeBytesInst DeserializeBytesInstLawful b) bytes
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3277,7 +3294,7 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU24.trait_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3285,7 +3302,7 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_pf (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) (fun b => tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom DeserializeBytesInst DeserializeBytesInstLawful b) bytes
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3293,7 +3310,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsVecU32.trait_pf DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3304,7 +3321,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
 /-! ### tls_vec: SecretTlsVecU* -/
 
 theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3314,7 +3331,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_b
   exact tls_vec.SecretTlsVecU8.trait_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3324,7 +3341,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_e
   exact DeserializeBytes.exact_default_pf (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) (fun b => tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful b) bytes
 
 theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3334,7 +3351,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU16.trait_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3344,7 +3361,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact DeserializeBytes.exact_default_pf (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) (fun b => tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful b) bytes
 
 theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3354,7 +3371,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU24.trait_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3364,7 +3381,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact DeserializeBytes.exact_default_pf (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) (fun b => tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful b) bytes
 
 theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3374,7 +3391,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU32.trait_pf DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -3398,7 +3415,7 @@ theorem ArrayU8LEN.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (LE
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem core.option.Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
     (core.option.Option.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3406,16 +3423,16 @@ theorem core.option.Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_fre
   have hs := SizeInstLawful.tls_serialized_len_spec
   mvcgen [core.option.Option.Insts.Tls_codecSize.tls_serialized_len, hs]
 
-theorem Shared0Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (core.option.Option T)) :
+theorem Shared0Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0Option.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hs := SizeInstLawful.tls_serialized_len_spec
   mvcgen [Shared0Option.Insts.Tls_codecSize.tls_serialized_len, core.option.Option.Insts.Tls_codecSize.tls_serialized_len, hs]
 
-theorem Pair.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} {U : Type} (SizeInst : Size
-  T) (SizeInst1 : Size U) (SizeInstLawful : Size.Lawful T SizeInst)
+theorem Pair.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} {U : Type _} (SizeInst :
+  Size T) (SizeInst1 : Size U) (SizeInstLawful : Size.Lawful T SizeInst)
   (SizeInst1Lawful : Size.Lawful U SizeInst1) (self_ : (T × U)) :
   ⦃ ⌜ True ⌝ ⦄
     (Pair.Insts.Tls_codecSize.tls_serialized_len SizeInst SizeInst1) self_
@@ -3424,8 +3441,8 @@ theorem Pair.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type
   have hs1 := SizeInst1Lawful.tls_serialized_len_spec
   mvcgen [Pair.Insts.Tls_codecSize.tls_serialized_len, hs, hs1]
 
-theorem TupleTUV.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} {U : Type} {V : Type}
-  (SizeInst : Size T) (SizeInst1 : Size U) (SizeInst2 : Size V)
+theorem TupleTUV.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} {U : Type _} {V :
+  Type _} (SizeInst : Size T) (SizeInst1 : Size U) (SizeInst2 : Size V)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (SizeInst1Lawful : Size.Lawful U SizeInst1)
   (SizeInst2Lawful : Size.Lawful V SizeInst2) (self_ : (T × U × V)) :
@@ -3443,13 +3460,13 @@ theorem Tuple.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ :
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Tuple.Insts.Tls_codecSize.tls_serialized_len]
 
-theorem core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (T : Type) (self_ : (core.marker.PhantomData T)) :
+theorem core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (T : Type _) (self_ : (core.marker.PhantomData T)) :
   ⦃ ⌜ True ⌝ ⦄
     core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len]
 
-theorem Box.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem Box.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : T) :
   ⦃ ⌜ True ⌝ ⦄
     (Box.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3465,35 +3482,17 @@ theorem U8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : St
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [U8.Insts.Tls_codecSize.tls_serialized_len]
 
-theorem U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U16.Insts.Tls_codecSize.tls_serialized_len]
-
-theorem U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U24.Insts.Tls_codecSize.tls_serialized_len]
-
-theorem U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U32.Insts.Tls_codecSize.tls_serialized_len]
-
-theorem U64.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U64) :
-  ⦃ ⌜ True ⌝ ⦄
-    U64.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U64.Insts.Tls_codecSize.tls_serialized_len]
-
 theorem Shared0U8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     Shared0U8.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0U8.Insts.Tls_codecSize.tls_serialized_len, U8.Insts.Tls_codecSize.tls_serialized_len]
+
+theorem U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U16.Insts.Tls_codecSize.tls_serialized_len]
 
 theorem Shared0U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U16) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3501,17 +3500,35 @@ theorem Shared0U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (se
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0U16.Insts.Tls_codecSize.tls_serialized_len, U16.Insts.Tls_codecSize.tls_serialized_len]
 
+theorem U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U24.Insts.Tls_codecSize.tls_serialized_len]
+
 theorem Shared0U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : U24) :
   ⦃ ⌜ True ⌝ ⦄
     Shared0U24.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0U24.Insts.Tls_codecSize.tls_serialized_len, U24.Insts.Tls_codecSize.tls_serialized_len]
 
+theorem U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U32.Insts.Tls_codecSize.tls_serialized_len]
+
 theorem Shared0U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U32) :
   ⦃ ⌜ True ⌝ ⦄
     Shared0U32.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0U32.Insts.Tls_codecSize.tls_serialized_len, U32.Insts.Tls_codecSize.tls_serialized_len]
+
+theorem U64.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U64) :
+  ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U64.Insts.Tls_codecSize.tls_serialized_len]
 
 theorem Shared0U64.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : Std.U64) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3527,14 +3544,14 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSize.tls_serialized_len_spec.panic
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [quic_vec.ContentLength.Insts.Tls_codecSize.tls_serialized_len, varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len]
 
-theorem alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (alloc.vec.Vec T)) :
+theorem alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
     (alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.size_pf SizeInst SizeInstLawful self_
 
-theorem Shared0Vec.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size T)
+theorem Shared0Vec.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst : Size T)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0Vec.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3554,8 +3571,8 @@ theorem Shared0VLBytes.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0VLBytes.Insts.Tls_codecSize.tls_serialized_len, quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len, quic_vec.VLBytes.as_slice, quic_vec.VLBytes.impl.vec, quic_vec.tls_serialize_bytes_len.spec.panic_freedom]
 
-theorem Shared0Slice.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (Slice T)) :
+theorem Shared0Slice.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0Slice.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -3675,15 +3692,23 @@ theorem Shared0TlsByteVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_f
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU8 T)) :
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsVecU8.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hl := tls_vec.TlsVecU8.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsVecU8.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsVecU8.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3691,7 +3716,15 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_free
   have hl := tls_vec.TlsVecU16.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsVecU16.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3699,7 +3732,15 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_free
   have hl := tls_vec.TlsVecU24.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsVecU24.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3707,32 +3748,8 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_free
   have hl := tls_vec.TlsVecU32.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsVecU8.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsVecU16.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsVecU24.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU32 T)) :
+theorem Shared0TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0TlsVecU32.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -3741,7 +3758,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freed
 
 /-! ### tls_vec: SecretTlsVecU* -/
 
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
@@ -3751,37 +3768,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic
   have hl := tls_vec.SecretTlsVecU8.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
   mvcgen [tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.SecretTlsVecU16.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
-  mvcgen [tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.SecretTlsVecU24.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
-  mvcgen [tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.SecretTlsVecU32.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
-  mvcgen [tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
@@ -3791,7 +3778,17 @@ theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_
   have hl := tls_vec.SecretTlsVecU8.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
   mvcgen [Shared0SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.SecretTlsVecU16.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
+  mvcgen [tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
@@ -3801,7 +3798,17 @@ theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic
   have hl := tls_vec.SecretTlsVecU16.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
   mvcgen [Shared0SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.SecretTlsVecU24.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
+  mvcgen [tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
@@ -3811,7 +3818,17 @@ theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic
   have hl := tls_vec.SecretTlsVecU24.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
   mvcgen [Shared0SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len zeroizeZeroizeInst SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.SecretTlsVecU32.tls_serialized_length_pf SizeInst zeroizeZeroizeInst SizeInstLawful
+  mvcgen [tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
@@ -3829,29 +3846,17 @@ theorem Shared0TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [Shared0TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU8.tls_serialized_byte_length, tls_vec.TlsByteSliceU8.as_slice]
 
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU16.tls_serialized_byte_length, tls_vec.TlsByteSliceU16.as_slice]
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU24.tls_serialized_byte_length, tls_vec.TlsByteSliceU24.as_slice]
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU32.tls_serialized_byte_length, tls_vec.TlsByteSliceU32.as_slice]
-
 theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU8) :
   ⦃ ⌜ True ⌝ ⦄
     tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU8.tls_serialized_byte_length, tls_vec.TlsByteSliceU8.as_slice]
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU16.tls_serialized_byte_length, tls_vec.TlsByteSliceU16.as_slice]
 
 theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU16) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3859,11 +3864,23 @@ theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.pani
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU16.tls_serialized_byte_length, tls_vec.TlsByteSliceU16.as_slice]
 
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU24.tls_serialized_byte_length, tls_vec.TlsByteSliceU24.as_slice]
+
 theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU24) :
   ⦃ ⌜ True ⌝ ⦄
     tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU24.tls_serialized_byte_length, tls_vec.TlsByteSliceU24.as_slice]
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len, tls_vec.TlsByteSliceU32.tls_serialized_byte_length, tls_vec.TlsByteSliceU32.as_slice]
 
 theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU32) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3873,7 +3890,7 @@ theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.pani
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3881,31 +3898,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_free
   have hl := tls_vec.TlsSliceU8.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsSliceU16.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsSliceU24.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  have hl := tls_vec.TlsSliceU32.tls_serialized_length_pf SizeInst SizeInstLawful
-  mvcgen [Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len, hl]
-
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3913,7 +3906,15 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_fre
   have hl := tls_vec.TlsSliceU8.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsSliceU16.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3921,7 +3922,15 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_fr
   have hl := tls_vec.TlsSliceU16.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsSliceU24.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3929,7 +3938,15 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_fr
   have hl := tls_vec.TlsSliceU24.tls_serialized_length_pf SizeInst SizeInstLawful
   mvcgen [tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len, hl]
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type} (SizeInst :
+theorem Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  have hl := tls_vec.TlsSliceU32.tls_serialized_length_pf SizeInst SizeInstLawful
+  mvcgen [Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len, hl]
+
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
     (tls_vec.TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len SizeInst) self_
@@ -3980,7 +3997,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_f
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -3993,7 +4010,7 @@ theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_fre
   intro hpre
   exact triple_post_mono (Option.ser_spec SerializeInstLawful coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre) (fun _ _ => trivial)
 
-theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4002,8 +4019,9 @@ theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.
   obtain ⟨sz, hsz⟩ := Option.size_ok SerializeInstLawful.SizeInstLawful self_
   exact triple_post_mono (Serialize.tls_serialize_detached.default_spec _ self_ sz hsz (fun w hpre => Option.ser_spec SerializeInstLawful _ StdIo.vec_lawful self_ w hpre)) (fun _ _ => trivial)
 
-theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : (core.option.Option T)) (writer : W) :
   (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0Option.Insts.Tls_codecSerialize SerializeInst).SizeInst
@@ -4014,14 +4032,15 @@ theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom 
   intro hpre
   exact triple_post_mono ((Shared0Option.serSpec SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
+theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0Option.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Shared0Option.serSpec SerializeInstLawful self_) (Option.size_ok SerializeInstLawful.SizeInstLawful self_)) (fun _ _ => trivial)
 
-theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -4031,7 +4050,7 @@ theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Option.de_spec DeserializeInstLawful allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -4042,7 +4061,7 @@ theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Deserialize.tls_deserialize_exact.default_spec _ coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => Option.de_spec DeserializeInstLawful _ StdIo.slice_lawful s)) (fun _ _ => trivial)
 
-theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _} {U : Type _}
   (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -4053,7 +4072,7 @@ theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : 
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((Pair.deSpec' DeserializeInstLawful DeserializeInst1Lawful) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _} {U : Type _}
   (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1) {T1 : Type}
@@ -4065,7 +4084,7 @@ theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (DeSpec.exact (Pair.deSpec' DeserializeInstLawful DeserializeInst1Lawful) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
-theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _} {U : Type _}
   (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -4079,7 +4098,7 @@ theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type
   intro hpre
   exact triple_post_mono ((Pair.serSpec' SerializeInstLawful SerializeInst1Lawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _} {U : Type _}
   (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1) (self_ : (T × U)) :
@@ -4088,9 +4107,9 @@ theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom 
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Pair.serSpec' SerializeInstLawful SerializeInst1Lawful self_) (Pair.size_ex SerializeInstLawful SerializeInst1Lawful self_)) (fun _ _ => trivial)
 
-theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type} {U : Type} {V :
-  Type} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
-  (DeserializeInst2 : Deserialize V)
+theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _} {U : Type _} {V
+  : Type _} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize
+  U) (DeserializeInst2 : Deserialize V)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1)
   (DeserializeInst2Lawful : Deserialize.Lawful V DeserializeInst2) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -4101,9 +4120,9 @@ theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((Triple.deSpec' DeserializeInstLawful DeserializeInst1Lawful DeserializeInst2Lawful) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type} {U : Type} {V :
-  Type} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
-  (DeserializeInst2 : Deserialize V)
+theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _} {U : Type _} {V
+  : Type _} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize
+  U) (DeserializeInst2 : Deserialize V)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1)
   (DeserializeInst2Lawful : Deserialize.Lawful V DeserializeInst2) {T1 : Type}
@@ -4115,8 +4134,8 @@ theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_fre
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (DeSpec.exact (Triple.deSpec' DeserializeInstLawful DeserializeInst1Lawful DeserializeInst2Lawful) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
-theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} {U : Type} {V :
-  Type} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
+theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _} {U : Type _} {V :
+  Type _} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInst2 : Serialize V)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -4131,8 +4150,8 @@ theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : 
   intro hpre
   exact triple_post_mono ((Triple.serSpec' SerializeInstLawful SerializeInst1Lawful SerializeInst2Lawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} {U : Type} {V :
-  Type} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
+theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _} {U : Type _} {V :
+  Type _} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInst2 : Serialize V)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -4176,7 +4195,7 @@ theorem Tuple.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Unit.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
-theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom (T : Type) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom (T : Type _) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4184,7 +4203,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((Phantom.deSpec T) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom (T : Type) {T1 : Type}
+theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom (T : Type _) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
     (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
     Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
@@ -4193,7 +4212,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (DeSpec.exact (Phantom.deSpec T) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom (T : Type) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom (T : Type _) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : (core.marker.PhantomData T)) (writer : W) :
   (Serialize.tls_serialize.pre coreiowriteWriteInst (core.marker.PhantomData.Insts.Tls_codecSerialize T).SizeInst
@@ -4204,13 +4223,13 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.pani
   intro hpre
   exact triple_post_mono ((Phantom.serSpec T self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (T : Type) (self_ : (core.marker.PhantomData T)) :
+theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (T : Type _) (self_ : (core.marker.PhantomData T)) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecSerialize T).tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Phantom.serSpec T self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
-theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} (SerializeInst :
+theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _} (SerializeInst :
   Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : T) (writer : W) :
@@ -4222,14 +4241,14 @@ theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
   intro hpre
   exact triple_post_mono ((Box.serSpec SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} (SerializeInst :
+theorem Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _} (SerializeInst :
   Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : T) :
   ⦃ ⌜ True ⌝ ⦄
     (Box.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (Box.serSpec SerializeInstLawful self_) (Size.lawful_ok _ SerializeInstLawful.SizeInstLawful self_)) (fun _ _ => trivial)
+  exact triple_post_mono (SerSpec.detached (Box.serSpec SerializeInstLawful self_) (Box.size_ex SerializeInstLawful self_)) (fun _ _ => trivial)
 
-theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type} (DeserializeInst :
+theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _} (DeserializeInst :
   Deserialize T) (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -4238,7 +4257,7 @@ theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : T
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((Box.deSpec DeserializeInstLawful) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type} (DeserializeInst :
+theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _} (DeserializeInst :
   Deserialize T) (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
     (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
@@ -4267,74 +4286,6 @@ theorem U8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Deserialize.tls_deserialize_exact.default_spec U8.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U8.de_spec _ StdIo.slice_lawful s)) (fun _ _ => trivial)
 
-theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U16.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (U16.de_spec allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Deserialize.tls_deserialize_exact.default_spec U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U16.de_spec _ StdIo.slice_lawful s)) (fun _ _ => trivial)
-
-theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U24.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((U24.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (DeSpec.exact (U24.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U32.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((U32.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (DeSpec.exact (U32.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U64.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((U64.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (DeSpec.exact (U64.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
 theorem U8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U8) (writer : W) :
@@ -4351,74 +4302,6 @@ theorem U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (s
     U8.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Serialize.tls_serialize_detached.default_spec U8.Insts.Tls_codecSerialize self_ 1#usize rfl (fun w hpre => U8.ser_spec _ StdIo.vec_lawful self_ w hpre)) (fun _ _ => trivial)
-
-theorem U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U16.Insts.Tls_codecSerialize.SizeInst
-    U16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (U16.ser_spec coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre) (fun _ _ => trivial)
-
-theorem U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Serialize.tls_serialize_detached.default_spec U16.Insts.Tls_codecSerialize self_ 2#usize rfl (fun w hpre => U16.ser_spec _ StdIo.vec_lawful self_ w hpre)) (fun _ _ => trivial)
-
-theorem U24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : U24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U24.Insts.Tls_codecSerialize.SizeInst
-    U24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono ((U24.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (U24.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
-
-theorem U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U32.Insts.Tls_codecSerialize.SizeInst
-    U32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono ((U32.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (U32.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
-
-theorem U64.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U64) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U64.Insts.Tls_codecSerialize.SizeInst
-    U64.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U64.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono ((U64.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U64) :
-  ⦃ ⌜ True ⌝ ⦄
-    U64.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (U64.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
 theorem Shared0U8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4437,6 +4320,40 @@ theorem Shared0U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_fre
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Shared0U8.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
+theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U16.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (U16.de_spec allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Deserialize.tls_deserialize_exact.default_spec U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U16.de_spec _ StdIo.slice_lawful s)) (fun _ _ => trivial)
+
+theorem U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U16.Insts.Tls_codecSerialize.SizeInst
+    U16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (U16.ser_spec coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre) (fun _ _ => trivial)
+
+theorem U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Serialize.tls_serialize_detached.default_spec U16.Insts.Tls_codecSerialize self_ 2#usize rfl (fun w hpre => U16.ser_spec _ StdIo.vec_lawful self_ w hpre)) (fun _ _ => trivial)
+
 theorem Shared0U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
@@ -4453,6 +4370,40 @@ theorem Shared0U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_fr
     Shared0U16.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Shared0U16.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
+
+theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U24.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((U24.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (DeSpec.exact (U24.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem U24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : U24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U24.Insts.Tls_codecSerialize.SizeInst
+    U24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono ((U24.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (SerSpec.detached (U24.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
 theorem Shared0U24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4471,6 +4422,40 @@ theorem Shared0U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_fr
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Shared0U24.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
+theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U32.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((U32.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (DeSpec.exact (U32.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U32.Insts.Tls_codecSerialize.SizeInst
+    U32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono ((U32.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (SerSpec.detached (U32.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
+
 theorem Shared0U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
@@ -4487,6 +4472,40 @@ theorem Shared0U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_fr
     Shared0U32.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (Shared0U32.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
+
+theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U64.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((U64.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (DeSpec.exact (U64.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem U64.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U64) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U64.Insts.Tls_codecSerialize.SizeInst
+    U64.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U64.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono ((U64.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : Std.U64) :
+  ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (SerSpec.detached (U64.serSpec self_) (⟨_, rfl⟩)) (fun _ _ => trivial)
 
 theorem Shared0U64.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4541,7 +4560,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize_detached_s
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (SerSpec.detached (ContentLength.serSpec self_) (ContentLength.size_ex self_)) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -4551,7 +4570,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_free
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Vec.de_spec DeserializeInstLawful allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -4562,8 +4581,8 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.pani
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Deserialize.tls_deserialize_exact.default_spec _ coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => Vec.de_spec DeserializeInstLawful _ StdIo.slice_lawful s)) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4576,18 +4595,18 @@ theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom 
   intro hpre
   exact triple_post_mono (Vec.ser_spec write_length_runs corefmtDebugInst SerializeInstLawful coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
     (alloc.vec.Vec.Insts.Tls_codecSerialize SerializeInst corefmtDebugInst).tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.size_rel SerializeInst.SizeInst SerializeInstLawful.SizeInstLawful self_)
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.size_rel SerializeInst.SizeInst SerializeInstLawful.SizeInstLawful self_)
   exact triple_post_mono (Serialize.tls_serialize_detached.default_spec _ self_ sz hsz (fun w hpre => Vec.ser_spec write_length_runs corefmtDebugInst SerializeInstLawful _ StdIo.vec_lawful self_ w hpre)) (fun _ _ => trivial)
 
-theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4600,8 +4619,8 @@ theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {
   intro hpre
   exact triple_post_mono ((Shared0Slice.serSpec corefmtDebugInst SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4845,7 +4864,7 @@ theorem Str.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (
   ⦃ ⌜ True ⌝ ⦄
     Str.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (Str.serSpec self_) (Shared0Slice.size_ex U8.lawful self_)) (fun _ _ => trivial)
+  exact triple_post_mono (SerSpec.detached (Str.serSpec self_) (Str.size_ex self_)) (fun _ _ => trivial)
 
 theorem Shared0Str.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4862,7 +4881,7 @@ theorem Shared0Str.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_fr
   ⦃ ⌜ True ⌝ ⦄
     Shared0Str.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (SerSpec.detached (Shared0Str.serSpec self_) (Shared0Slice.size_ex U8.lawful self_)) (fun _ _ => trivial)
+  exact triple_post_mono (SerSpec.detached (Shared0Str.serSpec self_) (Shared0Str.size_ex self_)) (fun _ _ => trivial)
 
 theorem alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -4883,7 +4902,7 @@ theorem alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize_exact_spe
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4896,7 +4915,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freed
   intro hpre
   exact triple_post_mono (tls_vec.TlsVecU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4904,70 +4923,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.pa
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsVecU8.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU32.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -4980,7 +4936,7 @@ theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedo
   intro hpre
   exact triple_post_mono (Shared0TlsVecU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4988,7 +4944,49 @@ theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.pan
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsVecU8.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU8.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.TlsVecU8.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5001,7 +4999,7 @@ theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freed
   intro hpre
   exact triple_post_mono (Shared0TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5009,7 +5007,49 @@ theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.pa
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsVecU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU16.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.TlsVecU16.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5022,7 +5062,7 @@ theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freed
   intro hpre
   exact triple_post_mono (Shared0TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5030,7 +5070,49 @@ theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.pa
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsVecU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU24.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.TlsVecU24.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsVecU32.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5043,7 +5125,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freed
   intro hpre
   exact triple_post_mono (Shared0TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5051,70 +5133,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.pa
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsVecU32.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU8.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.TlsVecU8.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU16.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.TlsVecU16.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsVecU24.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.TlsVecU24.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -5124,7 +5143,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsVecU32.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -5134,284 +5153,6 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.
     (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU32.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((tls_vec.TlsVecU32.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-/-! ### tls_vec: SecretTlsVecU* -/
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono ((tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
 /-! ### tls_vec: TlsByteVecU* -/
 
@@ -5432,57 +5173,6 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spe
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsByteVecU8.serDetached self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsByteVecU16.serDetached self_) (fun _ _ => trivial)
-
-theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsByteVecU24.serDetached self_) (fun _ _ => trivial)
-
-theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (tls_vec.TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (tls_vec.TlsByteVecU32.serDetached self_) (fun _ _ => trivial)
-
 theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU8) (writer : W) :
@@ -5499,57 +5189,6 @@ theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec
     Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsByteVecU8.serDetached self_) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteVecU16.serDetached self_) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteVecU24.serDetached self_) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteVecU32.serDetached self_) (fun _ _ => trivial)
 
 theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -5568,6 +5207,40 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_sp
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((tls_vec.TlsByteVecU8.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
+theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsByteVecU16.serDetached self_) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteVecU16.serDetached self_) (fun _ _ => trivial)
+
 theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -5584,6 +5257,40 @@ theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
     (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((tls_vec.TlsByteVecU16.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsByteVecU24.serDetached self_) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteVecU24.serDetached self_) (fun _ _ => trivial)
 
 theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -5602,6 +5309,40 @@ theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((tls_vec.TlsByteVecU24.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
+theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.TlsByteVecU32.serDetached self_) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteVecU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteVecU32.serDetached self_) (fun _ _ => trivial)
+
 theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -5618,6 +5359,284 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
     (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono ((tls_vec.TlsByteVecU32.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+/-! ### tls_vec: SecretTlsVecU* -/
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (tls_vec.SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes) (fun _ _ => trivial)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono ((tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes) (fun _ _ => trivial)
 
 /-! ### tls_vec: TlsByteSliceU* -/
 
@@ -5638,57 +5657,6 @@ theorem Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_sp
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsByteSliceU8.serDetached self_) (fun _ _ => trivial)
 
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteSliceU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteSliceU16.serDetached self_) (fun _ _ => trivial)
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteSliceU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteSliceU24.serDetached self_) (fun _ _ => trivial)
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsByteSliceU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsByteSliceU32.serDetached self_) (fun _ _ => trivial)
-
 theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU8) (writer : W) :
@@ -5705,6 +5673,23 @@ theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_s
     tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsByteSliceU8.serDetached self_) (fun _ _ => trivial)
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteSliceU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteSliceU16.serDetached self_) (fun _ _ => trivial)
 
 theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5723,6 +5708,23 @@ theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsByteSliceU16.serDetached self_) (fun _ _ => trivial)
 
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteSliceU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteSliceU24.serDetached self_) (fun _ _ => trivial)
+
 theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
@@ -5739,6 +5741,23 @@ theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_
     tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsByteSliceU24.serDetached self_) (fun _ _ => trivial)
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsByteSliceU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom (self_ : tls_vec.TlsByteSliceU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsByteSliceU32.serDetached self_) (fun _ _ => trivial)
 
 theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5759,7 +5778,7 @@ theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5772,7 +5791,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_free
   intro hpre
   exact triple_post_mono (Shared0TlsSliceU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5780,70 +5799,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.p
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (Shared0TlsSliceU8.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsSliceU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsSliceU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  intro hpre
-  exact triple_post_mono (Shared0TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact triple_post_mono (Shared0TlsSliceU32.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
-
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5856,7 +5812,7 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_fre
   intro hpre
   exact triple_post_mono (tls_vec.TlsSliceU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5864,7 +5820,28 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsSliceU8.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsSliceU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5877,7 +5854,7 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_fr
   intro hpre
   exact triple_post_mono (tls_vec.TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5885,7 +5862,28 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsSliceU16.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsSliceU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5898,7 +5896,7 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_fr
   intro hpre
   exact triple_post_mono (tls_vec.TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5906,7 +5904,28 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (tls_vec.TlsSliceU24.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type}
+theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  intro hpre
+  exact triple_post_mono (Shared0TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
+
+theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact triple_post_mono (Shared0TlsSliceU32.serDetached SerializeInstLawful self_) (fun _ _ => trivial)
+
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -5919,7 +5938,7 @@ theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_fr
   intro hpre
   exact triple_post_mono (tls_vec.TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre) (fun _ _ => trivial)
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5994,130 +6013,176 @@ theorem quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from]
 
-theorem quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from]
-
-theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom x
-
-theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom x
-
 theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from]
-
-theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from]
-
-theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom x
-
-theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom x
 
 theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom (N :
   Std.Usize) (x : (Array Std.U8 N)) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from]
 
+theorem alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from_spec.panic_freedom (x : quic_vec.VLBytes) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from]
+
+theorem quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from]
+
+theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from]
+
 theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom (N :
   Std.Usize) (x : (Array Std.U8 N)) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from]
 
+theorem alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from_spec.panic_freedom (x : quic_vec.VLByteVec) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from]
+
+theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom x
+
+theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom x
+
 theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom (N : Std.Usize) (x : (Array Std.U8 N)) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom N x
+
+theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom x
+
+theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom x
 
 theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom (N : Std.Usize) (x : (Array Std.U8 N)) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom N x
 
-theorem alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from_spec.panic_freedom (x : quic_vec.VLBytes) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from]
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from_spec.panic_freedom (x : quic_vec.VLByteVec) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from]
-
-theorem tls_vec.TlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type) (x : (alloc.vec.Vec T)) :
+theorem tls_vec.TlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type _) (x : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU8.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.Insts.CoreConvertFromVec.from]
 
-theorem tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from]
-
-theorem tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.from corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.from, tls_vec.TlsVecU8.from_slice, hc]
 
-theorem tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from]
+
+theorem tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type _) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from]
+
+theorem tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.from corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.from, tls_vec.TlsVecU16.from_slice, hc]
 
-theorem tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from]
+
+theorem tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type _) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from]
+
+theorem tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.from corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.from, tls_vec.TlsVecU24.from_slice, hc]
 
-theorem tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from]
+
+theorem tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom (T : Type _) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from]
+
+theorem tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.from corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.from, tls_vec.TlsVecU32.from_slice, hc]
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from]
+
+theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from]
+
+theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU8.from_slice]
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from_spec.panic_freedom (x : tls_vec.TlsByteVecU8) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from]
+
+theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from]
+
+theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU16.from_slice]
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from_spec.panic_freedom (x : tls_vec.TlsByteVecU16) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from]
+
+theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from]
+
+theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU24.from_slice]
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from_spec.panic_freedom (x : tls_vec.TlsByteVecU24) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from]
+
+theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from]
+
+theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
+  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU32.from_slice]
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from_spec.panic_freedom (x : tls_vec.TlsByteVecU32) :
+  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from]
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from]
+
 theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
@@ -6125,8 +6190,20 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.from, tls_vec.SecretTlsVecU8.from_slice, hc]
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from]
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from]
+
 theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
@@ -6134,8 +6211,20 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.pani
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.from, tls_vec.SecretTlsVecU16.from_slice, hc]
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from]
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from]
+
 theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
@@ -6143,8 +6232,20 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.pani
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.from, tls_vec.SecretTlsVecU24.from_slice, hc]
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from]
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (alloc.vec.Vec T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from]
+
 theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (Slice T)) :
@@ -6152,97 +6253,15 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.pani
   have hc := alloc.slice.Slice.to_vec_len corecloneCloneInst corecloneCloneInstLawful.clone_spec x
   mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.from, tls_vec.SecretTlsVecU32.from_slice, hc]
 
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from]
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.from_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.from_spec.panic_freedom {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.from zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.from]
 
-theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from]
-
-theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from]
-
-theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from]
-
-theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from_spec.panic_freedom (x : (alloc.vec.Vec Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from]
-
-theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU8.from_slice]
-
-theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU16.from_slice]
-
-theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU24.from_slice]
-
-theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom (x : (Slice Std.U8)) :
-  ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from, tls_vec.TlsByteVecU32.from_slice]
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from_spec.panic_freedom (x : tls_vec.TlsByteVecU8) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from]
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from_spec.panic_freedom (x : tls_vec.TlsByteVecU16) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from]
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from_spec.panic_freedom (x : tls_vec.TlsByteVecU24) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from]
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from_spec.panic_freedom (x : tls_vec.TlsByteVecU32) :
-  ⦃ ⌜ True ⌝ ⦄ alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from]
-
-theorem Error.Insts.CoreConvertFromInfallible.from_spec.panic_freedom (x : core.convert.Infallible) :
-  ⦃ ⌜ True ⌝ ⦄ Error.Insts.CoreConvertFromInfallible.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [Error.Insts.CoreConvertFromInfallible.from]
+theorem Error.Insts.CoreConvertFromNever.from_spec.panic_freedom (x : Never) :
+  ⦃ ⌜ True ⌝ ⦄ Error.Insts.CoreConvertFromNever.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [Error.Insts.CoreConvertFromNever.from]
 
 theorem U64.Insts.CoreConvertFromTlsVarInt.from_spec.panic_freedom (x : varint.TlsVarInt) :
   ⦃ ⌜ True ⌝ ⦄ U64.Insts.CoreConvertFromTlsVarInt.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6338,7 +6357,7 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.ne_spec.panic_
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.ne x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32, core.cmp.PartialEq.ne.default, tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq]
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU8 T)) (y : (tls_vec.TlsVecU8 T)) :
@@ -6346,7 +6365,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.panic_freedom {T
   unfold tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.ne_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.ne_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU8 T)) (y : (tls_vec.TlsVecU8 T)) :
@@ -6354,7 +6373,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.ne_spec.panic_freedom {T
   have hv := fun a b => alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf corecmpPartialEqInst a b corecmpPartialEqInstLawful.eq_pf
   mvcgen [tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8, core.cmp.PartialEq.ne.default, tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq, hv]
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU16 T)) (y : (tls_vec.TlsVecU16 T)) :
@@ -6362,7 +6381,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.panic_freedom 
   unfold tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.ne_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.ne_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU16 T)) (y : (tls_vec.TlsVecU16 T)) :
@@ -6370,7 +6389,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.ne_spec.panic_freedom 
   have hv := fun a b => alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf corecmpPartialEqInst a b corecmpPartialEqInstLawful.eq_pf
   mvcgen [tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16, core.cmp.PartialEq.ne.default, tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq, hv]
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU24 T)) (y : (tls_vec.TlsVecU24 T)) :
@@ -6378,7 +6397,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.panic_freedom 
   unfold tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.ne_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.ne_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU24 T)) (y : (tls_vec.TlsVecU24 T)) :
@@ -6386,7 +6405,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.ne_spec.panic_freedom 
   have hv := fun a b => alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf corecmpPartialEqInst a b corecmpPartialEqInstLawful.eq_pf
   mvcgen [tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24, core.cmp.PartialEq.ne.default, tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq, hv]
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU32 T)) (y : (tls_vec.TlsVecU32 T)) :
@@ -6394,7 +6413,7 @@ theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.panic_freedom 
   unfold tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.ne_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.ne_spec.panic_freedom {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU32 T)) (y : (tls_vec.TlsVecU32 T)) :
@@ -6403,7 +6422,7 @@ theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.ne_spec.panic_freedom 
   mvcgen [tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32, core.cmp.PartialEq.ne.default, tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq, hv]
 
 theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6413,7 +6432,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq_spec.pani
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
 theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.ne_spec.panic_freedom {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6423,7 +6442,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.ne_spec.pani
   mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8, core.cmp.PartialEq.ne.default, tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq, hv]
 
 theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6433,7 +6452,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq_spec.pa
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
 theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.ne_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6443,7 +6462,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.ne_spec.pa
   mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16, core.cmp.PartialEq.ne.default, tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq, hv]
 
 theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6453,7 +6472,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq_spec.pa
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
 theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.ne_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6463,7 +6482,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.ne_spec.pa
   mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24, core.cmp.PartialEq.ne.default, tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq, hv]
 
 theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.eq_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6473,7 +6492,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.eq_spec.pa
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpPartialEqInstLawful.eq_pf
 
 theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.ne_spec.panic_freedom {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -6504,52 +6523,24 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq.eq_spec.panic_f
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq_spec.panic_freedom x y
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type} (corecmpEqInst
-  : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : tls_vec.TlsByteVecU8) :
@@ -6567,6 +6558,34 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : tls_v
 theorem tls_vec.TlsByteVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : tls_vec.TlsByteVecU32) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq_spec.panic_freedom x y
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf _ _ _ corecmpEqInstLawful.eq_pf
 
 theorem varint.TlsVarInt.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : varint.TlsVarInt) :
   ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.CoreCmpPartialEqTlsVarInt.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6608,7 +6627,7 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.clone_spec
   unfold quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.clone
   mvcgen [quic_vec.VLByteVec.Insts.CoreCloneClone.clone_spec.panic_freedom]
 
-theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU8.Insts.CoreCloneClone.clone corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6617,7 +6636,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type
   mvcgen [hv,
     tls_vec.TlsVecU8.new.spec.panic_freedom]
 
-theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU16.Insts.CoreCloneClone.clone corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6626,7 +6645,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Typ
   mvcgen [hv,
     tls_vec.TlsVecU16.new.spec.panic_freedom]
 
-theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU24.Insts.CoreCloneClone.clone corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6635,7 +6654,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Typ
   mvcgen [hv,
     tls_vec.TlsVecU24.new.spec.panic_freedom]
 
-theorem tls_vec.TlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU32.Insts.CoreCloneClone.clone corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6643,50 +6662,6 @@ theorem tls_vec.TlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Typ
   have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
   mvcgen [hv,
     tls_vec.TlsVecU32.new.spec.panic_freedom]
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  unfold tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone
-  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
-  mvcgen [hv,
-    tls_vec.SecretTlsVecU8.new.spec.panic_freedom]
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  unfold tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone
-  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
-  mvcgen [hv,
-    tls_vec.SecretTlsVecU16.new.spec.panic_freedom]
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  unfold tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone
-  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
-  mvcgen [hv,
-    tls_vec.SecretTlsVecU24.new.spec.panic_freedom]
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  unfold tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone
-  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
-  mvcgen [hv,
-    tls_vec.SecretTlsVecU32.new.spec.panic_freedom]
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom (x : tls_vec.TlsByteVecU8) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreCloneClone.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6720,6 +6695,50 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom (x :
   have hv := vecClone_pf core.U8.Insts.CoreCloneClone hu8
   mvcgen [hv]
 
+theorem tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone
+  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
+  mvcgen [hv,
+    tls_vec.SecretTlsVecU8.new.spec.panic_freedom]
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone
+  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
+  mvcgen [hv,
+    tls_vec.SecretTlsVecU16.new.spec.panic_freedom]
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone
+  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
+  mvcgen [hv,
+    tls_vec.SecretTlsVecU24.new.spec.panic_freedom]
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) (x : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone zeroizeZeroizeInst corecloneCloneInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone
+  have hv := vecClone_pf corecloneCloneInst corecloneCloneInstLawful.clone_spec
+  mvcgen [hv,
+    tls_vec.SecretTlsVecU32.new.spec.panic_freedom]
+
 theorem varint.TlsVarInt.Insts.CoreCloneClone.clone_spec.panic_freedom (x : varint.TlsVarInt) :
   ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.CoreCloneClone.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold varint.TlsVarInt.Insts.CoreCloneClone.clone; mvcgen
@@ -6730,45 +6749,21 @@ theorem U24.Insts.CoreDefaultDefault.default_spec.panic_freedom  :
   ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreDefaultDefault.default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [U24.Insts.CoreDefaultDefault.default]
 
-theorem tls_vec.TlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU8.Insts.CoreDefaultDefault T).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.Insts.CoreDefaultDefault, tls_vec.TlsVecU8.Insts.CoreDefaultDefault.default]
 
-theorem tls_vec.TlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU16.Insts.CoreDefaultDefault T).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.Insts.CoreDefaultDefault, tls_vec.TlsVecU16.Insts.CoreDefaultDefault.default]
 
-theorem tls_vec.TlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU24.Insts.CoreDefaultDefault T).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.Insts.CoreDefaultDefault, tls_vec.TlsVecU24.Insts.CoreDefaultDefault.default]
 
-theorem tls_vec.TlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type) :
+theorem tls_vec.TlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU32.Insts.CoreDefaultDefault T).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.Insts.CoreDefaultDefault, tls_vec.TlsVecU32.Insts.CoreDefaultDefault.default]
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default]
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default]
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default]
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default]
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom  :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreDefaultDefault.default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -6785,6 +6780,30 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedo
 theorem tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom  :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.default]
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default]
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default]
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default]
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault zeroizeZeroizeInst).default ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault, tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default]
 
 /-! ### core.convert.TryFrom -/
 
@@ -6876,7 +6895,7 @@ theorem ArrayU84.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom (sel
   intro _
   exact spec.RoundTrip.round_trip.default_pf self_ rest
 
-theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom {T : Type _}
   (RoundTripInst : spec.RoundTrip T)
   (RoundTripInstLawful : spec.RoundTrip.Lawful T RoundTripInst) (self_ : (core.option.Option T)) (rest : Slice Std.U8) :
   (spec.RoundTrip.round_trip.pre (core.option.Option.Insts.Tls_codecSpecRoundTrip RoundTripInst).SerializeBytesInst
@@ -6958,7 +6977,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_f
   intro _
   exact spec.RoundTrip.round_trip.default_pf self_ rest
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) (self_ : (alloc.vec.Vec T)) (rest : Slice Std.U8) :
   (spec.RoundTrip.round_trip.pre (alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip NonEmptyInst).SerializeBytesInst
@@ -7008,7 +7027,7 @@ theorem ArrayU84.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom (self_ 
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact spec.NonEmpty.nonempty.default_pf self_
 
-theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom {T : Type _}
   (RoundTripInst1 : spec.RoundTrip T)
   (RoundTripInst1Lawful : spec.RoundTrip.Lawful T RoundTripInst1) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -7058,7 +7077,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_free
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact spec.NonEmpty.nonempty.default_pf self_
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -7106,7 +7125,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (VLBytes.round_trip_exact self_) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.panic_freedom {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -7122,7 +7141,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.pani
   intro hpre
   exact triple_post_mono (Vec.round_trip_std NonEmptyStdInst corefmtDebugInst NonEmptyStdInstLawful allocioreadReadInst allocioreadReadInstLawful self_ reader rest hpre) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.panic_freedom {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
@@ -7145,7 +7164,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.pani
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact triple_post_mono (VLBytes.nonempty_std self_) (fun _ _ => trivial)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.panic_freedom {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
@@ -7310,7 +7329,7 @@ theorem quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.b
   intro _
   exact ok_triple_of trivial
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom {T : Type _}
   (DecodersAgreeInst : spec.io.DecodersAgree T)
   (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -7320,7 +7339,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.pan
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   exact ok_triple_of trivial
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom {T : Type _}
   (DecodersAgreeInst : spec.io.DecodersAgree T)
   (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) («prefix» : Slice Std.U8) (rest : Slice Std.U8)
     (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
@@ -7360,45 +7379,21 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_sp
 
 /-! ### core.borrow.Borrow -/
 
-theorem tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU8 T)) :
+theorem tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.borrow]
 
-theorem tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU16 T)) :
+theorem tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.borrow]
 
-theorem tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU24 T)) :
+theorem tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.borrow]
 
-theorem tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type) (x : (tls_vec.TlsVecU32 T)) :
+theorem tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom (T : Type _) (x : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.borrow]
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow]
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow]
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow]
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow]
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_freedom (x : tls_vec.TlsByteVecU8) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU8.Insts.CoreBorrowBorrowSliceU8.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -7415,6 +7410,30 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_fr
 theorem tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_freedom (x : tls_vec.TlsByteVecU32) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow]
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow]
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow]
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow]
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow zeroizeZeroizeInst) x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow]
 
 end tls_codec
 

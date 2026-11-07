@@ -19,37 +19,52 @@ namespace tls_codec
 /-! ### `U24` and `[u8; N]` -/
 
 theorem U24.ser_runs (x : U24) : SerRuns U24.Insts.Tls_codecSerialize x 3#usize (some x.val) := by
+  rw [← Array.val_to_slice]
   apply ser_runs_of_write_all U24.Insts.Tls_codecSerialize x (Array.to_slice x) 3#usize
     (by simpa [Array.to_slice] using x.property.symm)
   intro W WI w w' hw
-  simp only [U24.Insts.Tls_codecSerialize.tls_serialize, U24.to_be_bytes, lift, bind_tc_ok, hw]
-  rfl
+  simp [U24.Insts.Tls_codecSerialize.tls_serialize, U24.to_be_bytes, lift, core.array.Array.as_slice,
+    rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hw,
+    core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 theorem U24.serSpec (x : U24) : SerSpec U24.Insts.Tls_codecSerialize x :=
   fun _ WI hWI w hpre =>
   Serialize.tls_serialize_spec_of_runs U24.Insts.Tls_codecSerialize x 3#usize rfl _
     (fun b hb => by cases hb; simpa using x.property) (U24.ser_runs x) WI hWI w hpre
 
+/-- `<[u8; N]>::default()` is `[0; N]` (spec for `mvcgen`, e.g. `U24::default`). -/
+@[spec]
+theorem core.Array.default_U8 (N : Std.Usize) :
+    core.Array.Insts.CoreDefaultDefault.default N core.U8.Insts.CoreDefaultDefault =
+      ok (Aeneas.Std.Array.repeat N 0#u8) := by
+  have hgo : ∀ n, rust_primitives.slice.array_from_fn_go
+      (core.array.DefaultArray.default.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT N
+        core.U8.Insts.CoreDefaultDefault) () n = ok (List.replicate n 0#u8, ()) := by
+    intro n
+    induction n with
+    | zero => rfl
+    | succ n ih =>
+      rw [rust_primitives.slice.array_from_fn_go, ih, Aeneas.Std.bind_ok]
+      simp only [core.array.DefaultArray.default.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT,
+        core.array.DefaultArray.default.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT.call_mut,
+        core.U8.Insts.CoreDefaultDefault, core.U8.Insts.CoreDefaultDefault.default]
+      simp [List.replicate_succ']
+  unfold core.Array.Insts.CoreDefaultDefault.default rust_primitives.slice.array_from_fn
+  rw [hgo, Aeneas.Std.bind_ok, dif_pos (by simp)]
+  congr 1
+
 theorem Array.default_ok (N : Std.Usize) :
     ∃ a : Array Std.U8 N, core.Array.Insts.CoreDefaultDefault.default N
-      core.U8.Insts.CoreDefaultDefault = ok a := by
-  have h : ⦃ ⌜ True ⌝ ⦄ core.Array.Insts.CoreDefaultDefault.default N core.U8.Insts.CoreDefaultDefault
-      ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-    mvcgen [core.Array.Insts.CoreDefaultDefault.default,
-      core.array.DefaultArray.default.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT,
-      core.array.DefaultArray.default.closure.Insts.CoreOpsFunctionFnMutTupleUsizeT.call_mut,
-      core.U8.Insts.CoreDefaultDefault.default]
-  obtain ⟨a, ha, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
-  exact ⟨a, ha⟩
+      core.U8.Insts.CoreDefaultDefault = ok a := ⟨_, core.Array.default_U8 N⟩
 
 theorem U24.fixed_runs: FixedRuns U24.Insts.Tls_codecDeserialize 3#usize (fun a => a) := by
   intro R RI v a law r
   have hre := read_exact_spec law r
   obtain ⟨a0, ha0⟩ := Array.default_ok 3#usize
   have hd : U24.Insts.CoreDefaultDefault.default = ok a0 := by
-    unfold U24.Insts.CoreDefaultDefault.default; rw [ha0]; rfl
+    simp [U24.Insts.CoreDefaultDefault.default, ha0]
   mvcgen [U24.Insts.Tls_codecDeserialize.tls_deserialize, hre, hd, U24.to_be_bytes,
-    U24.from_be_bytes]
+    U24.from_be_bytes, core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice]
   · rename_i p hp _ _ _ x1 hcf
     have hl : (a0.to_slice_mut).1.val.length = (3#usize).val := to_slice_mut_len a0
     by_cases h1 : (3#usize).val ≤ (v r).length
@@ -81,12 +96,13 @@ theorem Shared0U24.serSpec (x : U24) : SerSpec Shared0U24.Insts.Tls_codecSeriali
 
 theorem ArrayU8.ser_runs {LEN : Std.Usize} (x : Array Std.U8 LEN) :
     SerRuns (ArrayU8LEN.Insts.Tls_codecSerialize LEN) x LEN (some x.val) := by
+  rw [← Array.val_to_slice]
   apply ser_runs_of_write_all (ArrayU8LEN.Insts.Tls_codecSerialize LEN) x (Array.to_slice x) LEN
     (by simpa [Array.to_slice] using x.property.symm)
   intro W WI w w' hw
-  simp only [ArrayU8LEN.Insts.Tls_codecSerialize, ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize,
-    lift, bind_tc_ok, hw]
-  rfl
+  simp [ArrayU8LEN.Insts.Tls_codecSerialize, ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize,
+    lift, core.array.Array.as_slice, rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok,
+    Aeneas.Std.bind_tc_ok, hw, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 theorem ArrayU8.serSpec {LEN : Std.Usize} (x : Array Std.U8 LEN) :
     SerSpec (ArrayU8LEN.Insts.Tls_codecSerialize LEN) x :=
@@ -98,17 +114,18 @@ theorem ArrayU8.fixed_runs (LEN : Std.Usize) :
     FixedRuns (ArrayU8LEN.Insts.Tls_codecDeserialize LEN) LEN (fun a => a) := by
   intro R RI v a law r
   have hre := read_exact_spec law r
-  mvcgen [ArrayU8LEN.Insts.Tls_codecDeserialize.tls_deserialize, hre]
-  · rename_i arr p hp _ _ _ x1 hcf
-    have hl : (arr.to_slice_mut).1.val.length = LEN.val := to_slice_mut_len arr
+  mvcgen [ArrayU8LEN.Insts.Tls_codecDeserialize.tls_deserialize, hre,
+    core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice]
+  · rename_i p hp _ _ _ x1 hcf
+    have hl : ((Std.Array.repeat LEN 0#u8).to_slice_mut).1.val.length = LEN.val := to_slice_mut_len _
     by_cases h1 : LEN.val ≤ (v r).length
     · have hpe := hp.1 (by rw [hl]; exact h1)
       subst hpe
-      exact ⟨fun _ => ⟨x1, read_fixed arr (v r) h1, by rw [hl]⟩, fun h => by omega⟩
+      exact ⟨fun _ => ⟨x1, read_fixed _ (v r) h1, by rw [hl]⟩, fun h => by omega⟩
     · rw [hp.2 (by rw [hl]; omega)] at hcf
       simp [tryCF] at hcf
-  · rename_i arr p hp _ res _ hcf
-    have hl : (arr.to_slice_mut).1.val.length = LEN.val := to_slice_mut_len arr
+  · rename_i p hp _ res _ hcf
+    have hl : ((Std.Array.repeat LEN 0#u8).to_slice_mut).1.val.length = LEN.val := to_slice_mut_len _
     by_cases h1 : LEN.val ≤ (v r).length
     · rw [hp.1 (by rw [hl]; exact h1)] at hcf
       simp [tryCF] at hcf
@@ -128,7 +145,7 @@ theorem ArrayU8.deSpec (LEN : Std.Usize) : DeSpec (ArrayU8LEN.Insts.Tls_codecDes
 
 /-! ### Tuples -/
 
-theorem step_ok {T W : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x) (s : Std.Usize)
+theorem step_ok {T W : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x) (s : Std.Usize)
     (hs : SI.SizeInst.tls_serialized_len x = ok s) (hfit : s.val ≤ imax)
     {WI : core.io.write.Write W} {w : W} {p : core.result.Result Std.Usize Error × W}
     {val : Std.Usize}
@@ -145,7 +162,7 @@ theorem step_ok {T W : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x) (s : 
     rw [hn] at hcf; simp [tryCF] at hcf; subst hcf
     exact ⟨b, rfl, h.enc_len s hs hfit b hb, hnb, hv⟩
 
-theorem enc_none_of_err {T W : Type} {SI : Serialize T} {x : T}
+theorem enc_none_of_err {T W : Type _} {SI : Serialize T} {x : T}
     {WI : core.io.write.Write W} {w : W} {p : core.result.Result Std.Usize Error × W}
     (hp : (∀ b, encOut SI x = some b → (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
         core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
@@ -155,7 +172,7 @@ theorem enc_none_of_err {T W : Type} {SI : Serialize T} {x : T}
   | none => rfl
   | some b => obtain ⟨⟨n, hn, -⟩, -⟩ := hp.1 b hb; rw [he] at hn; cases hn
 
-theorem Pair.ser_runs {T U : Type} {SI : Serialize T} {SI1 : Serialize U} {t : T} {u : U}
+theorem Pair.ser_runs {T U : Type _} {SI : Serialize T} {SI1 : Serialize U} {t : T} {u : U}
     (h1 : SerSpec SI t) (h2 : SerSpec SI1 u) (s1 s2 : Std.Usize)
     (hs1 : SI.SizeInst.tls_serialized_len t = ok s1)
     (hs2 : SI1.SizeInst.tls_serialized_len u = ok s2) :
@@ -174,7 +191,7 @@ theorem Pair.ser_runs {T U : Type} {SI : Serialize T} {SI1 : Serialize U} {t : T
           (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
         core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         (((encOut SI t).bind fun b1 => (encOut SI1 u).map (b1 ++ ·)) = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   have hm : UScalar.max UScalarTy.Usize = Usize.max := by
     simp [UScalar.max, Usize.max, Usize.numBits]
@@ -210,7 +227,7 @@ theorem Pair.ser_runs {T U : Type} {SI : Serialize T} {SI1 : Serialize U} {t : T
     mvcgen
     exact ⟨fun b hb => by simp [this] at hb, fun _ => ⟨_, rfl⟩⟩
 
-theorem Pair.serSpec {T U : Type} {SI : Serialize T} {SI1 : Serialize U} {t : T} {u : U}
+theorem Pair.serSpec {T U : Type _} {SI : Serialize T} {SI1 : Serialize U} {t : T} {u : U}
     (h1 : SerSpec SI t) (h2 : SerSpec SI1 u)
     (hs1 : ∃ s, SI.SizeInst.tls_serialized_len t = ok s)
     (hs2 : ∃ s, SI1.SizeInst.tls_serialized_len u = ok s) :
@@ -236,29 +253,29 @@ theorem Pair.serSpec {T U : Type} {SI : Serialize T} {SI1 : Serialize U} {t : T}
       | some b2 => simp [h, h'] at hb; exact ⟨b1, rfl, b2, rfl, hb.symm⟩
   rw [List.length_append, h1.enc_len s1 hs1 (by omega) b1 hb1, h2.enc_len s2 hs2 (by omega) b2 hb2]
 
-theorem Pair.de_runs {T U : Type} {DI : Deserialize T} {DI1 : Deserialize U} (h1 : DeSpec DI)
+theorem Pair.de_runs {T U : Type _} {DI : Deserialize T} {DI1 : Deserialize U} (h1 : DeSpec DI)
     (h2 : DeSpec DI1) :
     DeRuns (Pair.Insts.Tls_codecDeserialize DI DI1) (fun _ _ _ => True) := by
   intro R RI v a law r
   have hT1 := fun r' => h1.runs R RI v a law r'
   have hT2 := fun r' => h2.runs R RI v a law r'
   mvcgen [Pair.Insts.Tls_codecDeserialize.tls_deserialize, hT1, hT2]
-  · rename_i p _ val1 _ hct1 q _ val2 _ hct2 hh1 hh2
+  · rename_i p hh1 _ hcf1 val1 hcu1 q hh2 _ hcf2 val2 hcu2
     intro val hval; cases hval
-    obtain ⟨n1, sz1, hn1, hq1, hsz1, hszn1⟩ := hh1 val1 (continue_eq_tryCF.mp hct1)
-    obtain ⟨n2, sz2, hn2, hq2, hsz2, hszn2⟩ := hh2 val2 (continue_eq_tryCF.mp hct2)
+    obtain ⟨n1, sz1, hn1, hq1, hsz1, hszn1⟩ := hh1 val1 (continue_eq_tryCF.mp (hcu1.symm.trans hcf1))
+    obtain ⟨n2, sz2, hn2, hq2, hsz2, hszn2⟩ := hh2 val2 (continue_eq_tryCF.mp (hcu2.symm.trans hcf2))
     rw [hq1, law.adv_view r n1 hn1, List.length_drop] at hn2
     rw [hq1, law.adv_adv r n1 n2 (by omega)] at hq2
     refine ⟨n1 + n2, lenAddVal sz1 sz2, by omega, hq2, Pair_size _ _ _ _ sz1 sz2 hsz1 hsz2, ?_⟩
     rw [lenAddVal_val _ _ (by have := law.view_le r; omega)]; omega
-  · rename_i _ _ _ _ _ q _ _ _ hbr _ _
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf _ hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
     all_goals simp
-  · rename_i q _ _ _ hbr _
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf _ hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
@@ -277,7 +294,7 @@ theorem lenAdd3_fit (a b c : Std.Usize) (L : Nat)
     · rw [lenAddVal_sat _ _ h2] at h; omega
     · rw [lenAddVal_val _ _ (by omega)] at h; omega
 
-theorem Triple.ser_runs {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
+theorem Triple.ser_runs {T U V : Type _} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
     {t : T} {u : U} {v : V}
     (h1 : SerSpec SI t) (h2 : SerSpec SI1 u) (h3 : SerSpec SI2 v) (s1 s2 s3 : Std.Usize)
     (hs1 : SI.SizeInst.tls_serialized_len t = ok s1)
@@ -300,7 +317,7 @@ theorem Triple.ser_runs {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {S
         core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         (((encOut SI t).bind fun b1 => (encOut SI1 u).bind fun b2 =>
           (encOut SI2 v).map fun b3 => b1 ++ b2 ++ b3) = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   have hm : UScalar.max UScalarTy.Usize = Usize.max := by
     simp [UScalar.max, Usize.max, Usize.numBits]
@@ -354,7 +371,7 @@ theorem Triple.ser_runs {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {S
     mvcgen
     exact ⟨fun b hb => by simp [this] at hb, fun _ => ⟨_, rfl⟩⟩
 
-theorem Triple.serSpec {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
+theorem Triple.serSpec {T U V : Type _} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
     {t : T} {u : U} {v : V}
     (h1 : SerSpec SI t) (h2 : SerSpec SI1 u) (h3 : SerSpec SI2 v)
     (hs1 : ∃ s, SI.SizeInst.tls_serialized_len t = ok s)
@@ -388,7 +405,7 @@ theorem Triple.serSpec {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI
   simp only [List.length_append, h1.enc_len s1 hs1 (by omega) b1 hb1,
     h2.enc_len s2 hs2 (by omega) b2 hb2, h3.enc_len s3 hs3 (by omega) b3 hb3]
 
-theorem Triple.de_runs {T U V : Type} {DI : Deserialize T} {DI1 : Deserialize U}
+theorem Triple.de_runs {T U V : Type _} {DI : Deserialize T} {DI1 : Deserialize U}
     {DI2 : Deserialize V} (h1 : DeSpec DI) (h2 : DeSpec DI1) (h3 : DeSpec DI2) :
     DeRuns (TupleTUV.Insts.Tls_codecDeserialize DI DI1 DI2) (fun _ _ _ => True) := by
   intro R RI v a law r
@@ -396,11 +413,11 @@ theorem Triple.de_runs {T U V : Type} {DI : Deserialize T} {DI1 : Deserialize U}
   have hT2 := fun r' => h2.runs R RI v a law r'
   have hT3 := fun r' => h3.runs R RI v a law r'
   mvcgen [TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize, hT1, hT2, hT3]
-  · rename_i p1 _ val1 _ hct1 p2 _ val2 _ hct2 p3 _ val3 _ hct3 hh1 hh2 hh3
+  · rename_i p1 hh1 _ hcf1 val1 hcu1 p2 hh2 _ hcf2 val2 hcu2 p3 hh3 _ hcf3 val3 hcu3
     intro val hval; cases hval
-    obtain ⟨n1, sz1, hn1, hq1, hsz1, hszn1⟩ := hh1 val1 (continue_eq_tryCF.mp hct1)
-    obtain ⟨n2, sz2, hn2, hq2, hsz2, hszn2⟩ := hh2 val2 (continue_eq_tryCF.mp hct2)
-    obtain ⟨n3, sz3, hn3, hq3, hsz3, hszn3⟩ := hh3 val3 (continue_eq_tryCF.mp hct3)
+    obtain ⟨n1, sz1, hn1, hq1, hsz1, hszn1⟩ := hh1 val1 (continue_eq_tryCF.mp (hcu1.symm.trans hcf1))
+    obtain ⟨n2, sz2, hn2, hq2, hsz2, hszn2⟩ := hh2 val2 (continue_eq_tryCF.mp (hcu2.symm.trans hcf2))
+    obtain ⟨n3, sz3, hn3, hq3, hsz3, hszn3⟩ := hh3 val3 (continue_eq_tryCF.mp (hcu3.symm.trans hcf3))
     rw [hq1, law.adv_view r n1 hn1, List.length_drop] at hn2
     rw [hq1, law.adv_adv r n1 n2 (by omega)] at hq2
     rw [hq2, law.adv_view r (n1 + n2) (by omega), List.length_drop] at hn3
@@ -409,20 +426,20 @@ theorem Triple.de_runs {T U V : Type} {DI : Deserialize T} {DI1 : Deserialize U}
       TupleTUV_size _ _ _ _ _ _ sz1 sz2 sz3 hsz1 hsz2 hsz3, ?_⟩
     have e1 := lenAddVal_val sz1 sz2 (by have := law.view_le r; omega)
     rw [lenAddVal_val _ _ (by have := law.view_le r; omega), e1]; omega
-  · rename_i _ _ _ _ _ _ _ _ _ _ p3 _ _ _ hbr _ _ _
-    refine try_break_vc (x := p3.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf _ hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
     all_goals simp
-  · rename_i _ _ _ _ _ p2 _ _ _ hbr _ _
-    refine try_break_vc (x := p2.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf _ hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
     all_goals simp
-  · rename_i p1 _ _ _ hbr _
-    refine try_break_vc (x := p1.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf _ hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
@@ -445,7 +462,7 @@ theorem Unit.deSpec : DeSpec Tuple.Insts.Tls_codecDeserialize := by
   intro R RI v a law r
   exact ok_triple_of fun val _ => ⟨0, 0#usize, by omega, (law.adv_zero r).symm, rfl, rfl, trivial⟩
 
-theorem Phantom.serSpec (T : Type) (x : core.marker.PhantomData T) :
+theorem Phantom.serSpec (T : Type _) (x : core.marker.PhantomData T) :
     SerSpec (core.marker.PhantomData.Insts.Tls_codecSerialize T) x := by
   intro W WI hWI w hpre
   refine Serialize.tls_serialize_spec_of_runs _ x 0#usize rfl (some []) (fun b hb => by cases hb; rfl)
@@ -455,7 +472,7 @@ theorem Phantom.serSpec (T : Type) (x : core.marker.PhantomData T) :
   cases hb
   exact ⟨⟨0#usize, rfl, rfl⟩, by simp⟩
 
-theorem Phantom.deSpec (T : Type) : DeSpec (core.marker.PhantomData.Insts.Tls_codecDeserialize T) := by
+theorem Phantom.deSpec (T : Type _) : DeSpec (core.marker.PhantomData.Insts.Tls_codecDeserialize T) := by
   refine fun R RI hRI r => Deserialize.tls_deserialize_spec_of_runs
     (P := fun _ _ _ => True) _ ?_ RI hRI r
   intro R RI v a law r
@@ -463,33 +480,33 @@ theorem Phantom.deSpec (T : Type) : DeSpec (core.marker.PhantomData.Insts.Tls_co
 
 /-! #### Contracts from the components' `Lawful` -/
 
-theorem Pair.serSpec' {T U : Type} {SI : Serialize T} {SI1 : Serialize U}
+theorem Pair.serSpec' {T U : Type _} {SI : Serialize T} {SI1 : Serialize U}
     (h1 : Serialize.Lawful T SI) (h2 : Serialize.Lawful U SI1) (x : T × U) :
     SerSpec (Pair.Insts.Tls_codecSerialize SI SI1) x :=
   Pair.serSpec (h1.serSpec x.1) (h2.serSpec x.2) (Size.lawful_ok _ h1.SizeInstLawful x.1)
     (Size.lawful_ok _ h2.SizeInstLawful x.2)
 
-theorem Pair.size_ex {T U : Type} {SI : Serialize T} {SI1 : Serialize U}
+theorem Pair.size_ex {T U : Type _} {SI : Serialize T} {SI1 : Serialize U}
     (h1 : Serialize.Lawful T SI) (h2 : Serialize.Lawful U SI1) (x : T × U) :
     ∃ sz, (Pair.Insts.Tls_codecSerialize SI SI1).SizeInst.tls_serialized_len x = ok sz := by
   obtain ⟨s1, hs1⟩ := Size.lawful_ok _ h1.SizeInstLawful x.1
   obtain ⟨s2, hs2⟩ := Size.lawful_ok _ h2.SizeInstLawful x.2
   exact ⟨_, Pair_size _ _ x.1 x.2 s1 s2 hs1 hs2⟩
 
-theorem Pair.deSpec' {T U : Type} {DI : Deserialize T} {DI1 : Deserialize U}
+theorem Pair.deSpec' {T U : Type _} {DI : Deserialize T} {DI1 : Deserialize U}
     (h1 : Deserialize.Lawful T DI) (h2 : Deserialize.Lawful U DI1) :
     DeSpec (Pair.Insts.Tls_codecDeserialize DI DI1) :=
   fun _ RI hRI r => Deserialize.tls_deserialize_spec_of_runs _
     (Pair.de_runs h1.deSpec h2.deSpec) RI hRI r
 
-theorem Triple.serSpec' {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
+theorem Triple.serSpec' {T U V : Type _} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
     (h1 : Serialize.Lawful T SI) (h2 : Serialize.Lawful U SI1) (h3 : Serialize.Lawful V SI2)
     (x : T × U × V) : SerSpec (TupleTUV.Insts.Tls_codecSerialize SI SI1 SI2) x :=
   Triple.serSpec (h1.serSpec x.1) (h2.serSpec x.2.1) (h3.serSpec x.2.2)
     (Size.lawful_ok _ h1.SizeInstLawful x.1) (Size.lawful_ok _ h2.SizeInstLawful x.2.1)
     (Size.lawful_ok _ h3.SizeInstLawful x.2.2)
 
-theorem Triple.size_ex {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
+theorem Triple.size_ex {T U V : Type _} {SI : Serialize T} {SI1 : Serialize U} {SI2 : Serialize V}
     (h1 : Serialize.Lawful T SI) (h2 : Serialize.Lawful U SI1) (h3 : Serialize.Lawful V SI2)
     (x : T × U × V) :
     ∃ sz, (TupleTUV.Insts.Tls_codecSerialize SI SI1 SI2).SizeInst.tls_serialized_len x = ok sz := by
@@ -498,7 +515,7 @@ theorem Triple.size_ex {T U V : Type} {SI : Serialize T} {SI1 : Serialize U} {SI
   obtain ⟨s3, hs3⟩ := Size.lawful_ok _ h3.SizeInstLawful x.2.2
   exact ⟨_, TupleTUV_size _ _ _ x.1 x.2.1 x.2.2 s1 s2 s3 hs1 hs2 hs3⟩
 
-theorem Triple.deSpec' {T U V : Type} {DI : Deserialize T} {DI1 : Deserialize U}
+theorem Triple.deSpec' {T U V : Type _} {DI : Deserialize T} {DI1 : Deserialize U}
     {DI2 : Deserialize V} (h1 : Deserialize.Lawful T DI) (h2 : Deserialize.Lawful U DI1)
     (h3 : Deserialize.Lawful V DI2) :
     DeSpec (TupleTUV.Insts.Tls_codecDeserialize DI DI1 DI2) :=

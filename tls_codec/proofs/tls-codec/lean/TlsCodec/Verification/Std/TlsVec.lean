@@ -20,7 +20,7 @@ namespace tls_codec
 
 namespace TlsVecStd
 
-variable {T V : Type}
+variable {T V : Type _}
 
 /-- The loop body of `TlsVecU*::deserialize` over an abstract wrapper `V` (`push`, `msg`: the
 zero-consumption message). -/
@@ -70,7 +70,7 @@ noncomputable def dloop {R : Type} (push : V → T → RustM V) (msg : Str) (DI 
 
 /-- `TlsVecU*::deserialize` (`PDI`: the prefix codec, `conv` / `dbg`: its conversion to `usize`,
 `lp`: the element loop). -/
-noncomputable def de {R P E : Type} (mk : alloc.vec.Vec T → V) (PDI : Deserialize P)
+noncomputable def de {R : Type} {P E : Type _} (mk : alloc.vec.Vec T → V) (PDI : Deserialize P)
     (conv : P → RustM (core.result.Result Std.Usize E)) (dbg : core.fmt.Debug E)
     (lp : (R → R) → V → R → Std.U64 → Std.U64 →
       RustM (V × (core.io.util.Take R) × (core.option.Option Error) × (core.io.util.Take R → R)))
@@ -156,11 +156,11 @@ theorem body_spec (msg : Str) (r0 : R) (L : Nat)
     rw [hq2, StdIo.takeAdv_inner, ht, law.adv_adv r0 m n (by omega)]
   mvcgen [body, core.io.util.Take.impl.limit, hT, hpush, core.fmt.Arguments.from_str]
   · intro h; cases h
-  · rename_i _ _ q el hq1 hne hq
+  · rename_i _ q hq el hq1 hne
     obtain ⟨n, sz, hn0, -, hmv, -, -, -, -⟩ := step q el hq1 hq hne
     have := law.view_le r0
     omega
-  · rename_i _ _ q el hq1 hne nv hnv hq
+  · rename_i _ q hq el hq1 hne nv hnv
     obtain ⟨n, sz, hn0, hmn, hmv, hlim', hinner, hsz, hszn⟩ := step q el hq1 hq hne
     refine ⟨⟨m + n, lenAddVal c sz, fun x => by simp +zetaDelta [hback], hmv, hinner,
       by show q.2.limit.val + (m + n) = L; omega, ?_, ?_, ?_⟩,
@@ -187,7 +187,7 @@ theorem dloop_spec (msg : Str) (r0 : R) (L : Nat)
   apply Aeneas.Std.loop.spec_decr_nat
     (fun q : (R → R) × V × R × Std.U64 × Std.U64 => q.2.2.2.2.val) (Inv DI vec v a r0 L)
   · rintro ⟨b, rs, t, ln, lm⟩ hq
-    obtain ⟨y, hy, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (body_spec hL law hpush msg r0 L _ hq)
+    obtain ⟨y, hy, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (body_spec hL law hpush msg r0 L _ hq)
     show Aeneas.Std.WP.spec (body push msg DI RI b rs t ln lm) _
     rw [hy, Aeneas.Std.WP.spec_ok]
     cases y with
@@ -212,7 +212,7 @@ theorem size_shift {S : Size T} (hS : Size.Lawful T S) {l : List T} {c r kz : St
 theorem de_runs {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {vec : V → alloc.vec.Vec T} {push : V → T → RustM V}
     (hpush : ∀ w x, ⦃ ⌜ (vec w).val.length < Usize.max ⌝ ⦄ push w x
       ⦃ ⇓ r => ⌜ (vec r).val = (vec w).val ++ [x] ⌝ ⦄)
-    {P E : Type} (mk : alloc.vec.Vec T → V) (hmk : ∀ v, vec (mk v) = v) (PDI : Deserialize P)
+    {P E : Type _} (mk : alloc.vec.Vec T → V) (hmk : ∀ v, vec (mk v) = v) (PDI : Deserialize P)
     {Q : List Std.U8 → P → Nat → Prop} (hP : DeRuns PDI Q) (kz : Std.Usize)
     (hk : ∀ x, PDI.SizeInst.tls_serialized_len x = ok kz)
     (conv : P → RustM (core.result.Result Std.Usize E))
@@ -229,15 +229,15 @@ theorem de_runs {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {vec : V →
   have hloop := fun r0 L p hp => dloop_spec hL law hpush msg r0 L p hp
   mvcgen [de, hr, hconv, hloop, alloc.io.read.Read.take.default, CoreModels.alloc.vec.Vec.new,
     rust_primitives.sequence.seq_empty, core.result.Result.unwrap]
-  · rename_i q hq _ val _ hcf rc _ y _
-    obtain ⟨n, sz, hn, hq2, hsz', hszn, -⟩ := hq val (continue_eq_tryCF.mp hcf)
+  · rename_i q hq _ hcf' val hcu rc _ y _
+    obtain ⟨n, sz, hn, hq2, hsz', hszn, -⟩ := hq val (continue_eq_tryCF.mp (hcu.symm.trans hcf'))
     obtain rfl : kz = sz := ok.inj ((hk val).symm.trans hsz')
     have hc : (UScalar.cast UScalarTy.U64 y).val = y.val := Usize.cast_U64_val_eq _
     have hinv : Inv DI vec v a q.2 y.val
         ((fun t => t), mk (Slice.new T), q.2, UScalar.cast UScalarTy.U64 y,
           UScalar.cast UScalarTy.U64 y) :=
       ⟨0, 0#usize, fun _ => rfl, by simp, (law.adv_zero _).symm, by simp [hc],
-        by rw [hmk]; exact .nil _, rfl, by simp [hmk, Slice.new]⟩
+        by rw [hmk]; exact .nil _, rfl, by simp [hmk, Slice.new_val]⟩
     have hl := hloop q.2 y.val _ hinv
     mvcgen [hl]
     · rename_i z hnone hz
@@ -245,7 +245,7 @@ theorem de_runs {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {vec : V →
       intro x hx; cases hx
       rw [hq2, law.adv_view r _ hn, List.length_drop] at hLv
       have hmax := law.view_le r
-      obtain ⟨s, hs, hsP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hsz z.1)
+      obtain ⟨s, hs, hsP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hsz z.1)
       refine ⟨kz.val + y.val, s, by omega, ?_, hs, ?_⟩
       · rw [hback, hin, hq2, law.adv_adv r _ _ (by omega), hszn]
       · rw [size_shift hL.SizeInstLawful hrel hsP (by omega)]; omega
@@ -253,8 +253,8 @@ theorem de_runs {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {vec : V →
   · rename_i hex _ hx
     obtain ⟨y, hy⟩ := hex
     rw [hy] at hx; cases hx
-  · rename_i q _ _ res _ hbr
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf res hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
@@ -266,12 +266,12 @@ end TlsVecStd
 
 namespace TlsVecStd
 
-variable {T : Type}
+variable {T : Type _}
 
 /-- `TlsVecU*::serialize` (`gcl`: `get_content_lengths`, `tryP` / `dbg`: the conversion of the
 content length to the prefix type, `PSI`: the prefix codec, `slc`: `as_slice`, `aw`:
 `assert_written_bytes`). -/
-noncomputable def ser {W P E : Type} (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
+noncomputable def ser {W : Type} {P E : Type _} (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
     (tryP : Std.Usize → RustM (core.result.Result P E)) (dbg : core.fmt.Debug E)
     (PSI : Serialize P) (slc : RustM (Slice T))
     (aw : Std.Usize → Std.Usize → RustM (core.result.Result Unit Error))
@@ -374,7 +374,7 @@ noncomputable def out (SI : Serialize T) (pre : List Std.U8) (M : Nat) (l : List
     Option (List Std.U8) :=
   if N ≤ M then (encAll SI l).map (pre ++ ·) else none
 
-theorem ser_runs {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (SI' : Serialize X)
+theorem ser_runs {P E X : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (SI' : Serialize X)
     (x : X) (s : Slice T) {N : Nat} (hN : SizeNat SI.SizeInst s.val N) (k : Std.Usize) (M : Nat)
     (_hkM : M + k.val ≤ Usize.max)
     (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
@@ -398,7 +398,7 @@ theorem ser_runs {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) 
           (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
           core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         (out SI pre M s.val N = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   have hel : ∀ (s' : Slice T) (w' : W),
       ⦃ ⌜ s' = s ∧ (core.io.write.Write.view WI w').length + N ≤ imax ⌝ ⦄
@@ -408,7 +408,7 @@ theorem ser_runs {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) 
         (encAll SI s.val = none → ∃ e, p.1 = .Err e) ⌝ ⦄ :=
     by intro s' w' ⟨hs, hr⟩; subst hs; exact serialize_elements_spec hL WI hWI w' _ N hN hr trivial
   rw [hser]
-  obtain ⟨g, hg, hgP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hgcl
+  obtain ⟨g, hg, hgP⟩ := Aeneas.Std.triple_iff_exists_ok.mp hgcl
   by_cases hNM : N ≤ M
   · obtain ⟨a, b, rfl, ha, hb⟩ := hgP.1 hNM
     obtain ⟨hencP, n0, p, hn0, ht, hrun⟩ := hpre0 hNM
@@ -515,7 +515,7 @@ theorem ser_runs {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) 
 
 /-- The trait-level contract of `TlsVecU*::tls_serialize`, from the width's pieces (`k`: the prefix
 width, `M`: the largest content length, `mx` computing it). -/
-theorem serSpec {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (SI' : Serialize X)
+theorem serSpec {P E X : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (SI' : Serialize X)
     (x : X) (s : Slice T) (k : Std.Usize) (M : Nat) (hkM : M + k.val ≤ Usize.max)
     (mx : RustM Std.Usize) (hmx : ⦃ ⌜ True ⌝ ⦄ mx ⦃ ⇓ r => ⌜ r.val = M ⌝ ⦄)
     (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
@@ -531,7 +531,7 @@ theorem serSpec {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (
     (hsz : ⦃ ⌜ True ⌝ ⦄ SI'.SizeInst.tls_serialized_len x
       ⦃ ⇓ r => ⌜ SizeFoldRel SI.SizeInst k s.val r ⌝ ⦄) : SerSpec SI' x := by
   obtain ⟨N, hN⟩ := SizeNat.exists hL.SizeInstLawful s.val
-  obtain ⟨sz, hsz', hrel⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hsz
+  obtain ⟨sz, hsz', hrel⟩ := Aeneas.Std.triple_iff_exists_ok.mp hsz
   have hszm := hrel.val_min hN
   have hszv : N ≤ M → sz.val = N + k.val := by intro h; omega
   have hg := gcl_spec hL.SizeInstLawful s hN k mx M hmx hkM
@@ -539,7 +539,7 @@ theorem serSpec {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (
   obtain ⟨pre, hpre0⟩ : ∃ pre, N ≤ M → pre.length = k.val ∧
       ∃ n0 p, n0.val = N ∧ tryP n0 = ok (.Ok p) ∧ SerRuns PSI p k (some pre) := by
     by_cases h : N ≤ M
-    · obtain ⟨g, -, hgP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hg
+    · obtain ⟨g, -, hgP⟩ := Aeneas.Std.triple_iff_exists_ok.mp hg
       obtain ⟨a, b, -, -, hb⟩ := hgP.1 h
       obtain ⟨p, pre, ht, hr, hl⟩ := hP b (by omega)
       exact ⟨pre, fun _ => ⟨hl, b, p, hb, ht, hr⟩⟩
@@ -562,11 +562,11 @@ theorem serSpec {P E X : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (
   · cases hb
 
 /-- The default `tls_serialize_detached`, from the contract and a total size. -/
-theorem detached_of {X : Type} {SI : Serialize X} {x : X} {Q : Std.Usize → Prop} (h : SerSpec SI x)
+theorem detached_of {X : Type _} {SI : Serialize X} {x : X} {Q : Std.Usize → Prop} (h : SerSpec SI x)
     (hsz : ⦃ ⌜ True ⌝ ⦄ SI.SizeInst.tls_serialized_len x ⦃ ⇓ r => ⌜ Q r ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ Serialize.tls_serialize_detached.default SI x
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize_detached.post SI.SizeInst SI x r).holds ⌝ ⦄ := by
-  obtain ⟨sz, h1, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hsz
+  obtain ⟨sz, h1, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp hsz
   exact h.detached ⟨sz, h1⟩
 
 end TlsVecStd
@@ -583,14 +583,16 @@ macro "tlsvec_body_eq" b:ident : tactic => `(tactic| (
 macro "tlsvec_de_eq" i:ident f:ident d:ident l:ident h:term : tactic => `(tactic| (
   unfold $i:ident $f:ident $d:ident TlsVecStd.de $l:ident TlsVecStd.dloop
   simp only [$h:term]
-  congr 1; funext v; congr 1; funext r; congr 1; funext cf; cases cf <;> rfl))
+  congr 1; funext v; congr 1; funext r; congr 1; funext cf
+  -- the residual conversion is `…NeverE` (an abbrev of `…InfallibleE`), under an ITree bind
+  cases cf <;> (funext b; congr 1; funext c; cases c <;> rfl)))
 
 /-- `DeSpec` from `de_runs`. -/
-theorem deSpec {V : Type} {DI' : Deserialize V} (h : DeRuns DI' (fun _ _ _ => True)) : DeSpec DI' :=
+theorem deSpec {V : Type _} {DI' : Deserialize V} (h : DeRuns DI' (fun _ _ _ => True)) : DeSpec DI' :=
   fun _ RI hRI r => Deserialize.tls_deserialize_spec_of_runs DI' h RI hRI r
 
 /-- A `push` spec with its precondition as a hypothesis, as a triple. -/
-theorem pre_triple {α : Type} {P : Prop} {m : RustM α} {Q : α → Prop}
+theorem pre_triple {α : Type _} {P : Prop} {m : RustM α} {Q : α → Prop}
     (h : P → ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄) : ⦃ ⌜ P ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄ := by
   intro hP; exact h hP trivial
 

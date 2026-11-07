@@ -4,9 +4,7 @@ instances.
 Obligations: none directly; the bytes-path halves of `PanicFreedom.lean` /
 `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U16`, `size_of_U24`,
-`size_of_U32`, `size_of_U8`, `size_of_Usize`, `numBits_eq_64`; 2 signature-only stubs
-(`core.convert.Infallible.Insts.CoreFmtDebug.fmt`,
-`core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt`). -/
+`size_of_U32`, `size_of_U8`, `size_of_Usize`, `numBits_eq_64`. -/
 import TlsCodec.Verification.Helpers.TlsVecGen
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -28,11 +26,11 @@ them, and `deserialize_char(_le)` follow from it by `Content.len`. -/
 
 namespace TlsByteVecGen
 
-variable {W : Type}
+variable {W : Type _}
 
 /-- `TlsByteVecU*::deserialize_bytes_bytes` over an abstract wrapper (`mk`), length prefix `readLen`
 of width `w`, and its conversion `conv` to `usize` (unwrapped with `dbg`). -/
-def deser {P E : Type} (mk : alloc.vec.Vec Std.U8 → W)
+def deser {P E : Type _} (mk : alloc.vec.Vec Std.U8 → W)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
     (conv : P → RustM (core.result.Result Std.Usize E)) (dbg : core.fmt.Debug E) (w : Std.Usize)
     (bytes : Slice Std.U8) : RustM (core.result.Result (W × Slice Std.U8) Error) := do
@@ -80,7 +78,7 @@ def deser {P E : Type} (mk : alloc.vec.Vec Std.U8 → W)
       (W × Slice Std.U8) (core.convert.From.Blanket Error) residual
 
 
-theorem content_rel {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
+theorem content_rel {P E : Type _} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
     (hmk : ∀ v, vec (mk v) = v) (enc : P → List Std.U8) (R : P → Nat → Prop) (w : Std.Usize)
     (henc : ∀ p, (enc p).length = w.val)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
@@ -99,9 +97,11 @@ theorem content_rel {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try (intros; simp [PostCond.ok]; done))
   case vc1.h => obtain ⟨y, hy, -⟩ := ‹∃ y, _ ∧ _›; exact ⟨y, hy⟩
-  case vc2 =>
-    rename_i r0 hP r1 p _ r2 hc len hlen o hca r3 hr3 _ val _ o1 hget1 r5 hr5 _ val1 _ v0 hv0 o2 hget2
-      r6 hr6 _ val2 _ e0 e1 e2 e3
+  case vc1.hQ =>
+    rename_i r0 hP cf0 e0 p x0 r2 hc len hlen o hca r3 hr3 cf1 e1 val x1 o1 hget1 r5 hr5 cf2 e2 val1 x2
+      v0 hv0 o2 hget2 r6 hr6 cf3 e3 val2 x3
+    subst x0 x1 x2 x3
+    simp only [continue_eq_tryCF] at e0 e1 e2 e3
     rintro v t ⟨⟩
     have hb := hP p e0
     have hw := henc p.1
@@ -127,7 +127,7 @@ theorem content_rel {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.
     · rw [hv, ht2', List.take_append_drop]; exact hb
 
 /-- `content_rel` with the prefix value `pval p` as the payload length. -/
-theorem content {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
+theorem content {P E : Type _} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
     (hmk : ∀ v, vec (mk v) = v) (enc : P → List Std.U8) (pval : P → Nat) (w : Std.Usize)
     (henc : ∀ p, (enc p).length = w.val)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
@@ -144,7 +144,7 @@ theorem content {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.
   obtain ⟨p, hp, hb⟩ := ok_of_partial_triple h hr v t hv
   exact ⟨p, hp.symm, hb⟩
 
-theorem pf {P E : Type} (mk : alloc.vec.Vec Std.U8 → W) (w : Std.Usize)
+theorem pf {P E : Type _} (mk : alloc.vec.Vec Std.U8 → W) (w : Std.Usize)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
     (hread : ∀ bytes, ⦃ ⌜ True ⌝ ⦄ readLen bytes ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (conv : P → RustM (core.result.Result Std.Usize E))
@@ -156,12 +156,12 @@ theorem pf {P E : Type} (mk : alloc.vec.Vec Std.U8 → W) (w : Std.Usize)
 
 
 /-- The post of `content`: the input is the encoded prefix, the payload, then the remainder. -/
-abbrev Content {P : Type} (vec : W → alloc.vec.Vec Std.U8) (enc : P → List Std.U8) (pval : P → Nat)
+abbrev Content {P : Type _} (vec : W → alloc.vec.Vec Std.U8) (enc : P → List Std.U8) (pval : P → Nat)
     (bytes : Slice Std.U8) (r : core.result.Result (W × Slice Std.U8) Error) : Prop :=
   ∀ v t, r = .Ok (v, t) → ∃ p : P, pval p = (vec v).val.length ∧
     bytes.val = enc p ++ ((vec v).val ++ t.val)
 
-theorem Content.len {P : Type} {vec : W → alloc.vec.Vec Std.U8} {enc : P → List Std.U8}
+theorem Content.len {P : Type _} {vec : W → alloc.vec.Vec Std.U8} {enc : P → List Std.U8}
     {pval : P → Nat} {bytes : Slice Std.U8} {r : core.result.Result (W × Slice Std.U8) Error}
     (h : Content vec enc pval bytes r) (n : Nat) (henc : ∀ p, (enc p).length = n) (bound : Nat)
     (hb : ∀ p, pval p ≤ bound) :
@@ -174,7 +174,7 @@ theorem Content.len {P : Type} {vec : W → alloc.vec.Vec Std.U8} {enc : P → L
   exact ⟨by omega, hp ▸ hb p⟩
 
 /-- `bytes = enc x ++ rest` after a successful prefix read (from a `U*_deserialize_char`). -/
-theorem prefix_split {U X : Type} (n : Nat) {f : X → U} {g : X → List Std.U8} (enc : U → List Std.U8)
+theorem prefix_split {U X : Type _} (n : Nat) {f : X → U} {g : X → List Std.U8} (enc : U → List Std.U8)
     (hrt : ∀ a, enc (f a) = g a)
     {readLen : Slice Std.U8 → RustM (core.result.Result (U × Slice Std.U8) Error)}
     (h : ∀ bytes, ⦃ ⌜ True ⌝ ⦄ readLen bytes
@@ -192,7 +192,7 @@ theorem prefix_split {U X : Type} (n : Nat) {f : X → U} {g : X → List Std.U8
 
 /-- Totality of a prefix read (from a `U*_deserialize_char`): on `enc u ++ Xs` it returns `u` and
 `Xs`. `e` is a section of `g`, and `f` inverts it. -/
-theorem prefix_ok {U X : Type} (n : Nat) {f : X → U} {g : X → List Std.U8} (enc : U → List Std.U8)
+theorem prefix_ok {U X : Type _} (n : Nat) {f : X → U} {g : X → List Std.U8} (enc : U → List Std.U8)
     (e : U → X) (hge : ∀ u, g (e u) = enc u) (hf : ∀ u, f (e u) = u)
     (hginj : ∀ a b, g a = g b → a = b) (hlen : ∀ u, (enc u).length = n)
     {readLen : Slice Std.U8 → RustM (core.result.Result (U × Slice Std.U8) Error)}
@@ -210,17 +210,17 @@ theorem prefix_ok {U X : Type} (n : Nat) {f : X → U} {g : X → List Std.U8} (
   exact ⟨t, by rw [hf], by rw [ht, hb]; exact List.drop_left' hu⟩
 
 /-- A conversion returning `Ok (g p)`, with `g p` of value `pval p`. -/
-theorem conv_val {P E : Type} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
+theorem conv_val {P E : Type _} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
     (pval : P → Nat) (h : ∀ p, ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓ r => ⌜ r = .Ok (g p) ⌝ ⦄)
     (hg : ∀ p, (g p).val = pval p) (p : P) :
     ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓? r => ⌜ ∃ y, r = .Ok y ∧ y.val = pval p ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h p)
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h p)
   refine partial_triple_of_ok fun r' hr' => ⟨g p, ?_, hg p⟩
-  rw [hr] at hr'; cases hr'; exact hP
+  rw [hr] at hr'; obtain rfl := RustM.ok_injective hr'; exact hP
 
 /-- Totality of `deser`: on `enc a ++ (payload ++ rest)` it returns the wrapper of `payload` and
 `rest`, provided the prefix reader and the conversion succeed there. -/
-theorem ok {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
+theorem ok {P E : Type _} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → W)
     (enc : P → List Std.U8) (pval : P → Nat) (w : Std.Usize)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
     (hread : ∀ (bytes : Slice Std.U8) (a : P) (X : List Std.U8), bytes.val = enc a ++ X →
@@ -233,7 +233,7 @@ theorem ok {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec S
     (hmax : w.val + payload.val.length ≤ Std.Usize.max) :
     ⦃ ⌜ True ⌝ ⦄ deser mk readLen conv dbg w bytes
     ⦃ ⇓ r => ⌜ ∃ t : Slice Std.U8, r = .Ok (mk payload, t) ∧ t.val = rest ⌝ ⦄ := by
-  obtain ⟨_, hrv, t, rfl, ht⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hread bytes a _ hb)
+  obtain ⟨_, hrv, t, rfl, ht⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hread bytes a _ hb)
   have hbl : bytes.val.length = w.val + (payload.val.length + rest.length) := by
     rw [hb]; simp [henc]
   have htl : t.val.length = payload.val.length + rest.length := by rw [ht]; simp
@@ -241,17 +241,18 @@ theorem ok {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec S
     rw [hb, ← henc, List.drop_left]
   unfold deser
   rw [hrv]
-  simp only [bind_tc_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   mvcgen [-core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_some_spec,
     hconv, core.option.Option.ok_or_spec, core.num.Usize.checked_add_spec,
     core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_total_spec,
     core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_spec,
     core.result.Result.unwrap_ok_spec]
-  all_goals (try simp only [continue_eq_tryCF, core.result.Result.Ok.injEq] at *)
+  all_goals (try subst_vars)
+  all_goals (try simp only [continue_eq_tryCF, tryCF_eq_continue, core.result.Result.Ok.injEq] at *)
   all_goals (try subst_vars)
   · obtain ⟨y, hy, -⟩ := ‹∃ y, _ ∧ _›
     exact ⟨y, hy⟩
-  · rename_i u o hca val o2 hget v o3 val1 hget2 hy hm1 hm2 hm3
+  · rename_i u o hca val o2 hget v o3 val1 hm1 hm2 hm3 hget2 hy
     obtain ⟨y, hy', hyv⟩ := hy
     cases hy'
     have hl : u.val = payload.val.length := hyv.trans hp
@@ -263,19 +264,19 @@ theorem ok {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec S
     simp only [ht', core.result.Result.Ok.injEq] at hm2
     simp only [ht'', core.result.Result.Ok.injEq] at hm3
     subst hm3
-    have hv : v = payload := Subtype.ext (by
+    have hv : v = payload := (Slice.eq_iff _ _).mpr (by
       rw [← hm2, ht'v, hzv, hl, hdrop, Nat.add_sub_cancel, List.take_left' rfl])
     subst hv
     exact ⟨_, rfl, by rw [ht''v]; simp only [] at *; rw [ht, hl, List.drop_left' rfl]⟩
-  · rename_i u o hca val o2 hget v o3 _ hget2 hy hm1 hm2
+  -- `Break` VCs: the `Break` equation (last hypothesis) contradicts the successful step.
+  · rename_i u o hca val o2 hget v o3 _ hbr hm1 hm2 hget2 hy
     obtain ⟨y, hy', hyv⟩ := hy
     cases hy'
     have hl : u.val = payload.val.length := hyv.trans hp
     obtain ⟨t'', ht'', -⟩ := hget2.1 (by first | omega | (dsimp only; omega))
-    rw [ht'']
-    intro h
-    simp [tryCF] at h
-  · rename_i u o hca val o2 hget _ hy hm1
+    rw [ht''] at hbr
+    simp [tryCF] at hbr
+  · rename_i u o hca val o2 hget _ hbr hm1 hy
     obtain ⟨y, hy', hyv⟩ := hy
     cases hy'
     have hl : u.val = payload.val.length := hyv.trans hp
@@ -283,22 +284,20 @@ theorem ok {P E : Type} (vec : W → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec S
     simp only [hz, core.result.Result.Ok.injEq] at hm1
     subst hm1
     obtain ⟨t', ht', -⟩ := hget (by omega) (by omega)
-    rw [ht']
-    intro h
-    simp [tryCF] at h
-  · rename_i u o hca _ hy
+    rw [ht'] at hbr
+    simp [tryCF] at hbr
+  · rename_i u o hca _ hbr hy
     obtain ⟨y, hy', hyv⟩ := hy
     cases hy'
     have hl : u.val = payload.val.length := hyv.trans hp
     obtain ⟨z, hz, -⟩ := hca.1 (by omega)
-    rw [hz]
-    intro h
-    simp [tryCF] at h
-  · intro h
-    simp [tryCF] at h
+    rw [hz] at hbr
+    simp [tryCF] at hbr
+  · rename_i hbr
+    simp [tryCF] at hbr
 
 /-- A conversion returning `Ok (g p)`, with `g p` of value `pval p` (total version of `conv_val`). -/
-theorem conv_total {P E : Type} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
+theorem conv_total {P E : Type _} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
     (pval : P → Nat) (h : ∀ p, ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓ r => ⌜ r = .Ok (g p) ⌝ ⦄)
     (hg : ∀ p, (g p).val = pval p) (p : P) :
     ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓ r => ⌜ ∃ y, r = .Ok y ∧ y.val = pval p ⌝ ⦄ :=
@@ -311,9 +310,9 @@ end TlsByteVecGen
 /-- `TlsByteVecU16::deserialize_bytes_bytes` is the generic one. -/
 theorem tls_vec.TlsByteVecU16.deserialize_bytes_bytes_eq : tls_vec.TlsByteVecU16.deserialize_bytes_bytes =
     TlsByteVecGen.deser tls_vec.TlsByteVecU16.mk U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
-      (core.convert.TryFromTUInfallible.Blanket.try_from
+      (core.convert.TryFromTUNever.Blanket.try_from
         (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU16))
-      core.convert.Infallible.Insts.CoreFmtDebug 2#usize := by
+      core.Never.Insts.CoreFmtDebug 2#usize := by
   funext bytes
   unfold tls_vec.TlsByteVecU16.deserialize_bytes_bytes TlsByteVecGen.deser
   congr 1; funext r; congr 1; funext cf; cases cf <;> rfl
@@ -326,13 +325,13 @@ theorem tls_vec.TlsByteVecU16.deserialize_content (bytes : Slice Std.U8) :
           bytes.val = (Aeneas.Std.core.num.U16.to_be_bytes n).val ++ (v.vec.val ++ t.val) ⌝ ⦄ := by
   rw [tls_vec.TlsByteVecU16.deserialize_bytes_bytes_eq]
   have hread := TlsByteVecGen.prefix_split 2 (fun n : Std.U16 => (Aeneas.Std.core.num.U16.to_be_bytes n).val)
-    (fun a => congrArg Subtype.val (U16_to_be_bytes_from_be_bytes a)) U16_deserialize_char
+    (fun a => congrArg Std.Array.val (U16_to_be_bytes_from_be_bytes a)) U16_deserialize_char
   exact total_of_pf_partial
     (TlsByteVecGen.pf _ _ _ (fun b => pf_of_total (hread b)) _
-      (TlsVecGen.conv_ok core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U16_spec) _ bytes)
+      (TlsVecGen.conv_ok core.convert.TryFromTUNever.Blanket.try_from_Usize_U16_spec) _ bytes)
     (TlsByteVecGen.content tls_vec.TlsByteVecU16.vec _ (fun _ => rfl) _ (fun n : Std.U16 => n.val) 2#usize
       (fun n => (Aeneas.Std.core.num.U16.to_be_bytes n).property) _ hread _
-      (TlsByteVecGen.conv_val _ core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U16_spec
+      (TlsByteVecGen.conv_val _ core.convert.TryFromTUNever.Blanket.try_from_Usize_U16_spec
         (fun _ => by simp)) _ bytes)
 
 theorem tls_vec.TlsByteVecU16.deserialize_char_le (bytes : Slice Std.U8) :
@@ -354,9 +353,9 @@ theorem tls_vec.TlsByteVecU16.deserialize_char (bytes : Slice Std.U8) :
 /-- `TlsByteVecU8::deserialize_bytes_bytes` is the generic one. -/
 theorem tls_vec.TlsByteVecU8.deserialize_bytes_bytes_eq : tls_vec.TlsByteVecU8.deserialize_bytes_bytes =
     TlsByteVecGen.deser tls_vec.TlsByteVecU8.mk U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
-      (core.convert.TryFromTUInfallible.Blanket.try_from
+      (core.convert.TryFromTUNever.Blanket.try_from
         (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU8))
-      core.convert.Infallible.Insts.CoreFmtDebug 1#usize := by
+      core.Never.Insts.CoreFmtDebug 1#usize := by
   funext bytes
   unfold tls_vec.TlsByteVecU8.deserialize_bytes_bytes TlsByteVecGen.deser
   congr 1; funext r; congr 1; funext cf; cases cf <;> rfl
@@ -369,14 +368,14 @@ theorem tls_vec.TlsByteVecU8.deserialize_content (bytes : Slice Std.U8) :
   rw [tls_vec.TlsByteVecU8.deserialize_bytes_bytes_eq]
   have hread := TlsByteVecGen.prefix_split 1 (fun n : Std.U8 => [n])
     (fun a => by
-      have := congrArg Subtype.val (U8_to_be_bytes_from_be_bytes a)
+      have := congrArg Std.Array.val (U8_to_be_bytes_from_be_bytes a)
       rwa [U8_to_be_bytes_val] at this) U8_deserialize_char
   exact total_of_pf_partial
     (TlsByteVecGen.pf _ _ _ (fun b => pf_of_total (hread b)) _
-      (TlsVecGen.conv_ok core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U8_spec) _ bytes)
+      (TlsVecGen.conv_ok core.convert.TryFromTUNever.Blanket.try_from_Usize_U8_spec) _ bytes)
     (TlsByteVecGen.content tls_vec.TlsByteVecU8.vec _ (fun _ => rfl) (fun n : Std.U8 => [n]) (fun n : Std.U8 => n.val) 1#usize
       (fun n => rfl) _ hread _
-      (TlsByteVecGen.conv_val _ core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U8_spec
+      (TlsByteVecGen.conv_val _ core.convert.TryFromTUNever.Blanket.try_from_Usize_U8_spec
         (fun _ => by simp)) _ bytes)
 
 theorem tls_vec.TlsByteVecU8.deserialize_char_le (bytes : Slice Std.U8) :
@@ -413,7 +412,7 @@ theorem tls_vec.TlsByteVecU32.deserialize_content (bytes : Slice Std.U8) :
           bytes.val = (Aeneas.Std.core.num.U32.to_be_bytes n).val ++ (v.vec.val ++ t.val) ⌝ ⦄ := by
   rw [tls_vec.TlsByteVecU32.deserialize_bytes_bytes_eq]
   have hread := TlsByteVecGen.prefix_split 4 (fun n : Std.U32 => (Aeneas.Std.core.num.U32.to_be_bytes n).val)
-    (fun a => congrArg Subtype.val (U32_to_be_bytes_from_be_bytes a)) U32_deserialize_char
+    (fun a => congrArg Std.Array.val (U32_to_be_bytes_from_be_bytes a)) U32_deserialize_char
   exact total_of_pf_partial
     (TlsByteVecGen.pf _ _ _ (fun b => pf_of_total (hread b)) _
       (TlsVecGen.conv_ok core.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from_spec) _ bytes)
@@ -441,9 +440,9 @@ theorem tls_vec.TlsByteVecU32.deserialize_char (bytes : Slice Std.U8) :
 /-- `TlsByteVecU24::deserialize_bytes_bytes` is the generic one. -/
 theorem tls_vec.TlsByteVecU24.deserialize_bytes_bytes_eq : tls_vec.TlsByteVecU24.deserialize_bytes_bytes =
     TlsByteVecGen.deser tls_vec.TlsByteVecU24.mk U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
-      (core.convert.TryFromTUInfallible.Blanket.try_from
+      (core.convert.TryFromTUNever.Blanket.try_from
         (core.convert.Into.Blanket Usize.Insts.CoreConvertFromU24))
-      core.convert.Infallible.Insts.CoreFmtDebug 3#usize := by
+      core.Never.Insts.CoreFmtDebug 3#usize := by
   funext bytes
   unfold tls_vec.TlsByteVecU24.deserialize_bytes_bytes TlsByteVecGen.deser
   congr 1; funext r; congr 1; funext cf; cases cf <;> rfl
@@ -453,12 +452,12 @@ def U24.pval (a : Aeneas.Std.Array Std.U8 3#usize) : Nat :=
   a.val[0]!.val * 65536 + a.val[1]!.val * 256 + a.val[2]!.val
 
 /-- `usize::try_from(U24)` (blanket `Into` impl) never fails: it is `Ok` of `U24.pval`. -/
-theorem core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_val (x : Aeneas.Std.Array Std.U8 3#usize) :
+theorem core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_val (x : Aeneas.Std.Array Std.U8 3#usize) :
     ⦃ ⌜ True ⌝ ⦄
-    core.convert.TryFromTUInfallible.Blanket.try_from
+    core.convert.TryFromTUNever.Blanket.try_from
       (core.convert.Into.Blanket Usize.Insts.CoreConvertFromU24) x
     ⦃ ⇓ r => ⌜ ∃ y, r = .Ok y ∧ y.val = U24.pval x ⌝ ⦄ :=
-  triple_post_mono (core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_content x)
+  triple_post_mono (core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_content x)
     fun _ ⟨y, hy, hh⟩ => ⟨y, hy, by
       have hl : x.val.length = 3 := by simpa using x.property
       match hx : x.val, hl with
@@ -475,14 +474,14 @@ theorem tls_vec.TlsByteVecU24.deserialize_content (bytes : Slice Std.U8) :
     (fun a => a.val) (f := id) (fun _ => rfl) U24_deserialize_char
   refine total_of_pf_partial
     (TlsByteVecGen.pf _ _ _ (fun b => pf_of_total (hread b)) _ (fun p =>
-      triple_post_mono (core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_val p)
+      triple_post_mono (core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_val p)
         fun _ ⟨y, hy, _⟩ => ⟨y, hy⟩) _ bytes) ?_
   refine partial_triple_of_ok fun r hr => ?_
   intro v t hv
   obtain ⟨p, hp, hb⟩ := ok_of_partial_triple
     (TlsByteVecGen.content tls_vec.TlsByteVecU24.vec _ (fun _ => rfl) (fun a => a.val) U24.pval 3#usize
       (fun a => a.property) _ hread _
-      (fun p => partial_of_total (core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_val p)) _ bytes) hr v t hv
+      (fun p => partial_of_total (core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_val p)) _ bytes) hr v t hv
   have hl : p.val.length = 3 := by simpa using p.property
   match hx : p.val, hl with
   | [b0, b1, b2], _ => exact ⟨b0, b1, b2, by simpa [U24.pval, hx] using hp, by simpa [hx] using hb⟩

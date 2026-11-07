@@ -24,8 +24,6 @@ CoreModels.alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt.ok_spec
 # signature-only stubs (Assumptions/MissingCoreModels.lean, MissingThirdPartyModels.lean,
 # FunsExternal.lean): no spec, reached by statements or on paths no obligation needs
 CoreModels.alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt
-CoreModels.core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt
-CoreModels.core.convert.Infallible.Insts.CoreFmtDebug.fmt
 CoreModels.core.io.error.Error.Insts.CoreFmtDebug.fmt
 CoreModels.alloc.vec.Vec.Insts.CoreCmpOrd.cmp
 CoreModels.alloc.vec.Vec.Insts.CoreHashHash.hash
@@ -51,9 +49,6 @@ tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
 tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
 tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
 tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.fmt
-
-# `native_decide` (kernel-checked by evaluation; the compiler is trusted)
-tls_codec.alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop.body._native.decide.ax_3
 
 # OPEN on purpose (false in Rust for `io::Error::Custom` with a failing
 # `Debug`); `sorryAx` allowed for these theorems only

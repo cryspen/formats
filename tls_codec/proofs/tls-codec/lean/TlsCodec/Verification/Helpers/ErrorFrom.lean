@@ -30,7 +30,7 @@ theorem Error.from_panic_freedom_of_eof (x : core.io.error.Error)
     (h : x.repr_kind = .UnexpectedEof) :
     ⦃ ⌜ True ⌝ ⦄ Error.Insts.CoreConvertFromError.from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold Error.Insts.CoreConvertFromError.from core.io.error.Error.kind
-  simp only [Aeneas.Std.bind_tc_ok, h]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, h]
   mvcgen
 
 /-- `Error::from(READ_EXACT_EOF)` returns. -/

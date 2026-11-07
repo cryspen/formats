@@ -51,14 +51,10 @@ theorem SecretVLBytes.from_size (v : alloc.vec.Vec Std.U8) (n : Std.Usize)
       quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSize.tls_serialized_len s = ok n := by
   refine ⟨⟨v⟩, rfl, ?_⟩
   obtain ⟨c, -, hc, hsz⟩ := Vec.size_exact U8.lawful v n h (SizeNat.u8 v.val)
+  obtain ⟨r, hr, hrv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.tls_serialize_bytes_len_val v)
   simp only [quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSize.tls_serialized_len,
-    quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len, quic_vec.VLBytes.as_slice,
-    quic_vec.VLBytes.impl.vec, alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref,
-    core.Slice.Insts.CoreConvertAsRefSlice.as_ref]
-  have hs : alloc.vec.Vec.as_slice v = ok ⟨v.val, v.property⟩ := rfl
-  obtain ⟨r, hr, hrv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (quic_vec.tls_serialize_bytes_len_val ⟨v.val, v.property⟩)
-  simp only [hs, bind_tc_ok, hr]
+    quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len, VLBytes.as_slice_ok,
+    Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hr]
   congr 1
   apply UScalar.eq_of_val_eq
   have hvl : (v.val).length ≤ Usize.max := by have := v.property; scalar_tac

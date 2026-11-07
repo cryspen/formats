@@ -287,22 +287,18 @@ theorem alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_byte
   simp only [alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post]
   rcases r with ⟨t, rem⟩ | e
   · obtain ⟨raw, hraw, hu⟩ := h t rem rfl
-    obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
+    obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
     rw [hraw] at hr0
-    cases hr0
+    obtain rfl := RustM.ok_injective hr0
     obtain ⟨hlen, hsum⟩ := hP raw rem rfl
     have hs := core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec core.U8.Insts.CoreCmpPartialEqU8
       (heq := core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec)
-    mvcgen [core.result.Result.is_ok_and_spec,
-      string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.call_once]
-    rename_i _ _ _ hx
-    cases hx
-    rw [hraw]
     have htake : List.take Usize.max t.utf8U8 = raw.vec.val := by
       rw [hu]; exact List.take_of_length_le (by scalar_tac)
-    mvcgen [core.result.Result.is_ok_and_spec, hs, quic_vec.VLByteVec.as_slice,
+    mvcgen [core.result.Result.is_ok_and, hraw, hs, quic_vec.VLByteVec.as_slice,
       quic_vec.VLByteVec.impl.vec,
-      string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.call_once,
+      string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringShared0SliceU8Bool.call_once,
+      string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecShared0SliceU8Bool.call_once,
       alloc.string.String.Insts.Tls_codecSize.tls_serialized_len, Shared0Slice.size_U8_char]
     all_goals (simp only [core.result.Result.Ok.injEq] at *; subst_vars)
     all_goals (simp only [htake, Slice.len_val, Slice.length] at *)
@@ -391,7 +387,7 @@ theorem spec.u8_encode_decode.spec.functional_correctness (value : Std.U8) :
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = Aeneas.Std.core.num.U8.to_be_bytes value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using (Aeneas.Std.core.num.U8.to_be_bytes value).property
     rw [haa, tls_codec.U8_from_be_bytes_to_be_bytes]
@@ -445,7 +441,7 @@ theorem spec.u8_decode_encode.spec.functional_correctness (bytes : Slice Std.U8)
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -492,7 +488,7 @@ theorem spec.u16_encode_decode.spec.functional_correctness (value : Std.U16) :
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = Aeneas.Std.core.num.U16.to_be_bytes value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using (Aeneas.Std.core.num.U16.to_be_bytes value).property
     rw [haa, tls_codec.U16_from_be_bytes_to_be_bytes]
@@ -546,7 +542,7 @@ theorem spec.u16_decode_encode.spec.functional_correctness (bytes : Slice Std.U8
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -593,7 +589,7 @@ theorem spec.u32_encode_decode.spec.functional_correctness (value : Std.U32) :
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = Aeneas.Std.core.num.U32.to_be_bytes value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using (Aeneas.Std.core.num.U32.to_be_bytes value).property
     rw [haa, tls_codec.U32_from_be_bytes_to_be_bytes]
@@ -647,7 +643,7 @@ theorem spec.u32_decode_encode.spec.functional_correctness (bytes : Slice Std.U8
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -694,7 +690,7 @@ theorem spec.u64_encode_decode.spec.functional_correctness (value : Std.U64) :
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = Aeneas.Std.core.num.U64.to_be_bytes value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using (Aeneas.Std.core.num.U64.to_be_bytes value).property
     rw [haa, tls_codec.U64_from_be_bytes_to_be_bytes]
@@ -748,7 +744,7 @@ theorem spec.u64_decode_encode.spec.functional_correctness (bytes : Slice Std.U8
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -795,7 +791,7 @@ theorem spec.u24_encode_decode.spec.functional_correctness (value : U24) :
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using value.property
     subst haa
@@ -850,7 +846,7 @@ theorem spec.u24_decode_encode.spec.functional_correctness (bytes : Slice Std.U8
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__12.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -898,7 +894,7 @@ theorem spec.array4_encode_decode.spec.functional_correctness (value : Array Std
     subst hcf1
     have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
     have haa : a = value := by
-      apply Subtype.ext
+      apply Std.Array.ext _ _
       rw [ha, hv0]
       simpa using value.property
     subst haa
@@ -955,7 +951,7 @@ theorem spec.array4_decode_encode.spec.functional_correctness (bytes : Slice Std
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__14.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -1024,7 +1020,7 @@ theorem spec.option_u16_encode_decode.spec.functional_correctness (value : core.
       rw [hr, core.result.Result.Ok.injEq] at hcf1
       subst hcf1
       have haa : a = Aeneas.Std.core.num.U16.to_be_bytes x := by
-        apply Subtype.ext
+        apply Std.Array.ext _ _
         rw [ha, List.take_of_length_le (by omega)]
       have hlt : t.val.length = 0 := by rw [ht]; simp [hlen]
       rw [haa, tls_codec.U16_from_be_bytes_to_be_bytes]
@@ -1077,7 +1073,7 @@ theorem spec.option_u16_decode_encode.spec.functional_correctness (bytes : Slice
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v0 n3)
     have e : spec.__16.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v0, n3) = tls_codec.prefixCheck bytes (v0, n3) := rfl
     rw [e, hb]
@@ -1128,11 +1124,13 @@ theorem spec.varint_encode_decode.spec.functional_correctness (value : varint.Tl
   ⦃ ⇓? res => ⌜ (spec.varint_encode_decode.post value res).holds ⌝ ⦄ := by
   intro hpre
   have hv : value.val ≤ 2 ^ 62 - 1 := by
-    obtain ⟨m, hm, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
+    obtain ⟨m, hm, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
     simp only [spec.varint_encode_decode.pre, varint.TlsVarInt.value] at hpre
     rw [hm] at hpre
-    obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hpre
-    have hr' : r = (decide (value.val ≤ m.val) = true) := (ok.inj hr).symm
+    obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp hpre
+    have hr' : r = (decide (value.val ≤ m.val) = true) := by
+      simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, RustM.pure_eq_ok] at hr
+      exact (RustM.ok_injective hr).symm
     simp [hr'] at hp
     omega
   mvcgen [spec.varint_encode_decode, varint.TlsVarInt.serialize_content,
@@ -1206,7 +1204,7 @@ theorem spec.varint_decode_encode.spec.functional_correctness (bytes : Slice Std
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v' n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes v' n3)
     have e : spec.__19.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (v', n3) = tls_codec.prefixCheck bytes (v', n3) := rfl
     rw [e, hb]
@@ -1272,7 +1270,7 @@ theorem spec.vlbytes_decode_encode.spec.functional_correctness (bytes : Slice St
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__21.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1344,7 +1342,7 @@ theorem spec.byte_vec_u8_decode_encode.spec.functional_correctness (bytes : Slic
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__23.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1382,7 +1380,7 @@ theorem spec.byte_vec_u16_encode_decode.spec.functional_correctness (value : tls
     obtain ⟨hpre, happ⟩ := List.append_inj (hm2.symm.trans hm2') (by rw [hbl, hbl])
     have hmm : m = m' := by
       rw [← tls_codec.U16_from_be_bytes_to_be_bytes m, ← tls_codec.U16_from_be_bytes_to_be_bytes m']
-      exact congrArg _ (Subtype.ext hpre)
+      exact congrArg _ (Std.Array.ext _ _ hpre)
     subst hmm
     have hl1 : p.1.vec.val = value.vec.val ∧ p.2.val = [] := by
       have := congrArg List.length happ
@@ -1425,7 +1423,7 @@ theorem spec.byte_vec_u16_decode_encode.spec.functional_correctness (bytes : Sli
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__25.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1504,7 +1502,7 @@ theorem spec.byte_vec_u24_decode_encode.spec.functional_correctness (bytes : Sli
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__27.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1555,7 +1553,7 @@ theorem spec.byte_vec_u32_encode_decode.spec.functional_correctness (value : tls
     obtain ⟨hpre, happ⟩ := List.append_inj (hm2.symm.trans hm2') (by rw [hbl, hbl])
     have hmm : m = m' := by
       rw [← tls_codec.U32_from_be_bytes_to_be_bytes m, ← tls_codec.U32_from_be_bytes_to_be_bytes m']
-      exact congrArg _ (Subtype.ext hpre)
+      exact congrArg _ (Std.Array.ext _ _ hpre)
     subst hmm
     have hl1 : p.1.vec.val = value.vec.val ∧ p.2.val = [] := by
       have := congrArg List.length happ
@@ -1598,7 +1596,7 @@ theorem spec.byte_vec_u32_decode_encode.spec.functional_correctness (bytes : Sli
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__29.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1669,7 +1667,7 @@ theorem spec.vec_u16_decode_encode.spec.functional_correctness (bytes : Slice St
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__31.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1730,7 +1728,7 @@ theorem spec.string_decode_encode.spec.functional_correctness (bytes : Slice Std
     rename_i heq
     rw [core.result.Result.Ok.injEq] at heq
     subst heq
-    obtain ⟨b, hb, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
+    obtain ⟨b, hb, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (tls_codec.prefixCheck_spec bytes val n3)
     have e : spec.__33.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once
         bytes (val, n3) = tls_codec.prefixCheck bytes (val, n3) := rfl
     rw [e, hb]
@@ -1802,7 +1800,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.
   ⦃ ⇓? res =>
     ⌜ (varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.post
         self res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.serialize_len_char self)
   rw [hr]
   apply RustM.ok_spec
@@ -1820,7 +1818,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.s
         bytes res).holds ⌝ ⦄ := by
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -1836,7 +1834,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.s
     show (do let a ← varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes (core.result.Result.Ok p); pure (a = true)).holds
     simp only [varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post]
     mvcgen [core.result.Result.is_ok_and_spec,
-      varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool.call_once,
+      varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntShared0SliceU8Bool.call_once,
       varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len, varint.TlsVarInt.bytes_len_spec,
       varint.TlsVarInt.value]
     · rename_i b h1 h2 t ht rM hle hM i hi i1 hle2 hi1 r hr r5 hsum
@@ -1918,17 +1916,17 @@ theorem varint.TlsVarInt.write_bytes.spec.functional_correctness (self : varint.
   varint.TlsVarInt.write_bytes self buf
   ⦃ ⇓? res =>
     ⌜ (varint.TlsVarInt.write_bytes.post self buf res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.write_bytes_spec self buf)
   rw [hv]
   apply RustM.ok_spec
   obtain ⟨v1, v2⟩ := v
   show (do let a ← varint.TlsVarInt.write_bytes.post self buf (v1, v2); pure (a = true)).holds
   unfold varint.TlsVarInt.write_bytes.post
-  obtain ⟨m, hm, hmv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
+  obtain ⟨m, hm, hmv⟩ := Aeneas.Std.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
   by_cases hle' : self.val ≤ 2 ^ 62 - 1
   · have hngt : ¬ self > m := by scalar_tac
-    simp only [hm, bind_tc_ok, if_neg hngt]
+    simp only [hm, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, if_neg hngt]
     mvcgen [varint.TlsVarInt.bytes_len_spec, core.result.Result.Insts.CoreCmpPartialEqResult.eq,
       core.Usize.Insts.CoreCmpPartialEqUsize, Error.Insts.CoreCmpPartialEqError.eq]
     · rename_i len hlc blen hbl hlt t hx
@@ -1960,7 +1958,7 @@ theorem varint.TlsVarInt.write_bytes.spec.functional_correctness (self : varint.
       rw [hl] at hx
       cases hx
   · have hgt : self > m := by scalar_tac
-    simp only [hm, bind_tc_ok, if_pos hgt]
+    simp only [hm, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, if_pos hgt]
     have hr : v1 = core.result.Result.Err Error.InvalidVectorLength :=
       congrArg Prod.fst (hP.1 (Or.inl (by omega)))
     subst hr
@@ -2026,21 +2024,21 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.functional_correctness (value :
     core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     tls_codec.core.slice.Slice.copy_from_slice_U8_spec, core.num.Usize.from_be_bytes,
     rust_primitives.arithmetic.from_be_bytes_usize]
-  · rename_i bytes0 n hn i1 hi1 hle
+  · rename_i n hn i1 hi1 hle
     have hnb := System.Platform.numBits_eq
-    have : (Std.Array.to_slice_mut bytes0).1.length = 8 := by
-      simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+    have : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.length = 8 := by
+      simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     scalar_tac
-  · rename_i bytes0 n hn i1 hi1 hle p back hp s2 bytes1 hc
+  · rename_i n hn i1 hi1 hle p back hp s2 bytes1 hc
     have hnb := System.Platform.numBits_eq
     obtain ⟨hp1, hp2⟩ := hp
     obtain ⟨hlen, hs2⟩ := hc
-    obtain ⟨vl, hvl⟩ := value
-    obtain ⟨b0, b1, b2, rfl⟩ := List.length_eq_three.mp (by simpa using hvl)
-    have hb0 : bytes0.val = List.replicate 8 0#u8 := rfl
+    obtain ⟨b0, b1, b2, hvl⟩ := List.length_eq_three.mp (show value.val.length = 3 from value.property)
+    have hb0 : (Std.Array.repeat 8#usize 0#u8).val = List.replicate 8 0#u8 := by
+      simp [Std.Array.repeat_val]
     have hl1 : p.1.val.length = 8 - i1.val := by
       rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, hb0]
-    have hl2 : (Std.Array.to_slice (⟨[b0, b1, b2], hvl⟩ : U24)).val.length = 3 := by
+    have hl2 : (Std.Array.to_slice value).val.length = 3 := by
       simp [Std.Array.to_slice]
     have hi5 : i1.val = 5 := by
       rw [hl1, hl2] at hlen
@@ -2048,45 +2046,42 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.functional_correctness (value :
     have hn8 : n.val = 8 := by scalar_tac
     have hnb64 : System.Platform.numBits = 64 := by omega
     have hbytes1 : bytes1.val = [0#u8, 0#u8, 0#u8, 0#u8, 0#u8, b0, b1, b2] := by
-      have e2 : (Std.Array.to_slice_mut bytes0).1.val = bytes0.val := rfl
+      have e2 : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.val = (Std.Array.repeat 8#usize 0#u8).val := rfl
       have e3 : (p.2 s2).val.length = 8 := by
         rw [hp2 s2, List.length_setSlice!, e2, hb0]; simp
       have e1 : bytes1.val = (p.2 s2).val :=
-        Std.Array.from_slice_val bytes0 (p.2 s2) (by rw [e3]; rfl)
+        Std.Array.from_slice_val (Std.Array.repeat 8#usize 0#u8) (p.2 s2) (by rw [e3]; rfl)
       rw [e1, hp2 s2, hs2, hi5, e2, hb0]
-      simp [Std.Array.to_slice]
+      simp [Std.Array.to_slice, hvl]
       rfl
     rw [hbytes1]
     simp only [Usize.Insts.CoreConvertFromU24.from.post]
     mvcgen [U24.to_be_bytes]
-    · rename_i r9 r8 r7 r6 hc6 r5 a6 r4 hc4 r3 a5 r2 a4 r1 hc1 r a3 heq e0 e1 e2
+    · rename_i r9 e0 r8 e1 r7 e2 r6 hc6 r5 a6 r4 hc4 r3 a5 r2 a4 r1 hc1 r a3 heq
       have hv := tls_codec.usize_from_zero5_val b0 b1 b2 hnb64
       obtain ⟨_, he0⟩ := e0
       obtain ⟨_, he1⟩ := e1
       obtain ⟨_, he2⟩ := e2
-      have he0' : r9 = b0 := by simpa using he0
-      have he1' : r8 = b1 := by simpa using he1
-      have he2' : r7 = b2 := by simpa using he2
+      have he0' : r9 = b0 := by simpa [hvl] using he0
+      have he1' : r8 = b1 := by simpa [hvl] using he1
+      have he2' : r7 = b2 := by simpa [hvl] using he2
       subst he0' he1' he2'
       simp only [decide_eq_true_eq]
       scalar_tac
-    · rename_i r9 r8 r7 r6 hc6 r5 a6 r4 hc4 r3 a5 r2 a4 r1 hc1 r a3 heq e0 e1 e2
+    · rename_i r9 e0 r8 e1 r7 e2 r6 hc6 r5 a6 r4 hc4 r3 a5 r2 a4 r1 hc1 r a3 heq
       have hv := tls_codec.usize_from_zero5_val b0 b1 b2 hnb64
       obtain ⟨_, he0⟩ := e0
       obtain ⟨_, he1⟩ := e1
       obtain ⟨_, he2⟩ := e2
-      have he0' : r9 = b0 := by simpa using he0
-      have he1' : r8 = b1 := by simpa using he1
-      have he2' : r7 = b2 := by simpa using he2
+      have he0' : r9 = b0 := by simpa [hvl] using he0
+      have he1' : r8 = b1 := by simpa [hvl] using he1
+      have he2' : r7 = b2 := by simpa [hvl] using he2
       subst he0' he1' he2'
       exfalso
       apply heq
       apply UScalar.eq_of_val_eq
       scalar_tac
-    · exfalso; scalar_tac
-    · exfalso; scalar_tac
-    · exfalso; scalar_tac
-    · exfalso; scalar_tac
+    all_goals (exfalso; have := numBits_eq_64; scalar_tac)
 
 theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.functional_correctness (value : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
@@ -2104,7 +2099,7 @@ theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.functional_correctn
       CoreModels.core.Array.Insts.CoreCmpPartialEqArray.eq_spec]
     · have := numBits_eq_64
       subst_vars
-      simp only [decide_eq_true_eq, ha, Array.make, List.cons.injEq, and_true]
+      simp only [decide_eq_true_eq, ha, Array.make, Array.from_val, List.cons.injEq, and_true]
       clear hok herr
       have : b0.val < 256 := by scalar_tac
       have : b1.val < 256 := by scalar_tac
@@ -2126,7 +2121,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.fu
   ⦃ ⇓? res =>
     ⌜ (ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
         bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (ArrayU8LEN_deserialize_char LEN bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (ArrayU8LEN_deserialize_char LEN bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2134,7 +2129,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.fu
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.call_once]
+      arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENShared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · have hs := core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec core.U8.Insts.CoreCmpPartialEqU8
         (heq := core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec)
@@ -2178,7 +2173,7 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functional
   ⦃ ⇓? res =>
     ⌜ (U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes
         res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2186,7 +2181,7 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functional
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool.call_once]
+      primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8Shared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · intro hget
       refine ⟨_, hget, ?_⟩
@@ -2229,7 +2224,7 @@ theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   ⦃ ⇓? res =>
     ⌜ (U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes
         res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2237,7 +2232,7 @@ theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool.call_once]
+      primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16Shared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · intro hget
       refine ⟨_, hget, ?_⟩
@@ -2280,7 +2275,7 @@ theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   ⦃ ⇓? res =>
     ⌜ (U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes
         res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2288,7 +2283,7 @@ theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool.call_once]
+      primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24Shared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · have hs := core.Slice.Insts.CoreCmpPartialEqSlice.eq_spec core.U8.Insts.CoreCmpPartialEqU8
         (heq := core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec)
@@ -2331,7 +2326,7 @@ theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   ⦃ ⇓? res =>
     ⌜ (U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes
         res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2339,7 +2334,7 @@ theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool.call_once]
+      primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32Shared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · intro hget
       refine ⟨_, hget, ?_⟩
@@ -2382,7 +2377,7 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   ⦃ ⇓? res =>
     ⌜ (U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes
         res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   show (do let a ← U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post bytes v; pure (a = true)).holds
@@ -2390,7 +2385,7 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
   · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
     unfold U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
     mvcgen [core.result.Result.is_ok_and_spec,
-      primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool.call_once]
+      primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64Shared0SliceU8Bool.call_once]
     · intro hr; exfalso; subst hr; simp only [Slice.len] at *; scalar_tac
     · intro hget
       refine ⟨_, hget, ?_⟩
@@ -2429,7 +2424,7 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functiona
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.new.spec.functional_correctness {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU8.new.spec.functional_correctness {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.new vec
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.new.post vec res).holds ⌝ ⦄ := by
@@ -2440,7 +2435,7 @@ theorem tls_vec.TlsVecU8.new.spec.functional_correctness {T : Type} (vec : alloc
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU8.len.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.len.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.len self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.len.post self res).holds ⌝ ⦄ := by
@@ -2448,7 +2443,7 @@ theorem tls_vec.TlsVecU8.len.spec.functional_correctness {T : Type} (self : tls_
   all_goals (try simp only [tls_vec.TlsVecU8.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU8.is_empty.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.is_empty.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.is_empty self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.is_empty.post self res).holds ⌝ ⦄ := by
@@ -2458,7 +2453,7 @@ theorem tls_vec.TlsVecU8.is_empty.spec.functional_correctness {T : Type} (self :
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.TlsVecU8.into_vec.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.into_vec.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.into_vec self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.into_vec.post self res).holds ⌝ ⦄ := by
@@ -2468,7 +2463,7 @@ theorem tls_vec.TlsVecU8.into_vec.spec.functional_correctness {T : Type} (self :
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU8.push.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.push.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T)
   (value : T) :
   (tls_vec.TlsVecU8.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2479,7 +2474,7 @@ theorem tls_vec.TlsVecU8.push.spec.functional_correctness {T : Type} (self : tls
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU8.pop.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T) :
+theorem tls_vec.TlsVecU8.pop.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.pop self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.pop.post self res).holds ⌝ ⦄ := by
@@ -2491,7 +2486,7 @@ theorem tls_vec.TlsVecU8.pop.spec.functional_correctness {T : Type} (self : tls_
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.TlsVecU8.remove.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.remove.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU8.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2505,7 +2500,7 @@ theorem tls_vec.TlsVecU8.remove.spec.functional_correctness {T : Type} (self : t
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.TlsVecU8.get.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU8 T)
+theorem tls_vec.TlsVecU8.get.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU8 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.get self index
@@ -2516,7 +2511,7 @@ theorem tls_vec.TlsVecU8.get.spec.functional_correctness {T : Type} (self : tls_
   subst_vars
   simp [*]
 
-theorem tls_vec.TlsVecU8.len_len.spec.functional_correctness (T : Type) :
+theorem tls_vec.TlsVecU8.len_len.spec.functional_correctness (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.len_len T
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU8.len_len.post T res).holds ⌝ ⦄ := by
@@ -2524,7 +2519,7 @@ theorem tls_vec.TlsVecU8.len_len.spec.functional_correctness (T : Type) :
   all_goals (try simp only [tls_vec.TlsVecU8.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
   (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2533,7 +2528,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_cor
   hax_mvcgen [tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU8.len]
   fc_arith
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T : Type _}
   (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -2543,7 +2538,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functio
   hax_mvcgen [tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU8.len]
   fc_arith
 
-theorem tls_vec.TlsVecU16.new.spec.functional_correctness {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU16.new.spec.functional_correctness {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.new vec
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.new.post vec res).holds ⌝ ⦄ := by
@@ -2554,7 +2549,7 @@ theorem tls_vec.TlsVecU16.new.spec.functional_correctness {T : Type} (vec : allo
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU16.len.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.len.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.len self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.len.post self res).holds ⌝ ⦄ := by
@@ -2562,7 +2557,7 @@ theorem tls_vec.TlsVecU16.len.spec.functional_correctness {T : Type} (self : tls
   all_goals (try simp only [tls_vec.TlsVecU16.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU16.is_empty.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.is_empty.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.is_empty self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.is_empty.post self res).holds ⌝ ⦄ := by
@@ -2572,7 +2567,7 @@ theorem tls_vec.TlsVecU16.is_empty.spec.functional_correctness {T : Type} (self 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.TlsVecU16.into_vec.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.into_vec.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.into_vec self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.into_vec.post self res).holds ⌝ ⦄ := by
@@ -2582,7 +2577,7 @@ theorem tls_vec.TlsVecU16.into_vec.spec.functional_correctness {T : Type} (self 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU16.push.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.push.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T)
   (value : T) :
   (tls_vec.TlsVecU16.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2593,7 +2588,7 @@ theorem tls_vec.TlsVecU16.push.spec.functional_correctness {T : Type} (self : tl
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU16.pop.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T) :
+theorem tls_vec.TlsVecU16.pop.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.pop self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.pop.post self res).holds ⌝ ⦄ := by
@@ -2605,7 +2600,7 @@ theorem tls_vec.TlsVecU16.pop.spec.functional_correctness {T : Type} (self : tls
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.TlsVecU16.remove.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.remove.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU16.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2619,7 +2614,7 @@ theorem tls_vec.TlsVecU16.remove.spec.functional_correctness {T : Type} (self : 
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.TlsVecU16.get.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU16 T)
+theorem tls_vec.TlsVecU16.get.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU16 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.get self index
@@ -2630,7 +2625,7 @@ theorem tls_vec.TlsVecU16.get.spec.functional_correctness {T : Type} (self : tls
   subst_vars
   simp [*]
 
-theorem tls_vec.TlsVecU16.len_len.spec.functional_correctness (T : Type) :
+theorem tls_vec.TlsVecU16.len_len.spec.functional_correctness (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.len_len T
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU16.len_len.post T res).holds ⌝ ⦄ := by
@@ -2638,7 +2633,7 @@ theorem tls_vec.TlsVecU16.len_len.spec.functional_correctness (T : Type) :
   all_goals (try simp only [tls_vec.TlsVecU16.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
   (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2647,7 +2642,8 @@ theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_co
   hax_mvcgen [tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU16.len]
   fc_arith
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -2657,7 +2653,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functi
   hax_mvcgen [tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU16.len]
   fc_arith
 
-theorem tls_vec.TlsVecU24.new.spec.functional_correctness {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU24.new.spec.functional_correctness {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.new vec
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.new.post vec res).holds ⌝ ⦄ := by
@@ -2668,7 +2664,7 @@ theorem tls_vec.TlsVecU24.new.spec.functional_correctness {T : Type} (vec : allo
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU24.len.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.len.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.len self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.len.post self res).holds ⌝ ⦄ := by
@@ -2676,7 +2672,7 @@ theorem tls_vec.TlsVecU24.len.spec.functional_correctness {T : Type} (self : tls
   all_goals (try simp only [tls_vec.TlsVecU24.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU24.is_empty.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.is_empty.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.is_empty self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.is_empty.post self res).holds ⌝ ⦄ := by
@@ -2686,7 +2682,7 @@ theorem tls_vec.TlsVecU24.is_empty.spec.functional_correctness {T : Type} (self 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.TlsVecU24.into_vec.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.into_vec.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.into_vec self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.into_vec.post self res).holds ⌝ ⦄ := by
@@ -2696,7 +2692,7 @@ theorem tls_vec.TlsVecU24.into_vec.spec.functional_correctness {T : Type} (self 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU24.push.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.push.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T)
   (value : T) :
   (tls_vec.TlsVecU24.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2707,7 +2703,7 @@ theorem tls_vec.TlsVecU24.push.spec.functional_correctness {T : Type} (self : tl
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU24.pop.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T) :
+theorem tls_vec.TlsVecU24.pop.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.pop self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.pop.post self res).holds ⌝ ⦄ := by
@@ -2719,7 +2715,7 @@ theorem tls_vec.TlsVecU24.pop.spec.functional_correctness {T : Type} (self : tls
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.TlsVecU24.remove.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.remove.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU24.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2733,7 +2729,7 @@ theorem tls_vec.TlsVecU24.remove.spec.functional_correctness {T : Type} (self : 
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.TlsVecU24.get.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU24 T)
+theorem tls_vec.TlsVecU24.get.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU24 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.get self index
@@ -2744,7 +2740,7 @@ theorem tls_vec.TlsVecU24.get.spec.functional_correctness {T : Type} (self : tls
   subst_vars
   simp [*]
 
-theorem tls_vec.TlsVecU24.len_len.spec.functional_correctness (T : Type) :
+theorem tls_vec.TlsVecU24.len_len.spec.functional_correctness (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.len_len T
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU24.len_len.post T res).holds ⌝ ⦄ := by
@@ -2752,7 +2748,7 @@ theorem tls_vec.TlsVecU24.len_len.spec.functional_correctness (T : Type) :
   all_goals (try simp only [tls_vec.TlsVecU24.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
   (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2761,7 +2757,8 @@ theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_co
   hax_mvcgen [tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU24.len]
   fc_arith
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -2771,7 +2768,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functi
   hax_mvcgen [tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.TlsVecU24.len]
   fc_arith
 
-theorem tls_vec.TlsVecU32.new.spec.functional_correctness {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU32.new.spec.functional_correctness {T : Type _} (vec : alloc.vec.Vec T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.new vec
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.new.post vec res).holds ⌝ ⦄ := by
@@ -2782,7 +2779,7 @@ theorem tls_vec.TlsVecU32.new.spec.functional_correctness {T : Type} (vec : allo
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.TlsVecU32.len.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.len.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.len self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.len.post self res).holds ⌝ ⦄ := by
@@ -2790,7 +2787,7 @@ theorem tls_vec.TlsVecU32.len.spec.functional_correctness {T : Type} (self : tls
   all_goals (try simp only [tls_vec.TlsVecU32.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU32.is_empty.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.is_empty.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.is_empty self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.is_empty.post self res).holds ⌝ ⦄ := by
@@ -2800,7 +2797,7 @@ theorem tls_vec.TlsVecU32.is_empty.spec.functional_correctness {T : Type} (self 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.TlsVecU32.into_vec.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.into_vec.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.into_vec self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.into_vec.post self res).holds ⌝ ⦄ := by
@@ -2810,7 +2807,7 @@ theorem tls_vec.TlsVecU32.into_vec.spec.functional_correctness {T : Type} (self 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU32.push.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.push.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T)
   (value : T) :
   (tls_vec.TlsVecU32.push.pre self value).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2821,7 +2818,7 @@ theorem tls_vec.TlsVecU32.push.spec.functional_correctness {T : Type} (self : tl
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.TlsVecU32.pop.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T) :
+theorem tls_vec.TlsVecU32.pop.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.pop self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.pop.post self res).holds ⌝ ⦄ := by
@@ -2833,7 +2830,7 @@ theorem tls_vec.TlsVecU32.pop.spec.functional_correctness {T : Type} (self : tls
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.TlsVecU32.remove.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.remove.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T)
   (index : Std.Usize) :
   (tls_vec.TlsVecU32.remove.pre self index).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2847,7 +2844,7 @@ theorem tls_vec.TlsVecU32.remove.spec.functional_correctness {T : Type} (self : 
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.TlsVecU32.get.spec.functional_correctness {T : Type} (self : tls_vec.TlsVecU32 T)
+theorem tls_vec.TlsVecU32.get.spec.functional_correctness {T : Type _} (self : tls_vec.TlsVecU32 T)
   (index : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.get self index
@@ -2858,7 +2855,7 @@ theorem tls_vec.TlsVecU32.get.spec.functional_correctness {T : Type} (self : tls
   subst_vars
   simp [*]
 
-theorem tls_vec.TlsVecU32.len_len.spec.functional_correctness (T : Type) :
+theorem tls_vec.TlsVecU32.len_len.spec.functional_correctness (T : Type _) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.len_len T
   ⦃ ⇓? res => ⌜ (tls_vec.TlsVecU32.len_len.post T res).holds ⌝ ⦄ := by
@@ -2866,7 +2863,7 @@ theorem tls_vec.TlsVecU32.len_len.spec.functional_correctness (T : Type) :
   all_goals (try simp only [tls_vec.TlsVecU32.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
   (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.pre self i).holds →
   ⦃ ⌜ True ⌝ ⦄
@@ -2875,7 +2872,8 @@ theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_co
   hax_mvcgen [tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.TlsVecU32.len]
   fc_arith
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness {T :
+                                                                   Type _}
   (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre self
   i).holds →
@@ -3058,7 +3056,7 @@ theorem tls_vec.TlsByteVecU8.deserialize_bytes_bytes.spec.functional_correctness
     ⌜ (tls_vec.TlsByteVecU8.deserialize_bytes_bytes.post bytes res).holds ⌝ ⦄ := by
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU8.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -3074,7 +3072,7 @@ theorem tls_vec.TlsByteVecU8.deserialize_bytes_bytes.spec.functional_correctness
     show (do let a ← tls_vec.TlsByteVecU8.deserialize_bytes_bytes.post bytes (core.result.Result.Ok p); pure (a = true)).holds
     simp only [tls_vec.TlsByteVecU8.deserialize_bytes_bytes.post]
     mvcgen [core.result.Result.is_ok_and_spec,
-      tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool.call_once]
+      tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8Shared0SliceU8Bool.call_once]
     · rename_i b h1 h2 t ht rM hM r2 hle rl hrl r3 hsum rb hb
       have htp := core.result.Result.Ok.inj ht
       subst htp
@@ -3267,7 +3265,7 @@ theorem tls_vec.TlsByteVecU16.deserialize_bytes_bytes.spec.functional_correctnes
     ⌜ (tls_vec.TlsByteVecU16.deserialize_bytes_bytes.post bytes res).holds ⌝ ⦄ := by
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU16.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -3283,7 +3281,7 @@ theorem tls_vec.TlsByteVecU16.deserialize_bytes_bytes.spec.functional_correctnes
     show (do let a ← tls_vec.TlsByteVecU16.deserialize_bytes_bytes.post bytes (core.result.Result.Ok p); pure (a = true)).holds
     simp only [tls_vec.TlsByteVecU16.deserialize_bytes_bytes.post]
     mvcgen [core.result.Result.is_ok_and_spec,
-      tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool.call_once]
+      tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16Shared0SliceU8Bool.call_once]
     · rename_i b h1 h2 t ht rM hM r2 hle rl hrl r3 hsum rb hb
       have htp := core.result.Result.Ok.inj ht
       subst htp
@@ -3488,7 +3486,7 @@ theorem tls_vec.TlsByteVecU24.deserialize_bytes_bytes.spec.functional_correctnes
     show (do let a ← tls_vec.TlsByteVecU24.deserialize_bytes_bytes.post bytes (core.result.Result.Ok p); pure (a = true)).holds
     simp only [tls_vec.TlsByteVecU24.deserialize_bytes_bytes.post]
     mvcgen [core.result.Result.is_ok_and_spec,
-      tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool.call_once]
+      tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24Shared0SliceU8Bool.call_once]
     · rename_i b h1 h2 t ht rM hM r2 hle rl hrl r3 hsum rb hb
       have htp := core.result.Result.Ok.inj ht
       subst htp
@@ -3681,7 +3679,7 @@ theorem tls_vec.TlsByteVecU32.deserialize_bytes_bytes.spec.functional_correctnes
     ⌜ (tls_vec.TlsByteVecU32.deserialize_bytes_bytes.post bytes res).holds ⌝ ⦄ := by
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU32.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -3697,7 +3695,7 @@ theorem tls_vec.TlsByteVecU32.deserialize_bytes_bytes.spec.functional_correctnes
     show (do let a ← tls_vec.TlsByteVecU32.deserialize_bytes_bytes.post bytes (core.result.Result.Ok p); pure (a = true)).holds
     simp only [tls_vec.TlsByteVecU32.deserialize_bytes_bytes.post]
     mvcgen [core.result.Result.is_ok_and_spec,
-      tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool.call_once]
+      tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32Shared0SliceU8Bool.call_once]
     · rename_i b h1 h2 t ht rM hM r2 hle rl hrl r3 hsum rb hb
       have htp := core.result.Result.Ok.inj ht
       subst htp
@@ -3842,7 +3840,7 @@ theorem tls_vec.TlsByteSliceU32.tls_serialized_byte_length.spec.functional_corre
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem tls_vec.TlsSliceU8.as_slice.spec.functional_correctness {T : Type} (self : tls_vec.TlsSliceU8 T) :
+theorem tls_vec.TlsSliceU8.as_slice.spec.functional_correctness {T : Type _} (self : tls_vec.TlsSliceU8 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU8.as_slice self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsSliceU8.as_slice.post self res).holds ⌝ ⦄ := by
@@ -3850,7 +3848,8 @@ theorem tls_vec.TlsSliceU8.as_slice.spec.functional_correctness {T : Type} (self
   all_goals (try simp only [tls_vec.TlsSliceU8.as_slice.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU16.as_slice.spec.functional_correctness {T : Type} (self : tls_vec.TlsSliceU16 T) :
+theorem tls_vec.TlsSliceU16.as_slice.spec.functional_correctness {T : Type _}
+  (self : tls_vec.TlsSliceU16 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU16.as_slice self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsSliceU16.as_slice.post self res).holds ⌝ ⦄ := by
@@ -3858,7 +3857,8 @@ theorem tls_vec.TlsSliceU16.as_slice.spec.functional_correctness {T : Type} (sel
   all_goals (try simp only [tls_vec.TlsSliceU16.as_slice.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU24.as_slice.spec.functional_correctness {T : Type} (self : tls_vec.TlsSliceU24 T) :
+theorem tls_vec.TlsSliceU24.as_slice.spec.functional_correctness {T : Type _}
+  (self : tls_vec.TlsSliceU24 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU24.as_slice self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsSliceU24.as_slice.post self res).holds ⌝ ⦄ := by
@@ -3866,7 +3866,8 @@ theorem tls_vec.TlsSliceU24.as_slice.spec.functional_correctness {T : Type} (sel
   all_goals (try simp only [tls_vec.TlsSliceU24.as_slice.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU32.as_slice.spec.functional_correctness {T : Type} (self : tls_vec.TlsSliceU32 T) :
+theorem tls_vec.TlsSliceU32.as_slice.spec.functional_correctness {T : Type _}
+  (self : tls_vec.TlsSliceU32 T) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU32.as_slice self
   ⦃ ⇓? res => ⌜ (tls_vec.TlsSliceU32.as_slice.post self res).holds ⌝ ⦄ := by
@@ -3881,7 +3882,7 @@ Function specs over trait instances. Since the trait-level specs, the instance a
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.functional_correctness    {T : Type} (SerializeBytesInst : SerializeBytes T)
+theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.functional_correctness    {T : Type _} (SerializeBytesInst : SerializeBytes T)
   (self : core.option.Option T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3890,7 +3891,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spe
   ⦃ ⇓? res =>
     ⌜ (core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.post
         SerializeBytesInst self res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP, hN⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP, hN⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Option_serialize_char SerializeBytesInst SerializeBytesInstLawful self)
   rw [hv]
   apply RustM.ok_spec
@@ -3919,7 +3920,6 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spe
         exfalso
         apply hne
         simp [Std.Array.to_slice, ho]
-        rfl
       · subst_vars
         simp_all
     · cases he
@@ -3942,7 +3942,9 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spe
           core.result.Result.is_err,
           primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once]
         have hsz := Option_size_some SerializeBytesInst.SizeInst _ _ hn
-        mvcgen [core.option.Option.is_some_spec, core.slice.Slice.first_spec, Option_U8_eq_spec, hsz]
+        mvcgen [core.option.Option.is_some_spec, core.slice.Slice.first_spec, Option_U8_eq_spec, hsz,
+          core.option.Option.is_some_and,
+          primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0U8Bool.call_once]
         · exfalso
           subst_vars
           simp_all
@@ -3958,11 +3960,9 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spe
           apply UScalar.eq_of_val_eq
           simp [h1, Slice.len, ho, hw]
           omega
-        · exfalso
-          subst_vars
-          simp_all
+        all_goals (exfalso; subst_vars; simp_all)
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functional_correctness    {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.functional_correctness    {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -3971,7 +3971,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   ⦃ ⇓? res =>
     ⌜ (core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post
         DeserializeBytesInst bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Option_deserialize_char DeserializeBytesInst DeserializeBytesInstLawful bytes)
   rw [hv]
   apply RustM.ok_spec
@@ -3990,11 +3990,11 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
     · unfold RustM.holds
       simp only [core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post,
         core.result.Result.is_err, core.result.Result.is_ok_and,
-        primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.call_once]
+        primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionShared0SliceU8Bool.call_once]
       have h1 : (lenAddVal 1#usize 0#usize).val = 1 := by
         rw [lenAddVal_val _ _ (by scalar_tac)]
         rfl
-      obtain ⟨fv, hf, hfv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.slice.Slice.first_spec bytes)
+      obtain ⟨fv, hf, hfv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.slice.Slice.first_spec bytes)
       have hh : bytes.val.head? = some 0#u8 := by rw [hl]; rfl
       rw [hfv, hh] at hf
       have hlen : ∀ (s : Slice Std.U8), core.slice.Slice.len s = ok (Slice.len s) := by
@@ -4020,14 +4020,14 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
     · unfold RustM.holds
       simp only [core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.post,
         core.result.Result.is_err, core.result.Result.is_ok_and,
-        primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.call_once]
+        primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionShared0SliceU8Bool.call_once]
       have h1 : (lenAddVal 1#usize n).val = 1 + n.val := by
         have hb' := hb
         rw [hl] at hb'
         simp only [List.length_cons] at hb'
         rw [lenAddVal_val _ _ (by scalar_tac)]
         simp
-      obtain ⟨fv, hf, hfv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.slice.Slice.first_spec bytes)
+      obtain ⟨fv, hf, hfv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.slice.Slice.first_spec bytes)
       have hh : bytes.val.head? = some 1#u8 := by rw [hl]; rfl
       rw [hfv, hh] at hf
       have hlen : ∀ (s : Slice Std.U8), core.slice.Slice.len s = ok (Slice.len s) := by
@@ -4056,7 +4056,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.from_slice.spec.functional_correctness {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU8.from_slice.spec.functional_correctness {T : Type _} (corecloneCloneInst :
                                   core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4069,7 +4069,7 @@ theorem tls_vec.TlsVecU8.from_slice.spec.functional_correctness {T : Type} (core
   all_goals (try (intros; mvcgen))
   all_goals (try scalar_tac)
 
-theorem tls_vec.TlsVecU8.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU8.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                             Serialize T)
   (self : tls_vec.TlsVecU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -4084,7 +4084,7 @@ theorem tls_vec.TlsVecU8.assert_written_bytes.spec.functional_correctness {T : T
   all_goals (try simp only [tls_vec.TlsVecU8.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU8.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU8.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU8.tls_serialized_length SizeInst self
@@ -4092,7 +4092,7 @@ theorem tls_vec.TlsVecU8.tls_serialized_length.spec.functional_correctness {T : 
     ⌜ (tls_vec.TlsVecU8.tls_serialized_length.post SizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsVecU8.deserialize_bytes.spec.functional_correctness {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU8.deserialize_bytes.spec.functional_correctness {T : Type _} (DeserializeBytesInst :
                                          DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -4103,7 +4103,7 @@ theorem tls_vec.TlsVecU8.deserialize_bytes.spec.functional_correctness {T : Type
         res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU8.deserialize_bytes_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU16.from_slice.spec.functional_correctness {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU16.from_slice.spec.functional_correctness {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4116,7 +4116,7 @@ theorem tls_vec.TlsVecU16.from_slice.spec.functional_correctness {T : Type} (cor
   all_goals (try (intros; mvcgen))
   all_goals (try scalar_tac)
 
-theorem tls_vec.TlsVecU16.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU16.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -4131,7 +4131,7 @@ theorem tls_vec.TlsVecU16.assert_written_bytes.spec.functional_correctness {T : 
   all_goals (try simp only [tls_vec.TlsVecU16.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU16.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU16.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU16.tls_serialized_length SizeInst self
@@ -4139,7 +4139,7 @@ theorem tls_vec.TlsVecU16.tls_serialized_length.spec.functional_correctness {T :
     ⌜ (tls_vec.TlsVecU16.tls_serialized_length.post SizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsVecU16.deserialize_bytes.spec.functional_correctness {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU16.deserialize_bytes.spec.functional_correctness {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -4150,7 +4150,7 @@ theorem tls_vec.TlsVecU16.deserialize_bytes.spec.functional_correctness {T : Typ
         res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU16.deserialize_bytes_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU24.from_slice.spec.functional_correctness {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU24.from_slice.spec.functional_correctness {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4163,7 +4163,7 @@ theorem tls_vec.TlsVecU24.from_slice.spec.functional_correctness {T : Type} (cor
   all_goals (try (intros; mvcgen))
   all_goals (try scalar_tac)
 
-theorem tls_vec.TlsVecU24.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU24.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -4178,7 +4178,7 @@ theorem tls_vec.TlsVecU24.assert_written_bytes.spec.functional_correctness {T : 
   all_goals (try simp only [tls_vec.TlsVecU24.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU24.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU24.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU24.tls_serialized_length SizeInst self
@@ -4186,7 +4186,7 @@ theorem tls_vec.TlsVecU24.tls_serialized_length.spec.functional_correctness {T :
     ⌜ (tls_vec.TlsVecU24.tls_serialized_length.post SizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsVecU24.deserialize_bytes.spec.functional_correctness {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU24.deserialize_bytes.spec.functional_correctness {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -4197,7 +4197,7 @@ theorem tls_vec.TlsVecU24.deserialize_bytes.spec.functional_correctness {T : Typ
         res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU24.deserialize_bytes_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU32.from_slice.spec.functional_correctness {T : Type} (corecloneCloneInst :
+theorem tls_vec.TlsVecU32.from_slice.spec.functional_correctness {T : Type _} (corecloneCloneInst :
                                    core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4210,7 +4210,7 @@ theorem tls_vec.TlsVecU32.from_slice.spec.functional_correctness {T : Type} (cor
   all_goals (try (intros; mvcgen))
   all_goals (try scalar_tac)
 
-theorem tls_vec.TlsVecU32.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsVecU32.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                              Serialize T)
   (self : tls_vec.TlsVecU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -4225,7 +4225,7 @@ theorem tls_vec.TlsVecU32.assert_written_bytes.spec.functional_correctness {T : 
   all_goals (try simp only [tls_vec.TlsVecU32.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsVecU32.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsVecU32.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size T)
   (self : tls_vec.TlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsVecU32.tls_serialized_length SizeInst self
@@ -4233,7 +4233,7 @@ theorem tls_vec.TlsVecU32.tls_serialized_length.spec.functional_correctness {T :
     ⌜ (tls_vec.TlsVecU32.tls_serialized_length.post SizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsVecU32.deserialize_bytes.spec.functional_correctness {T : Type} (DeserializeBytesInst :
+theorem tls_vec.TlsVecU32.deserialize_bytes.spec.functional_correctness {T : Type _} (DeserializeBytesInst :
                                           DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) :
@@ -4255,7 +4255,8 @@ theorem tls_vec.TlsByteVecU8.from_slice.spec.functional_correctness (corecloneCl
   ⦃ ⇓? res =>
     ⌜ (tls_vec.TlsByteVecU8.from_slice.post corecloneCloneU8Inst slice
         res).holds ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU8.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU8.from_slice, h]
   all_goals (try simp only [tls_vec.TlsByteVecU8.from_slice.post])
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
@@ -4270,7 +4271,8 @@ theorem tls_vec.TlsByteVecU16.from_slice.spec.functional_correctness (corecloneC
   ⦃ ⇓? res =>
     ⌜ (tls_vec.TlsByteVecU16.from_slice.post corecloneCloneU8Inst slice
         res).holds ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU16.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU16.from_slice, h]
   all_goals (try simp only [tls_vec.TlsByteVecU16.from_slice.post])
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
@@ -4285,7 +4287,8 @@ theorem tls_vec.TlsByteVecU24.from_slice.spec.functional_correctness (corecloneC
   ⦃ ⇓? res =>
     ⌜ (tls_vec.TlsByteVecU24.from_slice.post corecloneCloneU8Inst slice
         res).holds ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU24.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU24.from_slice, h]
   all_goals (try simp only [tls_vec.TlsByteVecU24.from_slice.post])
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
@@ -4300,14 +4303,15 @@ theorem tls_vec.TlsByteVecU32.from_slice.spec.functional_correctness (corecloneC
   ⦃ ⇓? res =>
     ⌜ (tls_vec.TlsByteVecU32.from_slice.post corecloneCloneU8Inst slice
         res).holds ⌝ ⦄ := by
-  mvcgen [tls_vec.TlsByteVecU32.from_slice]
+  have h := alloc.slice.Slice.to_vec_len corecloneCloneU8Inst corecloneCloneU8InstLawful.clone_spec slice
+  mvcgen [tls_vec.TlsByteVecU32.from_slice, h]
   all_goals (try simp only [tls_vec.TlsByteVecU32.from_slice.post])
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
 
 /-! ### tls_vec: SecretTlsVecU* -/
 
-theorem tls_vec.SecretTlsVecU8.new.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.new.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4321,7 +4325,7 @@ theorem tls_vec.SecretTlsVecU8.new.spec.functional_correctness {T : Type} (zeroi
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.from_slice.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.from_slice.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T) (corecloneCloneInst
                                         : core.clone.Clone T) (slice : Slice T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
@@ -4337,7 +4341,7 @@ theorem tls_vec.SecretTlsVecU8.from_slice.spec.functional_correctness {T : Type}
   all_goals (try (intros; mvcgen))
   all_goals (try scalar_tac)
 
-theorem tls_vec.SecretTlsVecU8.len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4349,7 +4353,7 @@ theorem tls_vec.SecretTlsVecU8.len.spec.functional_correctness {T : Type} (zeroi
   all_goals (try simp only [tls_vec.SecretTlsVecU8.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU8.is_empty.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.is_empty.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4364,7 +4368,7 @@ theorem tls_vec.SecretTlsVecU8.is_empty.spec.functional_correctness {T : Type} (
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.into_vec.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.into_vec.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4379,7 +4383,7 @@ theorem tls_vec.SecretTlsVecU8.into_vec.spec.functional_correctness {T : Type} (
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU8.push.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.push.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4394,7 +4398,7 @@ theorem tls_vec.SecretTlsVecU8.push.spec.functional_correctness {T : Type} (zero
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU8.pop.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.pop.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4410,7 +4414,7 @@ theorem tls_vec.SecretTlsVecU8.pop.spec.functional_correctness {T : Type} (zeroi
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.SecretTlsVecU8.remove.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.remove.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                     zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4427,7 +4431,7 @@ theorem tls_vec.SecretTlsVecU8.remove.spec.functional_correctness {T : Type} (ze
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.SecretTlsVecU8.get.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.get.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                  zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4442,7 +4446,7 @@ theorem tls_vec.SecretTlsVecU8.get.spec.functional_correctness {T : Type} (zeroi
   subst_vars
   simp [*]
 
-theorem tls_vec.SecretTlsVecU8.len_len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU8.len_len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4453,7 +4457,7 @@ theorem tls_vec.SecretTlsVecU8.len_len.spec.functional_correctness {T : Type} (z
   all_goals (try simp only [tls_vec.SecretTlsVecU8.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
                                                                  (zeroizeZeroizeInst
                                                                  :
                                                                  zeroize.Zeroize
@@ -4469,7 +4473,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.function
   hax_mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU8.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -4481,8 +4485,8 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.f
   hax_mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU8.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
-                                                  Serialize T)
+theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst
+                                                  : Serialize T)
                                                   (zeroizeZeroizeInst :
                                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (tls_serialized_len : Std.Usize)
@@ -4499,9 +4503,9 @@ theorem tls_vec.SecretTlsVecU8.assert_written_bytes.spec.functional_correctness 
   all_goals (try simp only [tls_vec.SecretTlsVecU8.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size
-                                                   T) (zeroizeZeroizeInst :
-                                                   zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst :
+                                                   Size T) (zeroizeZeroizeInst
+                                                   : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4511,7 +4515,7 @@ theorem tls_vec.SecretTlsVecU8.tls_serialized_length.spec.functional_correctness
         zeroizeZeroizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.functional_correctness {T : Type _}
                                                (DeserializeBytesInst :
                                                DeserializeBytes T)
                                                (zeroizeZeroizeInst :
@@ -4527,7 +4531,7 @@ theorem tls_vec.SecretTlsVecU8.deserialize_bytes.spec.functional_correctness {T 
         zeroizeZeroizeInst bytes res).holds ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU8.deserialize_bytes_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU16.new.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.new.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4541,7 +4545,7 @@ theorem tls_vec.SecretTlsVecU16.new.spec.functional_correctness {T : Type} (zero
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.from_slice.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.from_slice.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -4559,7 +4563,7 @@ theorem tls_vec.SecretTlsVecU16.from_slice.spec.functional_correctness {T : Type
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
 
-theorem tls_vec.SecretTlsVecU16.len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4571,7 +4575,7 @@ theorem tls_vec.SecretTlsVecU16.len.spec.functional_correctness {T : Type} (zero
   all_goals (try simp only [tls_vec.SecretTlsVecU16.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU16.is_empty.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.is_empty.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4586,7 +4590,7 @@ theorem tls_vec.SecretTlsVecU16.is_empty.spec.functional_correctness {T : Type} 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.into_vec.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.into_vec.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4601,7 +4605,7 @@ theorem tls_vec.SecretTlsVecU16.into_vec.spec.functional_correctness {T : Type} 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU16.push.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.push.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4616,7 +4620,7 @@ theorem tls_vec.SecretTlsVecU16.push.spec.functional_correctness {T : Type} (zer
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU16.pop.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.pop.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4632,7 +4636,7 @@ theorem tls_vec.SecretTlsVecU16.pop.spec.functional_correctness {T : Type} (zero
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.SecretTlsVecU16.remove.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.remove.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4649,7 +4653,7 @@ theorem tls_vec.SecretTlsVecU16.remove.spec.functional_correctness {T : Type} (z
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.SecretTlsVecU16.get.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.get.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4664,7 +4668,7 @@ theorem tls_vec.SecretTlsVecU16.get.spec.functional_correctness {T : Type} (zero
   subst_vars
   simp [*]
 
-theorem tls_vec.SecretTlsVecU16.len_len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU16.len_len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4675,7 +4679,7 @@ theorem tls_vec.SecretTlsVecU16.len_len.spec.functional_correctness {T : Type} (
   all_goals (try simp only [tls_vec.SecretTlsVecU16.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -4691,7 +4695,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.functio
   hax_mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU16.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -4703,8 +4707,8 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU16.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (tls_serialized_len : Std.Usize)
@@ -4721,7 +4725,7 @@ theorem tls_vec.SecretTlsVecU16.assert_written_bytes.spec.functional_correctness
   all_goals (try simp only [tls_vec.SecretTlsVecU16.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -4734,7 +4738,7 @@ theorem tls_vec.SecretTlsVecU16.tls_serialized_length.spec.functional_correctnes
         zeroizeZeroizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.functional_correctness {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -4750,7 +4754,7 @@ theorem tls_vec.SecretTlsVecU16.deserialize_bytes.spec.functional_correctness {T
         zeroizeZeroizeInst bytes res).holds ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU16.deserialize_bytes_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU24.new.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.new.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4764,7 +4768,7 @@ theorem tls_vec.SecretTlsVecU24.new.spec.functional_correctness {T : Type} (zero
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.from_slice.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.from_slice.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -4782,7 +4786,7 @@ theorem tls_vec.SecretTlsVecU24.from_slice.spec.functional_correctness {T : Type
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
 
-theorem tls_vec.SecretTlsVecU24.len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4794,7 +4798,7 @@ theorem tls_vec.SecretTlsVecU24.len.spec.functional_correctness {T : Type} (zero
   all_goals (try simp only [tls_vec.SecretTlsVecU24.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU24.is_empty.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.is_empty.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4809,7 +4813,7 @@ theorem tls_vec.SecretTlsVecU24.is_empty.spec.functional_correctness {T : Type} 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.into_vec.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.into_vec.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4824,7 +4828,7 @@ theorem tls_vec.SecretTlsVecU24.into_vec.spec.functional_correctness {T : Type} 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU24.push.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.push.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4839,7 +4843,7 @@ theorem tls_vec.SecretTlsVecU24.push.spec.functional_correctness {T : Type} (zer
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU24.pop.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.pop.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4855,7 +4859,7 @@ theorem tls_vec.SecretTlsVecU24.pop.spec.functional_correctness {T : Type} (zero
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.SecretTlsVecU24.remove.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.remove.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4872,7 +4876,7 @@ theorem tls_vec.SecretTlsVecU24.remove.spec.functional_correctness {T : Type} (z
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.SecretTlsVecU24.get.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.get.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -4887,7 +4891,7 @@ theorem tls_vec.SecretTlsVecU24.get.spec.functional_correctness {T : Type} (zero
   subst_vars
   simp [*]
 
-theorem tls_vec.SecretTlsVecU24.len_len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU24.len_len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4898,7 +4902,7 @@ theorem tls_vec.SecretTlsVecU24.len_len.spec.functional_correctness {T : Type} (
   all_goals (try simp only [tls_vec.SecretTlsVecU24.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -4914,7 +4918,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.functio
   hax_mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU24.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -4926,8 +4930,8 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU24.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (tls_serialized_len : Std.Usize)
@@ -4944,7 +4948,7 @@ theorem tls_vec.SecretTlsVecU24.assert_written_bytes.spec.functional_correctness
   all_goals (try simp only [tls_vec.SecretTlsVecU24.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -4957,7 +4961,7 @@ theorem tls_vec.SecretTlsVecU24.tls_serialized_length.spec.functional_correctnes
         zeroizeZeroizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.functional_correctness {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -4973,7 +4977,7 @@ theorem tls_vec.SecretTlsVecU24.deserialize_bytes.spec.functional_correctness {T
         zeroizeZeroizeInst bytes res).holds ⌝ ⦄ := by
   exact tls_vec.SecretTlsVecU24.deserialize_bytes_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.SecretTlsVecU32.new.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.new.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T) (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -4987,7 +4991,7 @@ theorem tls_vec.SecretTlsVecU32.new.spec.functional_correctness {T : Type} (zero
   simp_all [Slice.len]
   scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.from_slice.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.from_slice.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T) (corecloneCloneInst
                                          : core.clone.Clone T)
   (slice : Slice T)
@@ -5005,7 +5009,7 @@ theorem tls_vec.SecretTlsVecU32.from_slice.spec.functional_correctness {T : Type
   all_goals (try mvcgen)
   all_goals (try scalar_tac)
 
-theorem tls_vec.SecretTlsVecU32.len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5017,7 +5021,7 @@ theorem tls_vec.SecretTlsVecU32.len.spec.functional_correctness {T : Type} (zero
   all_goals (try simp only [tls_vec.SecretTlsVecU32.len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU32.is_empty.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.is_empty.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5032,7 +5036,7 @@ theorem tls_vec.SecretTlsVecU32.is_empty.spec.functional_correctness {T : Type} 
   simp_all [Slice.len]
   constructor <;> intro h <;> scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.into_vec.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.into_vec.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5047,7 +5051,7 @@ theorem tls_vec.SecretTlsVecU32.into_vec.spec.functional_correctness {T : Type} 
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU32.push.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.push.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5062,7 +5066,7 @@ theorem tls_vec.SecretTlsVecU32.push.spec.functional_correctness {T : Type} (zer
   all_goals (try (intros; mvcgen))
   fc_arith
 
-theorem tls_vec.SecretTlsVecU32.pop.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.pop.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5078,7 +5082,7 @@ theorem tls_vec.SecretTlsVecU32.pop.spec.functional_correctness {T : Type} (zero
   all_goals (try split_ifs at *)
   all_goals scalar_tac
 
-theorem tls_vec.SecretTlsVecU32.remove.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.remove.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                      zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5095,7 +5099,7 @@ theorem tls_vec.SecretTlsVecU32.remove.spec.functional_correctness {T : Type} (z
   all_goals (have hl := @List.length_eraseIdx _ self.vec.val index.val
              split at hl <;> scalar_tac)
 
-theorem tls_vec.SecretTlsVecU32.get.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.get.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                   zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -5110,7 +5114,7 @@ theorem tls_vec.SecretTlsVecU32.get.spec.functional_correctness {T : Type} (zero
   subst_vars
   simp [*]
 
-theorem tls_vec.SecretTlsVecU32.len_len.spec.functional_correctness {T : Type} (zeroizeZeroizeInst :
+theorem tls_vec.SecretTlsVecU32.len_len.spec.functional_correctness {T : Type _} (zeroizeZeroizeInst :
                                       zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5121,7 +5125,7 @@ theorem tls_vec.SecretTlsVecU32.len_len.spec.functional_correctness {T : Type} (
   all_goals (try simp only [tls_vec.SecretTlsVecU32.len_len.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functional_correctness {T : Type _}
                                                                   (zeroizeZeroizeInst
                                                                   :
                                                                   zeroize.Zeroize
@@ -5137,7 +5141,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.functio
   hax_mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index, tls_vec.SecretTlsVecU32.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness    {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.pre
@@ -5149,8 +5153,8 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.
   hax_mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut, tls_vec.SecretTlsVecU32.len]
   fc_arith
 
-theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
-                                                   Serialize T)
+theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst
+                                                   : Serialize T)
                                                    (zeroizeZeroizeInst :
                                                    zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (tls_serialized_len : Std.Usize)
@@ -5167,7 +5171,7 @@ theorem tls_vec.SecretTlsVecU32.assert_written_bytes.spec.functional_correctness
   all_goals (try simp only [tls_vec.SecretTlsVecU32.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst :
+theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst :
                                                     Size T) (zeroizeZeroizeInst
                                                     : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -5180,7 +5184,7 @@ theorem tls_vec.SecretTlsVecU32.tls_serialized_length.spec.functional_correctnes
         zeroizeZeroizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.functional_correctness {T : Type}
+theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.functional_correctness {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
                                                 (zeroizeZeroizeInst :
@@ -5198,15 +5202,16 @@ theorem tls_vec.SecretTlsVecU32.deserialize_bytes.spec.functional_correctness {T
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem tls_vec.TlsSliceU8.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
-  (self : tls_vec.TlsSliceU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem tls_vec.TlsSliceU8.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size
+                                               T) (self : tls_vec.TlsSliceU8 T)
+  (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU8.tls_serialized_length SizeInst self
   ⦃ ⇓? res =>
     ⌜ (tls_vec.TlsSliceU8.tls_serialized_length.post SizeInst self res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                               Serialize T)
   (self : tls_vec.TlsSliceU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -5221,7 +5226,8 @@ theorem tls_vec.TlsSliceU8.assert_written_bytes.spec.functional_correctness {T :
   all_goals (try simp only [tls_vec.TlsSliceU8.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU16.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU16.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU16.tls_serialized_length SizeInst self
@@ -5230,7 +5236,7 @@ theorem tls_vec.TlsSliceU16.tls_serialized_length.spec.functional_correctness {T
         res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -5245,7 +5251,8 @@ theorem tls_vec.TlsSliceU16.assert_written_bytes.spec.functional_correctness {T 
   all_goals (try simp only [tls_vec.TlsSliceU16.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU24.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU24.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU24.tls_serialized_length SizeInst self
@@ -5254,7 +5261,7 @@ theorem tls_vec.TlsSliceU24.tls_serialized_length.spec.functional_correctness {T
         res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -5269,7 +5276,8 @@ theorem tls_vec.TlsSliceU24.assert_written_bytes.spec.functional_correctness {T 
   all_goals (try simp only [tls_vec.TlsSliceU24.assert_written_bytes.post])
   all_goals (try (intros; mvcgen))
 
-theorem tls_vec.TlsSliceU32.tls_serialized_length.spec.functional_correctness {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU32.tls_serialized_length.spec.functional_correctness {T : Type _} (SizeInst : Size
+                                                T)
   (self : tls_vec.TlsSliceU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   ⦃ ⌜ True ⌝ ⦄
   tls_vec.TlsSliceU32.tls_serialized_length SizeInst self
@@ -5278,7 +5286,7 @@ theorem tls_vec.TlsSliceU32.tls_serialized_length.spec.functional_correctness {T
         res).holds ⌝ ⦄ := by
   exact partial_triple_ok_true _ _ (fun _ => rfl)
 
-theorem tls_vec.TlsSliceU32.assert_written_bytes.spec.functional_correctness {T : Type} (SerializeInst :
+theorem tls_vec.TlsSliceU32.assert_written_bytes.spec.functional_correctness {T : Type _} (SerializeInst :
                                                Serialize T)
   (self : tls_vec.TlsSliceU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
@@ -5306,7 +5314,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.fu
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           (ArrayU8LEN.Insts.Tls_codecDeserializeBytes LEN).SizeInst (ArrayU8LEN.Insts.Tls_codecDeserializeBytes LEN) bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (ArrayU8LEN_deserialize_char LEN bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (ArrayU8LEN_deserialize_char LEN bytes)
   rw [hv]
   apply RustM.ok_spec
   by_cases hl : LEN.val ≤ bytes.val.length
@@ -5344,7 +5352,7 @@ theorem ArrayU8LEN.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functi
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5352,7 +5360,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spe
     ⦃ ⇓? res =>
       ⌜ (SerializeBytes.tls_serialize_bytes.post (core.option.Option.Insts.Tls_codecSerializeBytes SerializeBytesInst).SizeInst
           (core.option.Option.Insts.Tls_codecSerializeBytes SerializeBytesInst) self_ res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Option_serialize_char SerializeBytesInst SerializeBytesInstLawful self_)
   rw [hv]
   apply RustM.ok_spec
@@ -5369,7 +5377,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spe
       simp [hw]
       omega
 
-theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type}
+theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5380,7 +5388,7 @@ theorem Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.fun
   exact core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
     SerializeBytesInst SerializeBytesInstLawful self_
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5388,7 +5396,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Option_deserialize_char DeserializeBytesInst DeserializeBytesInstLawful bytes)
   rw [hv]
   apply RustM.ok_spec
@@ -5410,7 +5418,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       simp
       omega
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5420,7 +5428,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact
           (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (core.option.Option.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes (core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness DeserializeBytesInst DeserializeBytesInstLawful bytes)
 
-theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _} {U : Type _}
   (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1 :
   DeserializeBytes U)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -5431,7 +5439,7 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.function
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1).SizeInst (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1) bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Pair_deserialize_char DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInstLawful
       DeserializeBytesInst1Lawful bytes)
   rw [hv]
@@ -5446,7 +5454,7 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.function
     rw [lenAddVal_val _ _ (by scalar_tac)]
     omega
 
-theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _} {U : Type _}
   (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1 :
   DeserializeBytes U)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -5459,9 +5467,10 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.fu
           (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1).SizeInst (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (Pair.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1) bytes (Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInstLawful DeserializeBytesInst1Lawful bytes)
 
-theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type} {U : Type}
-  {V : Type} (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1
-  : DeserializeBytes U) (DeserializeBytesInst2 : DeserializeBytes V)
+theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _} {U :
+  Type _} {V : Type _} (DeserializeBytesInst : DeserializeBytes T)
+  (DeserializeBytesInst1 : DeserializeBytes U) (DeserializeBytesInst2 :
+  DeserializeBytes V)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   (DeserializeBytesInst1Lawful : DeserializeBytes.Lawful U
   DeserializeBytesInst1)
@@ -5472,7 +5481,7 @@ theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.func
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           (TupleTUV.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInst2).SizeInst (TupleTUV.Insts.Tls_codecDeserializeBytes DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInst2) bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (TupleTUV_deserialize_char DeserializeBytesInst DeserializeBytesInst1 DeserializeBytesInst2
       DeserializeBytesInstLawful DeserializeBytesInst1Lawful DeserializeBytesInst2Lawful bytes)
   rw [hv]
@@ -5488,9 +5497,10 @@ theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.func
     rw [lenAddVal_val _ _ (by scalar_tac), h12]
     omega
 
-theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type} {U : Type}
-  {V : Type} (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1
-  : DeserializeBytes U) (DeserializeBytesInst2 : DeserializeBytes V)
+theorem TupleTUV.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _} {U :
+  Type _} {V : Type _} (DeserializeBytesInst : DeserializeBytes T)
+  (DeserializeBytesInst1 : DeserializeBytes U) (DeserializeBytesInst2 :
+  DeserializeBytes V)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   (DeserializeBytesInst1Lawful : DeserializeBytes.Lawful U
   DeserializeBytesInst1)
@@ -5523,7 +5533,7 @@ theorem Tuple.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.f
   exact DeserializeBytes.exact_default_fc Tuple.Insts.Tls_codecDeserializeBytes bytes (Tuple.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
 
 theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (T :
-  Type) (bytes : Slice Std.U8) :
+  Type _) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes T) bytes
     ⦃ ⇓? res =>
@@ -5545,7 +5555,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_
     exact List.suffix_refl _
 
 theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (T :
-  Type) (bytes : Slice Std.U8) :
+  Type _) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T).tls_deserialize_exact_bytes bytes
     ⦃ ⇓? res =>
@@ -5553,7 +5563,8 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_
           (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T).SizeInst (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T) bytes (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness T bytes)
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (T : Type) (self_ : (core.marker.PhantomData T)) :
+theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (T :
+  Type _) (self_ : (core.marker.PhantomData T)) :
   ⦃ ⌜ True ⌝ ⦄
     core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
     ⦃ ⇓? res =>
@@ -5566,11 +5577,11 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_byte
     core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len]
   all_goals (try simp only [core.result.Result.Ok.injEq] at *)
   all_goals (try subst_vars)
-  simp only [Slice.new]
+  simp only [Slice.new_val, Slice.len, decide_eq_true_eq]
   rfl
 
-theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type} (SerializeBytesInst
-  : SerializeBytes T)
+theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
+  (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : T) :
   ⦃ ⌜ True ⌝ ⦄
     (Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes SerializeBytesInst) self_
@@ -5578,7 +5589,7 @@ theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_co
       ⌜ (SerializeBytes.tls_serialize_bytes.post (Box.Insts.Tls_codecSerializeBytes SerializeBytesInst).SizeInst
           (Box.Insts.Tls_codecSerializeBytes SerializeBytesInst) self_ res).holds ⌝ ⦄ := by
   rw [Box_serialize_eq]
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (SerializeBytesInstLawful.tls_serialize_bytes_spec self_ (pre_holds_of_ok_true rfl))
   rw [hv]
   apply RustM.ok_spec
@@ -5588,7 +5599,7 @@ theorem Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_co
     obtain ⟨n, hn, hl⟩ := SerializeBytes.post_ok_elim _ _ _ _ hP
     exact SerializeBytes.post_ok _ _ _ _ _ (Box_size _ _ _ hn) hl
 
-theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5597,7 +5608,7 @@ theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functiona
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           (Box.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (Box.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   rw [Box_deserialize_eq]
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (DeserializeBytesInstLawful.tls_deserialize_bytes_spec bytes (pre_holds_of_ok_true rfl))
   rw [hv]
   apply RustM.ok_spec
@@ -5609,7 +5620,7 @@ theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functiona
     exact DeserializeBytes.post_ok _ _ _ _ _ _ (Box_size _ _ _ hn) hl
       (DeserializeBytes.post_ok_suffix _ _ _ _ _ hP)
 
-theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5627,7 +5638,7 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           U8.Insts.Tls_codecDeserializeBytes.SizeInst U8.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U8_deserialize_char bytes)
   rw [hv]
   apply RustM.ok_spec
   by_cases hl : 1 ≤ bytes.val.length
@@ -5645,102 +5656,6 @@ theorem U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.func
           U8.Insts.Tls_codecDeserializeBytes.SizeInst U8.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc U8.Insts.Tls_codecDeserializeBytes bytes (U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
 
-theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
-          U16.Insts.Tls_codecDeserializeBytes.SizeInst U16.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
-  rw [hv]
-  apply RustM.ok_spec
-  by_cases hl : 2 ≤ bytes.val.length
-  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
-    refine DeserializeBytes.post_ok _ _ _ _ _ 2#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
-    simp [ht]; omega
-  · rw [hP.2 (by omega)]
-    exact DeserializeBytes.post_err _ _ _ _
-
-theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
-          U16.Insts.Tls_codecDeserializeBytes.SizeInst U16.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  exact DeserializeBytes.exact_default_fc U16.Insts.Tls_codecDeserializeBytes bytes (U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
-
-theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
-          U24.Insts.Tls_codecDeserializeBytes.SizeInst U24.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
-  rw [hv]
-  apply RustM.ok_spec
-  by_cases hl : 3 ≤ bytes.val.length
-  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
-    refine DeserializeBytes.post_ok _ _ _ _ _ 3#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
-    simp [ht]; omega
-  · rw [hP.2 (by omega)]
-    exact DeserializeBytes.post_err _ _ _ _
-
-theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
-          U24.Insts.Tls_codecDeserializeBytes.SizeInst U24.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  exact DeserializeBytes.exact_default_fc U24.Insts.Tls_codecDeserializeBytes bytes (U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
-
-theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
-          U32.Insts.Tls_codecDeserializeBytes.SizeInst U32.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
-  rw [hv]
-  apply RustM.ok_spec
-  by_cases hl : 4 ≤ bytes.val.length
-  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
-    refine DeserializeBytes.post_ok _ _ _ _ _ 4#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
-    simp [ht]; omega
-  · rw [hP.2 (by omega)]
-    exact DeserializeBytes.post_err _ _ _ _
-
-theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
-          U32.Insts.Tls_codecDeserializeBytes.SizeInst U32.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  exact DeserializeBytes.exact_default_fc U32.Insts.Tls_codecDeserializeBytes bytes (U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
-
-theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
-          U64.Insts.Tls_codecDeserializeBytes.SizeInst U64.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
-  rw [hv]
-  apply RustM.ok_spec
-  by_cases hl : 8 ≤ bytes.val.length
-  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
-    refine DeserializeBytes.post_ok _ _ _ _ _ 8#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
-    simp [ht]; omega
-  · rw [hP.2 (by omega)]
-    exact DeserializeBytes.post_err _ _ _ _
-
-theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
-  ⦃ ⌜ True ⌝ ⦄
-    U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
-    ⦃ ⇓? res =>
-      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
-          U64.Insts.Tls_codecDeserializeBytes.SizeInst U64.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  exact DeserializeBytes.exact_default_fc U64.Insts.Tls_codecDeserializeBytes bytes (U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
-
 theorem Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
     Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
@@ -5752,70 +5667,6 @@ theorem Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functio
   mvcgen [core.result.Result.is_ok_and_spec,
     __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
     Shared0U8.Insts.Tls_codecSize.tls_serialized_len, U8.Insts.Tls_codecSize.tls_serialized_len]
-  simp only [core.result.Result.Ok.injEq] at *
-  subst_vars
-  simp only [decide_eq_true_eq]
-  scalar_tac
-
-theorem Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓? res =>
-      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U16.Insts.Tls_codecSerializeBytes.SizeInst
-          Shared0U16.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  mvcgen [Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
-  simp only [SerializeBytes.tls_serialize_bytes.post]
-  mvcgen [core.result.Result.is_ok_and_spec,
-    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
-    Shared0U16.Insts.Tls_codecSize.tls_serialized_len, U16.Insts.Tls_codecSize.tls_serialized_len]
-  simp only [core.result.Result.Ok.injEq] at *
-  subst_vars
-  simp only [decide_eq_true_eq]
-  scalar_tac
-
-theorem Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓? res =>
-      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U24.Insts.Tls_codecSerializeBytes.SizeInst
-          Shared0U24.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  mvcgen [Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, U24.to_be_bytes]
-  simp only [SerializeBytes.tls_serialize_bytes.post]
-  mvcgen [core.result.Result.is_ok_and_spec,
-    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
-    Shared0U24.Insts.Tls_codecSize.tls_serialized_len, U24.Insts.Tls_codecSize.tls_serialized_len]
-  simp only [core.result.Result.Ok.injEq] at *
-  subst_vars
-  simp only [decide_eq_true_eq]
-  scalar_tac
-
-theorem Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓? res =>
-      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U32.Insts.Tls_codecSerializeBytes.SizeInst
-          Shared0U32.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  mvcgen [Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
-  simp only [SerializeBytes.tls_serialize_bytes.post]
-  mvcgen [core.result.Result.is_ok_and_spec,
-    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
-    Shared0U32.Insts.Tls_codecSize.tls_serialized_len, U32.Insts.Tls_codecSize.tls_serialized_len]
-  simp only [core.result.Result.Ok.injEq] at *
-  subst_vars
-  simp only [decide_eq_true_eq]
-  scalar_tac
-
-theorem Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U64) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
-    ⦃ ⇓? res =>
-      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U64.Insts.Tls_codecSerializeBytes.SizeInst
-          Shared0U64.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  mvcgen [Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
-  simp only [SerializeBytes.tls_serialize_bytes.post]
-  mvcgen [core.result.Result.is_ok_and_spec,
-    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
-    Shared0U64.Insts.Tls_codecSize.tls_serialized_len, U64.Insts.Tls_codecSize.tls_serialized_len]
   simp only [core.result.Result.Ok.injEq] at *
   subst_vars
   simp only [decide_eq_true_eq]
@@ -5838,6 +5689,46 @@ theorem U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_cor
   simp only [decide_eq_true_eq]
   scalar_tac
 
+theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
+          U16.Insts.Tls_codecDeserializeBytes.SizeInst U16.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U16_deserialize_char bytes)
+  rw [hv]
+  apply RustM.ok_spec
+  by_cases hl : 2 ≤ bytes.val.length
+  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
+    refine DeserializeBytes.post_ok _ _ _ _ _ 2#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
+    simp [ht]; omega
+  · rw [hP.2 (by omega)]
+    exact DeserializeBytes.post_err _ _ _ _
+
+theorem U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
+          U16.Insts.Tls_codecDeserializeBytes.SizeInst U16.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  exact DeserializeBytes.exact_default_fc U16.Insts.Tls_codecDeserializeBytes bytes (U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
+
+theorem Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓? res =>
+      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U16.Insts.Tls_codecSerializeBytes.SizeInst
+          Shared0U16.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
+  mvcgen [Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
+  simp only [SerializeBytes.tls_serialize_bytes.post]
+  mvcgen [core.result.Result.is_ok_and_spec,
+    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
+    Shared0U16.Insts.Tls_codecSize.tls_serialized_len, U16.Insts.Tls_codecSize.tls_serialized_len]
+  simp only [core.result.Result.Ok.injEq] at *
+  subst_vars
+  simp only [decide_eq_true_eq]
+  scalar_tac
+
 theorem U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U16) :
   ⦃ ⌜ True ⌝ ⦄
     U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
@@ -5850,6 +5741,46 @@ theorem U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_co
   mvcgen [core.result.Result.is_ok_and_spec,
     __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
     Shared0U16.Insts.Tls_codecSize.tls_serialized_len, U16.Insts.Tls_codecSize.tls_serialized_len]
+  simp only [core.result.Result.Ok.injEq] at *
+  subst_vars
+  simp only [decide_eq_true_eq]
+  scalar_tac
+
+theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
+          U24.Insts.Tls_codecDeserializeBytes.SizeInst U24.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U24_deserialize_char bytes)
+  rw [hv]
+  apply RustM.ok_spec
+  by_cases hl : 3 ≤ bytes.val.length
+  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
+    refine DeserializeBytes.post_ok _ _ _ _ _ 3#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
+    simp [ht]; omega
+  · rw [hP.2 (by omega)]
+    exact DeserializeBytes.post_err _ _ _ _
+
+theorem U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
+          U24.Insts.Tls_codecDeserializeBytes.SizeInst U24.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  exact DeserializeBytes.exact_default_fc U24.Insts.Tls_codecDeserializeBytes bytes (U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
+
+theorem Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓? res =>
+      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U24.Insts.Tls_codecSerializeBytes.SizeInst
+          Shared0U24.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
+  mvcgen [Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, U24.to_be_bytes]
+  simp only [SerializeBytes.tls_serialize_bytes.post]
+  mvcgen [core.result.Result.is_ok_and_spec,
+    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
+    Shared0U24.Insts.Tls_codecSize.tls_serialized_len, U24.Insts.Tls_codecSize.tls_serialized_len]
   simp only [core.result.Result.Ok.injEq] at *
   subst_vars
   simp only [decide_eq_true_eq]
@@ -5872,6 +5803,46 @@ theorem U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_co
   simp only [decide_eq_true_eq]
   scalar_tac
 
+theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
+          U32.Insts.Tls_codecDeserializeBytes.SizeInst U32.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U32_deserialize_char bytes)
+  rw [hv]
+  apply RustM.ok_spec
+  by_cases hl : 4 ≤ bytes.val.length
+  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
+    refine DeserializeBytes.post_ok _ _ _ _ _ 4#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
+    simp [ht]; omega
+  · rw [hP.2 (by omega)]
+    exact DeserializeBytes.post_err _ _ _ _
+
+theorem U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
+          U32.Insts.Tls_codecDeserializeBytes.SizeInst U32.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  exact DeserializeBytes.exact_default_fc U32.Insts.Tls_codecDeserializeBytes bytes (U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
+
+theorem Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓? res =>
+      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U32.Insts.Tls_codecSerializeBytes.SizeInst
+          Shared0U32.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
+  mvcgen [Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
+  simp only [SerializeBytes.tls_serialize_bytes.post]
+  mvcgen [core.result.Result.is_ok_and_spec,
+    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
+    Shared0U32.Insts.Tls_codecSize.tls_serialized_len, U32.Insts.Tls_codecSize.tls_serialized_len]
+  simp only [core.result.Result.Ok.injEq] at *
+  subst_vars
+  simp only [decide_eq_true_eq]
+  scalar_tac
+
 theorem U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U32) :
   ⦃ ⌜ True ⌝ ⦄
     U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
@@ -5884,6 +5855,46 @@ theorem U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_co
   mvcgen [core.result.Result.is_ok_and_spec,
     __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
     Shared0U32.Insts.Tls_codecSize.tls_serialized_len, U32.Insts.Tls_codecSize.tls_serialized_len]
+  simp only [core.result.Result.Ok.injEq] at *
+  subst_vars
+  simp only [decide_eq_true_eq]
+  scalar_tac
+
+theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_bytes.post
+          U64.Insts.Tls_codecDeserializeBytes.SizeInst U64.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (U64_deserialize_char bytes)
+  rw [hv]
+  apply RustM.ok_spec
+  by_cases hl : 8 ≤ bytes.val.length
+  · obtain ⟨a, t, ha, ht, rfl⟩ := hP.1 hl
+    refine DeserializeBytes.post_ok _ _ _ _ _ 8#usize rfl ?_ (by rw [ht]; exact List.drop_suffix _ _)
+    simp [ht]; omega
+  · rw [hP.2 (by omega)]
+    exact DeserializeBytes.post_err _ _ _ _
+
+theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
+  ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes bytes
+    ⦃ ⇓? res =>
+      ⌜ (DeserializeBytes.tls_deserialize_exact_bytes.post
+          U64.Insts.Tls_codecDeserializeBytes.SizeInst U64.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
+  exact DeserializeBytes.exact_default_fc U64.Insts.Tls_codecDeserializeBytes bytes (U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
+
+theorem Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness (self_ : Std.U64) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self_
+    ⦃ ⇓? res =>
+      ⌜ (SerializeBytes.tls_serialize_bytes.post Shared0U64.Insts.Tls_codecSerializeBytes.SizeInst
+          Shared0U64.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
+  mvcgen [Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes]
+  simp only [SerializeBytes.tls_serialize_bytes.post]
+  mvcgen [core.result.Result.is_ok_and_spec,
+    __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once,
+    Shared0U64.Insts.Tls_codecSize.tls_serialized_len, U64.Insts.Tls_codecSize.tls_serialized_len]
   simp only [core.result.Result.Ok.injEq] at *
   subst_vars
   simp only [decide_eq_true_eq]
@@ -5917,7 +5928,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_b
   refine DeserializeBytes.fc_of_len _ _ _ ?_ (quic_vec.ContentLength.deserialize_suffix bytes)
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.ContentLength.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -5971,7 +5982,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_e
           quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.SizeInst quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes bytes (quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness bytes)
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5981,7 +5992,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec
           (alloc.vec.Vec.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (alloc.vec.Vec.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact alloc.vec.Vec.trait_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -5997,13 +6008,13 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.
     ⦃ ⇓? res =>
       ⌜ (SerializeBytes.tls_serialize_bytes.post quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.SizeInst
           quic_vec.VLBytes.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLBytes.serialize_char self_)
   rw [hr]
   apply RustM.ok_spec
   by_cases hl : self_.vec.val.length ≤ 2 ^ 30 - 1
   · obtain ⟨out, rfl, hout⟩ := hP.1 hl
-    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (quic_vec.VLBytes.serialized_len_char self_ hl)
     exact SerializeBytes.post_ok _ _ _ out n hn (by rw [hn']; exact hout)
   · obtain ⟨e, rfl⟩ := hP.2 (by omega)
@@ -6034,7 +6045,7 @@ theorem Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.fu
     intro h
     contradiction
 
-theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type}
+theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6044,7 +6055,7 @@ theorem Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.func
           (Shared0Slice.Insts.Tls_codecSerializeBytes SerializeBytesInst) self_ res).holds ⌝ ⦄ := by
   exact Shared0Slice.trait_fc SerializeBytesInst SerializeBytesInstLawful self_
 
-theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type}
+theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6054,7 +6065,7 @@ theorem Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functi
           (Shared0Vec.Insts.Tls_codecSerializeBytes SerializeBytesInst) self_ res).holds ⌝ ⦄ := by
   exact Shared0Vec.trait_fc SerializeBytesInst SerializeBytesInstLawful self_
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6073,7 +6084,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_s
   refine DeserializeBytes.fc_of_len _ _ _ ?_ (quic_vec.VLBytes.deserialize_suffix bytes)
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLBytes.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -6135,7 +6146,7 @@ theorem quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   refine DeserializeBytes.fc_of_len _ _ _ ?_ (quic_vec.VLByteVec.deserialize_suffix bytes)
   apply partial_triple_of_ok
   intro r hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLByteVec.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -6194,7 +6205,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
     ⦃ ⇓? res =>
       ⌜ (SerializeBytes.tls_serialize_bytes.post quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.SizeInst
           quic_vec.ContentLength.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.serialize_len_char self_)
   unfold quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   rw [hr]
@@ -6225,13 +6236,13 @@ theorem quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_s
     ⦃ ⇓? res =>
       ⌜ (SerializeBytes.tls_serialize_bytes.post quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes.SizeInst
           quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLByteSlice.serialize_char self_)
   rw [hr]
   apply RustM.ok_spec
   by_cases hl : self_.val.length ≤ 2 ^ 30 - 1
   · obtain ⟨out, rfl, hout⟩ := hP.1 hl
-    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (quic_vec.tls_serialize_bytes_len_char self_ hl)
     exact SerializeBytes.post_ok _ _ _ out n hn (by rw [hn']; exact hout)
   · obtain ⟨e, rfl⟩ := hP.2 (by omega)
@@ -6284,12 +6295,12 @@ theorem alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_byte
   intro h hS
   rcases r with ⟨t, rem⟩ | e
   · obtain ⟨raw, hraw, hu⟩ := h t rem rfl
-    obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
+    obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
     rw [hraw] at hr0
-    cases hr0
+    obtain rfl := RustM.ok_injective hr0
     obtain ⟨hlen, hsum⟩ := hP raw rem rfl
     have hlen' : (alloc.string.String.utf8U8 t).length ≤ 2 ^ 30 - 1 := by rw [hu]; exact hlen
-    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.string.String.size_char t hlen')
+    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.string.String.size_char t hlen')
     have hs : rem.val <:+ bytes.val := hS t rem rfl
     refine DeserializeBytes.post_ok _ _ _ t rem n hn ?_ hs
     rw [hn', hu]
@@ -6393,13 +6404,13 @@ theorem varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.
     ⦃ ⇓? res =>
       ⌜ (SerializeBytes.tls_serialize_bytes.post varint.TlsVarInt.Insts.Tls_codecSerializeBytes.SizeInst
           varint.TlsVarInt.Insts.Tls_codecSerializeBytes self_ res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (varint.TlsVarInt.serialize_len_char self_)
   rw [hr]
   apply RustM.ok_spec
   by_cases hle : self_.val ≤ 2 ^ 62 - 1
   · obtain ⟨v, rfl, hv⟩ := hP.1 hle
-    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (varint.TlsVarInt.size_char self_)
+    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (varint.TlsVarInt.size_char self_)
     exact SerializeBytes.post_ok _ _ _ v n hn (by rw [hn']; exact hv)
   · obtain ⟨e, rfl⟩ := hP.2 (by omega)
     exact SerializeBytes.post_err _ _ _ _
@@ -6410,7 +6421,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_s
     ⦃ ⇓? res =>
       ⌜ (DeserializeBytes.tls_deserialize_bytes.post
           varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.SizeInst varint.TlsVarInt.Insts.Tls_codecDeserializeBytes bytes res).holds ⌝ ⦄ := by
-  obtain ⟨r, hr, hP, hS⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hP, hS⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (triple_and (varint.TlsVarInt.deserialize_char bytes) (varint.TlsVarInt.deserialize_suffix bytes))
   rw [hr]
   apply RustM.ok_spec
@@ -6418,7 +6429,7 @@ theorem varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_s
   | Err e => exact DeserializeBytes.post_err _ _ _ _
   | Ok p =>
     obtain ⟨hv, hl⟩ := hP p.1 p.2 rfl
-    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (varint.TlsVarInt.size_char p.1)
+    obtain ⟨n, hn, hn'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (varint.TlsVarInt.size_char p.1)
     exact DeserializeBytes.post_ok _ _ _ p.1 p.2 n hn (by rw [hn']; omega) (hS p.1 p.2 rfl)
 
 theorem varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness (bytes : Slice Std.U8) :
@@ -6470,7 +6481,7 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_byt
   apply partial_triple_of_ok
   intro r hr
   unfold tls_vec.TlsByteVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes at hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU8.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -6563,7 +6574,7 @@ theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_by
   apply partial_triple_of_ok
   intro r hr
   unfold tls_vec.TlsByteVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes at hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU16.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -6745,7 +6756,7 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_by
   apply partial_triple_of_ok
   intro r hr
   unfold tls_vec.TlsByteVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes at hr
-  obtain ⟨r', hr', hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r', hr', hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (tls_vec.TlsByteVecU32.deserialize_char bytes)
   rw [hr] at hr'
   have : r = r' := ok.inj hr'
@@ -6801,7 +6812,7 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_ex
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6811,7 +6822,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_s
           (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU8.trait_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6821,7 +6832,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_b
           (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes (tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness DeserializeBytesInst DeserializeBytesInstLawful bytes)
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6831,7 +6842,7 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
           (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU16.trait_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6841,7 +6852,7 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
           (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes (tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness DeserializeBytesInst DeserializeBytesInstLawful bytes)
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6851,7 +6862,7 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
           (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU24.trait_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6861,7 +6872,7 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
           (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact DeserializeBytes.exact_default_fc (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes (tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness DeserializeBytesInst DeserializeBytesInstLawful bytes)
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6871,7 +6882,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_
           (tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes DeserializeBytesInst).SizeInst (tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes DeserializeBytesInst) bytes res).holds ⌝ ⦄ := by
   exact tls_vec.TlsVecU32.trait_fc DeserializeBytesInst DeserializeBytesInstLawful bytes
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
   ⦃ ⌜ True ⌝ ⦄
@@ -6884,7 +6895,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_
 /-! ### tls_vec: SecretTlsVecU* -/
 
 theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6896,7 +6907,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_b
   exact tls_vec.SecretTlsVecU8.trait_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6908,7 +6919,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_e
   exact DeserializeBytes.exact_default_fc (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) bytes (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful bytes)
 
 theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6920,7 +6931,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU16.trait_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6932,7 +6943,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact DeserializeBytes.exact_default_fc (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) bytes (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful bytes)
 
 theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6944,7 +6955,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU24.trait_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6956,7 +6967,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact DeserializeBytes.exact_default_fc (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes zeroizeZeroizeInst DeserializeBytesInst) bytes (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness zeroizeZeroizeInst DeserializeBytesInst zeroizeZeroizeInstLawful DeserializeBytesInstLawful bytes)
 
 theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -6968,7 +6979,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_
   exact tls_vec.SecretTlsVecU32.trait_fc DeserializeBytesInst zeroizeZeroizeInst DeserializeBytesInstLawful bytes
 
 theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst) (bytes : Slice Std.U8) :
@@ -7030,7 +7041,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functio
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7045,7 +7056,7 @@ theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_spec.functiona
   intro hpre
   exact partial_of_total (Option.ser_spec SerializeInstLawful coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre)
 
-theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -7056,8 +7067,9 @@ theorem core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.
   obtain ⟨sz, hsz⟩ := Option.size_ok SerializeInstLawful.SizeInstLawful self_
   exact partial_of_total (Serialize.tls_serialize_detached.default_spec _ self_ sz hsz (fun w hpre => Option.ser_spec SerializeInstLawful _ StdIo.vec_lawful self_ w hpre))
 
-theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : (core.option.Option T)) (writer : W) :
   (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0Option.Insts.Tls_codecSerialize SerializeInst).SizeInst
@@ -7070,8 +7082,9 @@ theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_spec.functional_cor
   intro hpre
   exact partial_of_total ((Shared0Option.serSpec SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
+theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
     (Shared0Option.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
     ⦃ ⇓? res =>
@@ -7079,7 +7092,7 @@ theorem Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.funct
           (Shared0Option.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Shared0Option.serSpec SerializeInstLawful self_) (Option.size_ok SerializeInstLawful.SizeInstLawful self_))
 
-theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -7091,7 +7104,7 @@ theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_spec.funct
           (core.option.Option.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (core.option.Option.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (Option.de_spec DeserializeInstLawful allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -7104,7 +7117,7 @@ theorem core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec
           (core.option.Option.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (Deserialize.tls_deserialize_exact.default_spec _ coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => Option.de_spec DeserializeInstLawful _ StdIo.slice_lawful s))
 
-theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _} {U : Type _}
   (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -7117,7 +7130,7 @@ theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctn
           (Pair.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1).SizeInst (Pair.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((Pair.deSpec' DeserializeInstLawful DeserializeInst1Lawful) _ allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _} {U : Type _}
   (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1) {T1 : Type}
@@ -7131,7 +7144,7 @@ theorem Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_co
           (Pair.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (DeSpec.exact (Pair.deSpec' DeserializeInstLawful DeserializeInst1Lawful) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
-theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _} {U : Type _}
   (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7147,7 +7160,7 @@ theorem Pair.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness 
   intro hpre
   exact partial_of_total ((Pair.serSpec' SerializeInstLawful SerializeInst1Lawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _} {U : Type _}
   (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1) (self_ : (T × U)) :
@@ -7158,9 +7171,9 @@ theorem Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_cor
           (Pair.Insts.Tls_codecSerialize SerializeInst SerializeInst1) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Pair.serSpec' SerializeInstLawful SerializeInst1Lawful self_) (Pair.size_ex SerializeInstLawful SerializeInst1Lawful self_))
 
-theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type} {U : Type} {V :
-  Type} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
-  (DeserializeInst2 : Deserialize V)
+theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _} {U : Type _} {V
+  : Type _} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize
+  U) (DeserializeInst2 : Deserialize V)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1)
   (DeserializeInst2Lawful : Deserialize.Lawful V DeserializeInst2) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -7173,9 +7186,9 @@ theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_corr
           (TupleTUV.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1 DeserializeInst2).SizeInst (TupleTUV.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1 DeserializeInst2) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((Triple.deSpec' DeserializeInstLawful DeserializeInst1Lawful DeserializeInst2Lawful) _ allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type} {U : Type} {V :
-  Type} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
-  (DeserializeInst2 : Deserialize V)
+theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _} {U : Type _} {V
+  : Type _} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize
+  U) (DeserializeInst2 : Deserialize V)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1)
   (DeserializeInst2Lawful : Deserialize.Lawful V DeserializeInst2) {T1 : Type}
@@ -7189,8 +7202,8 @@ theorem TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functiona
           (TupleTUV.Insts.Tls_codecDeserialize DeserializeInst DeserializeInst1 DeserializeInst2) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (DeSpec.exact (Triple.deSpec' DeserializeInstLawful DeserializeInst1Lawful DeserializeInst2Lawful) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
-theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} {U : Type} {V :
-  Type} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
+theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _} {U : Type _} {V :
+  Type _} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInst2 : Serialize V)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -7207,8 +7220,8 @@ theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctn
   intro hpre
   exact partial_of_total ((Triple.serSpec' SerializeInstLawful SerializeInst1Lawful SerializeInst2Lawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} {U : Type} {V :
-  Type} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
+theorem TupleTUV.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _} {U : Type _} {V :
+  Type _} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInst2 : Serialize V)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -7262,7 +7275,7 @@ theorem Tuple.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_co
           Tuple.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Unit.serSpec self_) (⟨_, rfl⟩))
 
-theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness (T : Type) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness (T : Type _) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
   ⦃ ⌜ True ⌝ ⦄
@@ -7272,7 +7285,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_spec.
           (core.marker.PhantomData.Insts.Tls_codecDeserialize T).SizeInst (core.marker.PhantomData.Insts.Tls_codecDeserialize T) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((Phantom.deSpec T) _ allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness (T : Type) {T1 : Type}
+theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness (T : Type _) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
     (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
     Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
@@ -7283,7 +7296,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact
           (core.marker.PhantomData.Insts.Tls_codecDeserialize T) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (DeSpec.exact (Phantom.deSpec T) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness (T : Type) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness (T : Type _) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : (core.marker.PhantomData T)) (writer : W) :
   (Serialize.tls_serialize.pre coreiowriteWriteInst (core.marker.PhantomData.Insts.Tls_codecSerialize T).SizeInst
@@ -7296,7 +7309,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_spec.func
   intro hpre
   exact partial_of_total ((Phantom.serSpec T self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (T : Type) (self_ : (core.marker.PhantomData T)) :
+theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (T : Type _) (self_ : (core.marker.PhantomData T)) :
   ⦃ ⌜ True ⌝ ⦄
     (core.marker.PhantomData.Insts.Tls_codecSerialize T).tls_serialize_detached self_
     ⦃ ⇓? res =>
@@ -7304,7 +7317,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_
           (core.marker.PhantomData.Insts.Tls_codecSerialize T) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Phantom.serSpec T self_) (⟨_, rfl⟩))
 
-theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} (SerializeInst :
+theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _} (SerializeInst :
   Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : T) (writer : W) :
@@ -7318,16 +7331,16 @@ theorem Box.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {
   intro hpre
   exact partial_of_total ((Box.serSpec SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} (SerializeInst :
+theorem Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _} (SerializeInst :
   Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : T) :
   ⦃ ⌜ True ⌝ ⦄
     (Box.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
     ⦃ ⇓? res =>
       ⌜ (Serialize.tls_serialize_detached.post (Box.Insts.Tls_codecSerialize SerializeInst).SizeInst
           (Box.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (Box.serSpec SerializeInstLawful self_) (Size.lawful_ok _ SerializeInstLawful.SizeInstLawful self_))
+  exact partial_of_total (SerSpec.detached (Box.serSpec SerializeInstLawful self_) (Box.size_ex SerializeInstLawful self_))
 
-theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type} (DeserializeInst :
+theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _} (DeserializeInst :
   Deserialize T) (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -7338,7 +7351,7 @@ theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctne
           (Box.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (Box.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((Box.deSpec DeserializeInstLawful) _ allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type} (DeserializeInst :
+theorem Box.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _} (DeserializeInst :
   Deserialize T) (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
     (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
@@ -7373,90 +7386,6 @@ theorem U8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_corr
           U8.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (Deserialize.tls_deserialize_exact.default_spec U8.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U8.de_spec _ StdIo.slice_lawful s))
 
-theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U16.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          U16.Insts.Tls_codecDeserialize.SizeInst U16.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (U16.de_spec allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post U16.Insts.Tls_codecDeserialize.SizeInst
-          U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (Deserialize.tls_deserialize_exact.default_spec U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U16.de_spec _ StdIo.slice_lawful s))
-
-theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U24.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          U24.Insts.Tls_codecDeserialize.SizeInst U24.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((U24.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post U24.Insts.Tls_codecDeserialize.SizeInst
-          U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (DeSpec.exact (U24.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U32.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          U32.Insts.Tls_codecDeserialize.SizeInst U32.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((U32.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post U32.Insts.Tls_codecDeserialize.SizeInst
-          U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (DeSpec.exact (U32.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U64.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          U64.Insts.Tls_codecDeserialize.SizeInst U64.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((U64.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post U64.Insts.Tls_codecDeserialize.SizeInst
-          U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (DeSpec.exact (U64.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
 theorem U8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U8) (writer : W) :
@@ -7477,90 +7406,6 @@ theorem U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_corre
       ⌜ (Serialize.tls_serialize_detached.post U8.Insts.Tls_codecSerialize.SizeInst
           U8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Serialize.tls_serialize_detached.default_spec U8.Insts.Tls_codecSerialize self_ 1#usize rfl (fun w hpre => U8.ser_spec _ StdIo.vec_lawful self_ w hpre))
-
-theorem U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U16.Insts.Tls_codecSerialize.SizeInst
-    U16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          U16.Insts.Tls_codecSerialize.SizeInst U16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (U16.ser_spec coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre)
-
-theorem U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U16) :
-  ⦃ ⌜ True ⌝ ⦄
-    U16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post U16.Insts.Tls_codecSerialize.SizeInst
-          U16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Serialize.tls_serialize_detached.default_spec U16.Insts.Tls_codecSerialize self_ 2#usize rfl (fun w hpre => U16.ser_spec _ StdIo.vec_lawful self_ w hpre))
-
-theorem U24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : U24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U24.Insts.Tls_codecSerialize.SizeInst
-    U24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          U24.Insts.Tls_codecSerialize.SizeInst U24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total ((U24.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : U24) :
-  ⦃ ⌜ True ⌝ ⦄
-    U24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post U24.Insts.Tls_codecSerialize.SizeInst
-          U24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (U24.serSpec self_) (⟨_, rfl⟩))
-
-theorem U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U32.Insts.Tls_codecSerialize.SizeInst
-    U32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          U32.Insts.Tls_codecSerialize.SizeInst U32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total ((U32.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U32) :
-  ⦃ ⌜ True ⌝ ⦄
-    U32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post U32.Insts.Tls_codecSerialize.SizeInst
-          U32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (U32.serSpec self_) (⟨_, rfl⟩))
-
-theorem U64.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : Std.U64) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst U64.Insts.Tls_codecSerialize.SizeInst
-    U64.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U64.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          U64.Insts.Tls_codecSerialize.SizeInst U64.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total ((U64.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U64) :
-  ⦃ ⌜ True ⌝ ⦄
-    U64.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post U64.Insts.Tls_codecSerialize.SizeInst
-          U64.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (U64.serSpec self_) (⟨_, rfl⟩))
 
 theorem Shared0U8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7583,6 +7428,48 @@ theorem Shared0U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functiona
           Shared0U8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Shared0U8.serSpec self_) (⟨_, rfl⟩))
 
+theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U16.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          U16.Insts.Tls_codecDeserialize.SizeInst U16.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (U16.de_spec allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post U16.Insts.Tls_codecDeserialize.SizeInst
+          U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (Deserialize.tls_deserialize_exact.default_spec U16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => U16.de_spec _ StdIo.slice_lawful s))
+
+theorem U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U16.Insts.Tls_codecSerialize.SizeInst
+    U16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          U16.Insts.Tls_codecSerialize.SizeInst U16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (U16.ser_spec coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre)
+
+theorem U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U16) :
+  ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post U16.Insts.Tls_codecSerialize.SizeInst
+          U16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Serialize.tls_serialize_detached.default_spec U16.Insts.Tls_codecSerialize self_ 2#usize rfl (fun w hpre => U16.ser_spec _ StdIo.vec_lawful self_ w hpre))
+
 theorem Shared0U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U16) (writer : W) :
@@ -7603,6 +7490,48 @@ theorem Shared0U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.function
       ⌜ (Serialize.tls_serialize_detached.post Shared0U16.Insts.Tls_codecSerialize.SizeInst
           Shared0U16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Shared0U16.serSpec self_) (⟨_, rfl⟩))
+
+theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U24.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          U24.Insts.Tls_codecDeserialize.SizeInst U24.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((U24.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post U24.Insts.Tls_codecDeserialize.SizeInst
+          U24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (DeSpec.exact (U24.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem U24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : U24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U24.Insts.Tls_codecSerialize.SizeInst
+    U24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          U24.Insts.Tls_codecSerialize.SizeInst U24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total ((U24.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : U24) :
+  ⦃ ⌜ True ⌝ ⦄
+    U24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post U24.Insts.Tls_codecSerialize.SizeInst
+          U24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (SerSpec.detached (U24.serSpec self_) (⟨_, rfl⟩))
 
 theorem Shared0U24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7625,6 +7554,48 @@ theorem Shared0U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.function
           Shared0U24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Shared0U24.serSpec self_) (⟨_, rfl⟩))
 
+theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U32.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          U32.Insts.Tls_codecDeserialize.SizeInst U32.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((U32.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post U32.Insts.Tls_codecDeserialize.SizeInst
+          U32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (DeSpec.exact (U32.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U32.Insts.Tls_codecSerialize.SizeInst
+    U32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          U32.Insts.Tls_codecSerialize.SizeInst U32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total ((U32.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U32) :
+  ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post U32.Insts.Tls_codecSerialize.SizeInst
+          U32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (SerSpec.detached (U32.serSpec self_) (⟨_, rfl⟩))
+
 theorem Shared0U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : Std.U32) (writer : W) :
@@ -7645,6 +7616,48 @@ theorem Shared0U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.function
       ⌜ (Serialize.tls_serialize_detached.post Shared0U32.Insts.Tls_codecSerialize.SizeInst
           Shared0U32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (Shared0U32.serSpec self_) (⟨_, rfl⟩))
+
+theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => U64.Insts.Tls_codecDeserialize.tls_deserialize allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          U64.Insts.Tls_codecDeserialize.SizeInst U64.Insts.Tls_codecDeserialize bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((U64.deSpec) _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post U64.Insts.Tls_codecDeserialize.SizeInst
+          U64.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (DeSpec.exact (U64.deSpec) coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem U64.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : Std.U64) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst U64.Insts.Tls_codecSerialize.SizeInst
+    U64.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => U64.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          U64.Insts.Tls_codecSerialize.SizeInst U64.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total ((U64.serSpec self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : Std.U64) :
+  ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post U64.Insts.Tls_codecSerialize.SizeInst
+          U64.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (SerSpec.detached (U64.serSpec self_) (⟨_, rfl⟩))
 
 theorem Shared0U64.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7711,7 +7724,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize_detached_s
           quic_vec.ContentLength.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (SerSpec.detached (ContentLength.serSpec self_) (ContentLength.size_ex self_))
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -7723,7 +7736,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional
           (alloc.vec.Vec.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (alloc.vec.Vec.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (Vec.de_spec DeserializeInstLawful allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -7736,8 +7749,8 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.func
           (alloc.vec.Vec.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (Deserialize.tls_deserialize_exact.default_spec _ coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes (fun s => Vec.de_spec DeserializeInstLawful _ StdIo.slice_lawful s))
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7752,8 +7765,8 @@ theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_spec.functional_cor
   intro hpre
   exact partial_of_total (Vec.ser_spec write_length_runs corefmtDebugInst SerializeInstLawful coreiowriteWriteInst coreiowriteWriteInstLawful self_ writer hpre)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -7761,11 +7774,11 @@ theorem alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.funct
     ⦃ ⇓? res =>
       ⌜ (Serialize.tls_serialize_detached.post (alloc.vec.Vec.Insts.Tls_codecSerialize SerializeInst corefmtDebugInst).SizeInst
           (alloc.vec.Vec.Insts.Tls_codecSerialize SerializeInst corefmtDebugInst) self_ res).holds ⌝ ⦄ := by
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.size_rel SerializeInst.SizeInst SerializeInstLawful.SizeInstLawful self_)
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.size_rel SerializeInst.SizeInst SerializeInstLawful.SizeInstLawful self_)
   exact partial_of_total (Serialize.tls_serialize_detached.default_spec _ self_ sz hsz (fun w hpre => Vec.ser_spec write_length_runs corefmtDebugInst SerializeInstLawful _ StdIo.vec_lawful self_ w hpre))
 
-theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -7780,8 +7793,8 @@ theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_spec.functional_corr
   intro hpre
   exact partial_of_total ((Shared0Slice.serSpec corefmtDebugInst SerializeInstLawful self_) _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem Shared0Slice.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (Slice T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8083,7 +8096,7 @@ theorem Str.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_corr
     ⦃ ⇓? res =>
       ⌜ (Serialize.tls_serialize_detached.post Str.Insts.Tls_codecSerialize.SizeInst
           Str.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (Str.serSpec self_) (Shared0Slice.size_ex U8.lawful self_))
+  exact partial_of_total (SerSpec.detached (Str.serSpec self_) (Str.size_ex self_))
 
 theorem Shared0Str.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8104,7 +8117,7 @@ theorem Shared0Str.Insts.Tls_codecSerialize.tls_serialize_detached_spec.function
     ⦃ ⇓? res =>
       ⌜ (Serialize.tls_serialize_detached.post Shared0Str.Insts.Tls_codecSerialize.SizeInst
           Shared0Str.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (SerSpec.detached (Shared0Str.serSpec self_) (Shared0Slice.size_ex U8.lawful self_))
+  exact partial_of_total (SerSpec.detached (Shared0Str.serSpec self_) (Shared0Str.size_ex self_))
 
 theorem alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -8129,7 +8142,7 @@ theorem alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize_exact_spe
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8144,7 +8157,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_
   intro hpre
   exact partial_of_total (tls_vec.TlsVecU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8154,82 +8167,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.fu
           (tls_vec.TlsVecU8.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsVecU8.serDetached SerializeInstLawful self_)
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU16.serDetached SerializeInstLawful self_)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU24.serDetached SerializeInstLawful self_)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU32.serDetached SerializeInstLawful self_)
-
-theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8244,7 +8182,7 @@ theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_c
   intro hpre
   exact partial_of_total (Shared0TlsVecU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8254,7 +8192,57 @@ theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.fun
           (Shared0TlsVecU8.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsVecU8.serDetached SerializeInstLawful self_)
 
-theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU8.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
+          (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.TlsVecU8.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU16.serDetached SerializeInstLawful self_)
+
+theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8269,7 +8257,7 @@ theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_
   intro hpre
   exact partial_of_total (Shared0TlsVecU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8279,7 +8267,57 @@ theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.fu
           (Shared0TlsVecU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsVecU16.serDetached SerializeInstLawful self_)
 
-theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU16.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
+          (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.TlsVecU16.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU24.serDetached SerializeInstLawful self_)
+
+theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8294,7 +8332,7 @@ theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_
   intro hpre
   exact partial_of_total (Shared0TlsVecU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8304,7 +8342,57 @@ theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.fu
           (Shared0TlsVecU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsVecU24.serDetached SerializeInstLawful self_)
 
-theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU24.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (DeserializeInst : Deserialize T)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
+          (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.TlsVecU24.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsVecU32.serDetached SerializeInstLawful self_)
+
+theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -8319,7 +8407,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_
   intro hpre
   exact partial_of_total (Shared0TlsVecU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -8329,82 +8417,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.fu
           (Shared0TlsVecU32.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsVecU32.serDetached SerializeInstLawful self_)
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU8.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
-          (tls_vec.TlsVecU8.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.TlsVecU8.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU16.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
-          (tls_vec.TlsVecU16.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.TlsVecU16.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsVecU24.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (DeserializeInst : Deserialize T)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
-          (tls_vec.TlsVecU24.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.TlsVecU24.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -8416,7 +8429,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functi
           (tls_vec.TlsVecU32.Insts.Tls_codecDeserialize DeserializeInst).SizeInst (tls_vec.TlsVecU32.Insts.Tls_codecDeserialize DeserializeInst) bytes res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsVecU32.deSpec DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
     (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
@@ -8428,332 +8441,6 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.
       ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.TlsVecU32.Insts.Tls_codecDeserialize DeserializeInst).SizeInst
           (tls_vec.TlsVecU32.Insts.Tls_codecDeserialize DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((tls_vec.TlsVecU32.deSpec DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-/-! ### tls_vec: SecretTlsVecU* -/
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
-          (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
-          (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
-          (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
-          (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
-    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
-    allocioreadReadInst) (bytes : R) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
-          (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
-    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
-    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
-  ⦃ ⌜ True ⌝ ⦄
-    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
-    ⦃ ⇓? res =>
-      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
-          (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
-  exact partial_of_total ((tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
 /-! ### tls_vec: TlsByteVecU* -/
 
@@ -8778,69 +8465,6 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spe
           tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsByteVecU8.serDetached self_)
 
-theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-          tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsByteVecU16.serDetached self_)
-
-theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-          tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsByteVecU24.serDetached self_)
-
-theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (tls_vec.TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-          tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (tls_vec.TlsByteVecU32.serDetached self_)
-
 theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU8) (writer : W) :
@@ -8861,69 +8485,6 @@ theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec
       ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU8.Insts.Tls_codecSerialize.SizeInst
           Shared0TlsByteVecU8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsByteVecU8.serDetached self_)
-
-theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteVecU16.serDetached self_)
-
-theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteVecU24.serDetached self_)
-
-theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteVecU32.serDetached self_)
 
 theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -8946,6 +8507,48 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_sp
           tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((tls_vec.TlsByteVecU8.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
+theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+          tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsByteVecU16.serDetached self_)
+
+theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteVecU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU16.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteVecU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteVecU16.serDetached self_)
+
 theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -8966,6 +8569,48 @@ theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
       ⌜ (Deserialize.tls_deserialize_exact.post tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.SizeInst
           tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((tls_vec.TlsByteVecU16.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+          tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsByteVecU24.serDetached self_)
+
+theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteVecU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU24.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteVecU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteVecU24.serDetached self_)
 
 theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -8988,6 +8633,48 @@ theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
           tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((tls_vec.TlsByteVecU24.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
+theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+          tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.TlsByteVecU32.serDetached self_)
+
+theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteVecU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteVecU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteVecU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteVecU32.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteVecU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteVecU32.serDetached self_)
+
 theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
     allocioreadReadInst) (bytes : R) :
@@ -9008,6 +8695,332 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_s
       ⌜ (Deserialize.tls_deserialize_exact.post tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.SizeInst
           tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
   exact partial_of_total ((tls_vec.TlsByteVecU32.deSpec).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+/-! ### tls_vec: SecretTlsVecU* -/
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU8 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0SecretTlsVecU8.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0SecretTlsVecU8.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
+          (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.SecretTlsVecU8.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0SecretTlsVecU16.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0SecretTlsVecU16.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
+          (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.SecretTlsVecU16.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0SecretTlsVecU24.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0SecretTlsVecU24.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
+          (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.SecretTlsVecU24.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (tls_vec.SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.SecretTlsVecU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize zeroizeZeroizeInst SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0SecretTlsVecU32.serSpec zeroizeZeroizeInst SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst).SizeInst
+          (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0SecretTlsVecU32.serDetached zeroizeZeroizeInst SerializeInstLawful self_)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (bytes : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize zeroizeZeroizeInst DeserializeInst allocioreadReadInst) allocioreadReadInst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize.post allocioreadReadInst
+          (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total (tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful _ allocioreadReadInst allocioreadReadInstLawful bytes)
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) {T1 : Type}
+    (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+    (coreconvertAsRefPSliceU8InstLawful : core.convert.AsRef.Lawful T1 (Slice
+    Std.U8) coreconvertAsRefPSliceU8Inst) (bytes : T1) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {T1 : Type} (coreconvertAsRefPSliceU8Inst : core.convert.AsRef T1 (Slice Std.U8)) => Deserialize.tls_deserialize_exact.default (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst) coreconvertAsRefPSliceU8Inst bytes
+    ⦃ ⇓? res =>
+      ⌜ (Deserialize.tls_deserialize_exact.post (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst).SizeInst
+          (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst DeserializeInst) coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄ := by
+  exact partial_of_total ((tls_vec.SecretTlsVecU32.deSpec zeroizeZeroizeInst DeserializeInstLawful).exact coreconvertAsRefPSliceU8Inst coreconvertAsRefPSliceU8InstLawful bytes)
 
 /-! ### tls_vec: TlsByteSliceU* -/
 
@@ -9032,69 +9045,6 @@ theorem Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_sp
           Shared0TlsByteSliceU8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsByteSliceU8.serDetached self_)
 
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU16) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteSliceU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU16) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteSliceU16.serDetached self_)
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteSliceU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU24) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteSliceU24.serDetached self_)
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU32) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
-    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsByteSliceU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU32) :
-  ⦃ ⌜ True ⌝ ⦄
-    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
-          Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsByteSliceU32.serDetached self_)
-
 theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU8) (writer : W) :
@@ -9115,6 +9065,27 @@ theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_s
       ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.SizeInst
           tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsByteSliceU8.serDetached self_)
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU16) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteSliceU16.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU16) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteSliceU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteSliceU16.serDetached self_)
 
 theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9137,6 +9108,27 @@ theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_
           tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsByteSliceU16.serDetached self_)
 
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteSliceU24.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU24) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteSliceU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteSliceU24.serDetached self_)
+
 theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
     coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU24) (writer : W) :
@@ -9157,6 +9149,27 @@ theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_
       ⌜ (Serialize.tls_serialize_detached.post tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.SizeInst
           tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsByteSliceU24.serDetached self_)
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : tls_vec.TlsByteSliceU32) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
+    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsByteSliceU32.serSpec self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness (self_ : tls_vec.TlsByteSliceU32) :
+  ⦃ ⌜ True ⌝ ⦄
+    Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.SizeInst
+          Shared0TlsByteSliceU32.Insts.Tls_codecSerialize self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsByteSliceU32.serDetached self_)
 
 theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9181,7 +9194,7 @@ theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9196,7 +9209,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional
   intro hpre
   exact partial_of_total (Shared0TlsSliceU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -9206,82 +9219,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.f
           (Shared0TlsSliceU8.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (Shared0TlsSliceU8.serDetached SerializeInstLawful self_)
 
-theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU16 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsSliceU16.serDetached SerializeInstLawful self_)
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU24 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsSliceU24.serDetached SerializeInstLawful self_)
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
-    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
-    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU32 T)) (writer : W) :
-  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
-    ⦃ ⌜ True ⌝ ⦄
-    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
-          (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
-  intro hpre
-  exact partial_of_total (Shared0TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄
-    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
-    ⦃ ⇓? res =>
-      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
-          (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
-  exact partial_of_total (Shared0TlsSliceU32.serDetached SerializeInstLawful self_)
-
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9296,7 +9234,7 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functiona
   intro hpre
   exact partial_of_total (tls_vec.TlsSliceU8.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU8 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -9306,7 +9244,32 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.
           (tls_vec.TlsSliceU8.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsSliceU8.serDetached SerializeInstLawful self_)
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU16 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsSliceU16.serDetached SerializeInstLawful self_)
+
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9321,7 +9284,7 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.function
   intro hpre
   exact partial_of_total (tls_vec.TlsSliceU16.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU16 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -9331,7 +9294,32 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec
           (tls_vec.TlsSliceU16.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsSliceU16.serDetached SerializeInstLawful self_)
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU24 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsSliceU24.serDetached SerializeInstLawful self_)
+
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9346,7 +9334,7 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.function
   intro hpre
   exact partial_of_total (tls_vec.TlsSliceU24.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU24 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -9356,7 +9344,32 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec
           (tls_vec.TlsSliceU24.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (tls_vec.TlsSliceU24.serDetached SerializeInstLawful self_)
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type}
+theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+    (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+    coreiowriteWriteInst) (self_ : (tls_vec.TlsSliceU32 T)) (writer : W) :
+  (Serialize.tls_serialize.pre coreiowriteWriteInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (fun {W : Type} (coreiowriteWriteInst : core.io.write.Write W) => Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize SerializeInst coreiowriteWriteInst) coreiowriteWriteInst self_ writer
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize.post coreiowriteWriteInst
+          (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ writer res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (Shared0TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
+
+theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄
+    (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).tls_serialize_detached self_
+    ⦃ ⇓? res =>
+      ⌜ (Serialize.tls_serialize_detached.post (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst).SizeInst
+          (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst) self_ res).holds ⌝ ⦄ := by
+  exact partial_of_total (Shared0TlsSliceU32.serDetached SerializeInstLawful self_)
+
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
     (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
@@ -9371,7 +9384,7 @@ theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.function
   intro hpre
   exact partial_of_total (tls_vec.TlsSliceU32.serSpec SerializeInstLawful self_ _ coreiowriteWriteInst coreiowriteWriteInstLawful writer hpre)
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) (self_ : (tls_vec.TlsSliceU32 T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -9446,8 +9459,7 @@ theorem U24.Insts.CoreCmpPartialEqU24.eq_spec.functional_correctness (x : U24) (
   mvcgen [h]
   intro hr
   rw [hr]
-  simp [Subtype.val_inj]
-  exact Iff.rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq_spec.functional_correctness (x : quic_vec.VLBytes) (y : quic_vec.VLBytes) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9456,8 +9468,7 @@ theorem quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq_spec.functional_correc
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq_spec.functional_correctness (x : quic_vec.VLByteVec) (y : quic_vec.VLByteVec) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9466,8 +9477,7 @@ theorem quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq_spec.functional_co
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.eq_spec.functional_correctness (x : quic_vec.secret_bytes.SecretVLBytes) (y : quic_vec.secret_bytes.SecretVLBytes) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9490,8 +9500,7 @@ theorem tls_vec.TlsByteVecU8.Insts.CoreCmpPartialEqTlsByteVecU8.eq_spec.function
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.eq_spec.functional_correctness (x : tls_vec.TlsByteVecU16) (y : tls_vec.TlsByteVecU16) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9500,8 +9509,7 @@ theorem tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.eq_spec.functi
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.eq_spec.functional_correctness (x : tls_vec.TlsByteVecU24) (y : tls_vec.TlsByteVecU24) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9510,8 +9518,7 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.eq_spec.functi
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq_spec.functional_correctness (x : tls_vec.TlsByteVecU32) (y : tls_vec.TlsByteVecU32) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
@@ -9520,10 +9527,9 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq_spec.functi
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.functional_correctness {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU8 T)) (y : (tls_vec.TlsVecU8 T)) :
@@ -9536,7 +9542,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.eq_spec.functional_corre
   cases y
   simp
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.functional_correctness {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU16 T)) (y : (tls_vec.TlsVecU16 T)) :
@@ -9549,7 +9555,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.eq_spec.functional_cor
   cases y
   simp
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.functional_correctness {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU24 T)) (y : (tls_vec.TlsVecU24 T)) :
@@ -9562,7 +9568,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.eq_spec.functional_cor
   cases y
   simp
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.functional_correctness {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.functional_correctness {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) (x : (tls_vec.TlsVecU32 T)) (y : (tls_vec.TlsVecU32 T)) :
@@ -9576,7 +9582,7 @@ theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq_spec.functional_cor
   simp
 
 theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq_spec.functional_correctness {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -9591,7 +9597,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq_spec.func
   simp
 
 theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq_spec.functional_correctness {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -9606,7 +9612,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq_spec.fu
   simp
 
 theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq_spec.functional_correctness {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -9621,7 +9627,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq_spec.fu
   simp
 
 theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.eq_spec.functional_correctness {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -9649,8 +9655,7 @@ theorem quic_vec.VLBytes.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : q
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem quic_vec.VLByteVec.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : quic_vec.VLByteVec) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9658,8 +9663,7 @@ theorem quic_vec.VLByteVec.Insts.CoreCmpEq.eq_spec.functional_correctness (x y :
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : quic_vec.secret_bytes.SecretVLBytes) :
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9669,7 +9673,7 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq.eq_spec.functio
   ⦃ ⌜ True ⌝ ⦄ quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
   exact quic_vec.VLByteVec.Insts.CoreCmpEq.eq_spec.functional_correctness x y
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU8 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
   have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
@@ -9680,7 +9684,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Typ
   cases y
   simp
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU16 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
   have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
@@ -9691,7 +9695,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Ty
   cases y
   simp
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU24 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
   have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
@@ -9702,63 +9706,11 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Ty
   cases y
   simp
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) (x y : (tls_vec.TlsVecU32 T)) :
   ⦃ ⌜ True ⌝ ⦄ (tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32 corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
   have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
   mvcgen [tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32, tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.eq, h]
-  intro hr
-  rw [hr]
-  cases x
-  cases y
-  simp
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type} (corecmpEqInst
-  : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU8 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
-  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
-  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8, tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq, h]
-  intro hr
-  rw [hr]
-  cases x
-  cases y
-  simp
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU16 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
-  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
-  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16, tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq, h]
-  intro hr
-  rw [hr]
-  cases x
-  cases y
-  simp
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU24 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
-  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
-  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24, tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq, h]
-  intro hr
-  rw [hr]
-  cases x
-  cases y
-  simp
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU32 T)) :
-  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
-  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
-  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32, tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.eq, h]
   intro hr
   rw [hr]
   cases x
@@ -9771,8 +9723,7 @@ theorem tls_vec.TlsByteVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness (x y
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : tls_vec.TlsByteVecU16) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9780,8 +9731,7 @@ theorem tls_vec.TlsByteVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness (x 
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : tls_vec.TlsByteVecU24) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9789,8 +9739,7 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness (x 
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
 
 theorem tls_vec.TlsByteVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : tls_vec.TlsByteVecU32) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9798,8 +9747,59 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness (x 
   rintro rfl
   cases x
   cases y
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff, Std.Array.eq_iff]
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU8 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
+  mvcgen [tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8, tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.eq, h]
+  intro hr
+  rw [hr]
+  cases x
+  cases y
+  simp
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU16 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
+  mvcgen [tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16, tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.eq, h]
+  intro hr
+  rw [hr]
+  cases x
+  cases y
+  simp
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU24 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
+  mvcgen [tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24, tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.eq, h]
+  intro hr
+  rw [hr]
+  cases x
+  cases y
+  simp
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) (x y : (tls_vec.SecretTlsVecU32 T)) :
+  ⦃ ⌜ True ⌝ ⦄ (tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32 zeroizeZeroizeInst corecmpEqInst.PartialEqInst).eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff _ x.vec y.vec fun a b => corecmpEqInstLawful.eq_spec a b
+  mvcgen [tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32, tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.eq, h]
+  intro hr
+  rw [hr]
+  cases x
+  cases y
+  simp
 
 theorem varint.TlsVarInt.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : varint.TlsVarInt) :
   ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.CoreCmpPartialEqTlsVarInt.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
@@ -9842,7 +9842,7 @@ theorem U8.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness (
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
     · have : a = Aeneas.Std.core.num.U8.to_be_bytes self_ :=
-        Subtype.ext (by rw [ha, hs, List.take_left' hl])
+        Std.Array.ext _ _ (by rw [ha, hs, List.take_left' hl])
       show Aeneas.Std.core.num.U8.from_be_bytes a = self_
       rw [this, tls_codec.U8_from_be_bytes_to_be_bytes]
     · show t.val = rest.val
@@ -9882,7 +9882,7 @@ theorem U16.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness 
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
     · have : a = Aeneas.Std.core.num.U16.to_be_bytes self_ :=
-        Subtype.ext (by rw [ha, hs, List.take_left' hl])
+        Std.Array.ext _ _ (by rw [ha, hs, List.take_left' hl])
       show Aeneas.Std.core.num.U16.from_be_bytes a = self_
       rw [this, tls_codec.U16_from_be_bytes_to_be_bytes]
     · show t.val = rest.val
@@ -9922,7 +9922,7 @@ theorem U32.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness 
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
     · have : a = Aeneas.Std.core.num.U32.to_be_bytes self_ :=
-        Subtype.ext (by rw [ha, hs, List.take_left' hl])
+        Std.Array.ext _ _ (by rw [ha, hs, List.take_left' hl])
       show Aeneas.Std.core.num.U32.from_be_bytes a = self_
       rw [this, tls_codec.U32_from_be_bytes_to_be_bytes]
     · show t.val = rest.val
@@ -9962,7 +9962,7 @@ theorem U64.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness 
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
     · have : a = Aeneas.Std.core.num.U64.to_be_bytes self_ :=
-        Subtype.ext (by rw [ha, hs, List.take_left' hl])
+        Std.Array.ext _ _ (by rw [ha, hs, List.take_left' hl])
       show Aeneas.Std.core.num.U64.from_be_bytes a = self_
       rw [this, tls_codec.U64_from_be_bytes_to_be_bytes]
     · show t.val = rest.val
@@ -10002,7 +10002,7 @@ theorem U24.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness 
       simp
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
-    · exact Subtype.ext (by rw [ha, hs, List.take_left' hl])
+    · exact Std.Array.ext _ _ (by rw [ha, hs, List.take_left' hl])
     · show t.val = rest.val
       rw [ht, hs, List.drop_left' hl]
 
@@ -10041,11 +10041,11 @@ theorem ArrayU84.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correct
       simp
     obtain ⟨a, t, ha, ht, hr⟩ := h1 (by rw [hs]; simp [hl])
     refine ⟨_, hr, ?_, ?_⟩
-    · exact Subtype.ext (by rw [ha, hs]; exact List.take_left' hl)
+    · exact Std.Array.ext _ _ (by rw [ha, hs]; exact List.take_left' hl)
     · show t.val = rest.val
       rw [ht, hs]; exact List.drop_left' hl
 
-theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness {T : Type _}
   (RoundTripInst : spec.RoundTrip T)
   (RoundTripInstLawful : spec.RoundTrip.Lawful T RoundTripInst) (self_ : (core.option.Option T)) (rest : Slice Std.U8) :
   (spec.RoundTrip.round_trip.pre (core.option.Option.Insts.Tls_codecSpecRoundTrip RoundTripInst).SerializeBytesInst
@@ -10164,9 +10164,9 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functi
     (fun n => (Aeneas.Std.core.num.U8.to_be_bytes n).property) _
     (fun bytes a X hb => TlsByteVecGen.prefix_ok 1 (g := fun a => a.val) _
       Aeneas.Std.core.num.U8.to_be_bytes (fun _ => rfl) tls_codec.U8_from_be_bytes_to_be_bytes
-      (fun a b h => Subtype.ext h) (fun n => by simp) tls_codec.U8_deserialize_char bytes a X hb)
+      (fun a b h => Std.Array.ext _ _ h) (fun n => by simp) tls_codec.U8_deserialize_char bytes a X hb)
     _ (fun p => TlsByteVecGen.conv_total _
-      core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U8_spec (fun _ => by simp) p) _
+      core.convert.TryFromTUNever.Blanket.try_from_Usize_U8_spec (fun _ => by simp) p) _
     (funext fun s => congrFun tls_vec.TlsByteVecU8.deserialize_bytes_bytes_eq s)
     self_ rest hpre ?_
     (tls_vec.TlsByteVecU8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom self_)
@@ -10197,9 +10197,9 @@ theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSpecRoundTrip.round_trip_spec.funct
     (fun n => (Aeneas.Std.core.num.U16.to_be_bytes n).property) _
     (fun bytes a X hb => TlsByteVecGen.prefix_ok 2 (g := fun a => a.val) _
       Aeneas.Std.core.num.U16.to_be_bytes (fun _ => rfl) tls_codec.U16_from_be_bytes_to_be_bytes
-      (fun a b h => Subtype.ext h) (fun n => by simp) tls_codec.U16_deserialize_char bytes a X hb)
+      (fun a b h => Std.Array.ext _ _ h) (fun n => by simp) tls_codec.U16_deserialize_char bytes a X hb)
     _ (fun p => TlsByteVecGen.conv_total _
-      core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U16_spec (fun _ => by simp) p) _
+      core.convert.TryFromTUNever.Blanket.try_from_Usize_U16_spec (fun _ => by simp) p) _
     (funext fun s => congrFun tls_vec.TlsByteVecU16.deserialize_bytes_bytes_eq s)
     self_ rest hpre ?_
     (tls_vec.TlsByteVecU16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom self_)
@@ -10226,9 +10226,9 @@ theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSpecRoundTrip.round_trip_spec.funct
     (fun a : Aeneas.Std.Array Std.U8 3#usize => a.val) tls_codec.U24.pval 3#usize
     (fun a => a.property) _
     (fun bytes a X hb => TlsByteVecGen.prefix_ok 3 (f := id) (g := fun a => a.val) _
-      id (fun _ => rfl) (fun _ => rfl) (fun a b h => Subtype.ext h) (fun a => a.property)
+      id (fun _ => rfl) (fun _ => rfl) (fun a b h => Std.Array.ext _ _ h) (fun a => a.property)
       tls_codec.U24_deserialize_char bytes a X hb)
-    _ (fun p => tls_codec.core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_val p) _
+    _ (fun p => tls_codec.core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_val p) _
     (funext fun s => congrFun tls_vec.TlsByteVecU24.deserialize_bytes_bytes_eq s)
     self_ rest hpre ?_
     (tls_vec.TlsByteVecU24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom self_)
@@ -10239,7 +10239,7 @@ theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSpecRoundTrip.round_trip_spec.funct
   · refine partial_triple_post_mono (tls_vec.TlsByteVecU24.serialize_bytes_bytes_content self_) ?_
     intro r h out hr
     obtain ⟨b0, b1, b2, hn, ho⟩ := h out hr
-    exact ⟨⟨[b0, b1, b2], by simp⟩, by simpa [tls_codec.U24.pval] using hn, by simp [ho]⟩
+    exact ⟨Std.Array.from [b0, b1, b2] (by simp), by simpa [tls_codec.U24.pval] using hn, by simp [ho]⟩
 
 theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness (self_ : tls_vec.TlsByteVecU32) (rest : Slice Std.U8) :
   (spec.RoundTrip.round_trip.pre tls_vec.TlsByteVecU32.Insts.Tls_codecSpecRoundTrip.SerializeBytesInst
@@ -10259,7 +10259,7 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSpecRoundTrip.round_trip_spec.funct
     (fun n => (Aeneas.Std.core.num.U32.to_be_bytes n).property) _
     (fun bytes a X hb => TlsByteVecGen.prefix_ok 4 (g := fun a => a.val) _
       Aeneas.Std.core.num.U32.to_be_bytes (fun _ => rfl) tls_codec.U32_from_be_bytes_to_be_bytes
-      (fun a b h => Subtype.ext h) (fun n => by simp) tls_codec.U32_deserialize_char bytes a X hb)
+      (fun a b h => Std.Array.ext _ _ h) (fun n => by simp) tls_codec.U32_deserialize_char bytes a X hb)
     _ (fun p => TlsByteVecGen.conv_total _
       core.Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from_spec (fun _ => by simp) p) _
     (funext fun s => congrFun tls_vec.TlsByteVecU32.deserialize_bytes_bytes_eq s)
@@ -10299,7 +10299,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functio
     refine tls_codec.alloc.string.String.deserialize_enc_rest self_ rest s hn ?_
     rw [hs, List.map_append, hv, List.append_assoc]
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) (self_ : (alloc.vec.Vec T)) (rest : Slice Std.U8) :
   (spec.RoundTrip.round_trip.pre (alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip NonEmptyInst).SerializeBytesInst
@@ -10337,15 +10337,15 @@ theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_co
       have := t.property
       simp [ht, ← hbe] at this
       scalar_tac
-    exact triple_post_mono (hl.dec x ⟨w, by scalar_tac⟩ b hb (by simpa using hlen) t)
-      fun _ h => h (by rw [ht, hbe])
+    exact triple_post_mono (hl.dec x (Slice.from w (by scalar_tac)) b hb (by simpa using hlen) t)
+      fun _ h => by simpa using h (by simp [ht, hbe])
   have hb : s.val.map (·.val) = varint.encList ((self_ : Slice T).val.flatMap enc).length ++
       ((self_ : Slice T).val.flatMap enc).map (·.val) ++ rest.val.map (·.val) := by
     rw [hsv, List.map_append, hv]
   refine triple_post_mono (alloc.vec.Vec.deserialize_rt _ enc (self_ : Slice T).val hd
     (fun x hx => (hP x (hall x hx)).1) rest.val s hn hb) ?_
   rintro r ⟨p, rfl, h1, h2⟩
-  exact ⟨p, rfl, Subtype.ext h1, h2⟩
+  exact ⟨p, rfl, Slice.ext _ _ h1, h2⟩
 
 /-! ### spec.NonEmpty -/
 
@@ -10409,7 +10409,7 @@ theorem ArrayU84.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctnes
     (ArrayU8LEN.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness 4#usize self_) ?_
   mvcgen [ArrayU8LEN.Insts.Tls_codecSize.tls_serialized_len]
 
-theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness {T : Type _}
   (RoundTripInst1 : spec.RoundTrip T)
   (RoundTripInst1Lawful : spec.RoundTrip.Lawful T RoundTripInst1) (self_ : (core.option.Option T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -10504,7 +10504,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional
     (alloc.string.String.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness self_) ?_
   mvcgen [alloc.string.String.size_pos]
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) (self_ : (alloc.vec.Vec T)) :
   ⦃ ⌜ True ⌝ ⦄
@@ -10574,7 +10574,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec
           res).holds ⌝ ⦄ := by
   exact partial_of_total (VLBytes.round_trip_exact self_)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.functional_correctness {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -10594,7 +10594,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_std_spec.func
   intro hpre
   exact partial_of_total (Vec.round_trip_std NonEmptyStdInst corefmtDebugInst NonEmptyStdInstLawful allocioreadReadInst allocioreadReadInstLawful self_ reader rest hpre)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.functional_correctness {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
@@ -10625,7 +10625,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.func
           quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.RoundTripStdInst quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (VLBytes.nonempty_std self_)
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.functional_correctness {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) (self_ : (alloc.vec.Vec T)) :
@@ -10880,7 +10880,7 @@ theorem quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.b
   exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ SecretVLBytes.agree.1 VLBytes.partialEq_lawful SecretVLBytes.agree.2
     «prefix» rest bytes other_rest other hpre))
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {T : Type _}
   (DecodersAgreeInst : spec.io.DecodersAgree T)
   (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
     (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
@@ -10896,7 +10896,7 @@ theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.fun
   exact partial_of_total (ok_triple_of (decoders_agree_post_of _ (alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful _ DecodersAgreeInstLawful.corecmpPartialEqInstLawful) (Vec.agree DecodersAgreeInstLawful.DeserializeInstLawful DecodersAgreeInstLawful.DeserializeBytesInstLawful DecodersAgreeInstLawful.agree DecodersAgreeInstLawful.bindep).1
     allocioreadReadInst allocioreadReadInstLawful reader))
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness {T : Type _}
   (DecodersAgreeInst : spec.io.DecodersAgree T)
   (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) («prefix» : Slice Std.U8) (rest : Slice Std.U8)
     (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
@@ -10931,7 +10931,8 @@ theorem U8.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_
           U8.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst U8.Insts.Tls_codecSpecIoRoundTripMixed self_ rest
           whole res).holds ⌝ ⦄ := by
   intro hpre
-  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _ _ _ core.U8.Insts.CoreCmpPartialEqU8.Lawful U8.encode_decodes
+  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _
+    U8.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst _ core.U8.Insts.CoreCmpPartialEqU8.Lawful U8.encode_decodes
     U8.agree.1 self_ rest whole hpre))
 
 theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_correctness (self_ : quic_vec.VLBytes) (rest : Slice Std.U8)
@@ -10947,7 +10948,8 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_sp
           quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed self_ rest
           whole res).holds ⌝ ⦄ := by
   intro hpre
-  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _ _ _ VLBytes.partialEq_lawful VLBytes.encode_decodes
+  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst _ VLBytes.partialEq_lawful VLBytes.encode_decodes
     VLBytes.agree.1 self_ rest whole hpre))
 
 end tls_codec

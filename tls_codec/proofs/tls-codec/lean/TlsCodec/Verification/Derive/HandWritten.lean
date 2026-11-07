@@ -22,7 +22,7 @@ open tls_codec
 
 /-- `T::tls_deserialize_exact` on a byte slice, from `T`'s `Deserialize.Lawful`: an `Ok v` has
 the size of the slice. -/
-theorem Deserialize.Lawful.exact_slice {T : Type} {DI : Deserialize T}
+theorem Deserialize.Lawful.exact_slice {T : Type _} {DI : Deserialize T}
     (h : Deserialize.Lawful T DI) (s : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize_exact
       (core.Shared0T.Insts.CoreConvertAsRef (core.Slice.Insts.CoreConvertAsRefSlice Std.U8)) s

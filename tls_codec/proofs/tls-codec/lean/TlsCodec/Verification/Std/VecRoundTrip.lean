@@ -5,7 +5,7 @@ decoding loop reads the elements from a `Take` of the reader; an element's own r
 Obligations: none directly; the `std`-path halves (`Serialize` / `Deserialize` `Lawful` fields,
 lemma traits) of `PanicFreedom.lean` / `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): nothing ASSUMED; 1 signature-only stub
-(`core.io.error.Error.Insts.CoreFmtDebug.fmt`); `native_decide` (1). -/
+(`core.io.error.Error.Insts.CoreFmtDebug.fmt`). -/
 import TlsCodec.Verification.Std.VecVarInt
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -21,7 +21,7 @@ namespace tls_codec
 /-! ### From a `RoundTripStd` contract to `DecodesTo` -/
 
 /-- The `requires` of `round_trip_std`, from the reader's view. -/
-theorem spec.io.RoundTripStd.round_trip_std.pre_intro {T R : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_std.pre_intro {T R : Type _} (RT : spec.io.RoundTripStd T)
     (RI : alloc.io.read.Read R) (x : T) (bv : alloc.vec.Vec Std.U8) (reader : R)
     (rest : Slice Std.U8) (henc : spec.io.encode RT.SerializeInst x = ok (.Ok bv))
     (hv : alloc.io.read.Read.view RI reader = (bv : Slice Std.U8).val ++ rest.val) :
@@ -34,7 +34,7 @@ theorem spec.io.RoundTripStd.round_trip_std.pre_intro {T R : Type} (RT : spec.io
   simp [hv]
 
 /-- What the `ensures` of `round_trip_std` gives: the deserializer returns `x` and leaves `rest`. -/
-theorem spec.io.RoundTripStd.round_trip_std.post_elim {T R : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_std.post_elim {T R : Type _} (RT : spec.io.RoundTripStd T)
     (hEq : core.cmp.PartialEq.Lawful T T RT.corecmpPartialEqInst)
     (RI : alloc.io.read.Read R) (x : T) (reader : R) (rest : Slice Std.U8)
     (h : (spec.io.RoundTripStd.round_trip_std.post RI RT.SerializeInst RT.DeserializeInst
@@ -43,10 +43,10 @@ theorem spec.io.RoundTripStd.round_trip_std.post_elim {T R : Type} (RT : spec.io
       alloc.io.read.Read.view RI after = rest.val := by
   cases hd : RT.DeserializeInst.tls_deserialize RI reader with
   | fail e =>
-    obtain ⟨q, hq, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+    obtain ⟨q, hq, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
     simp [spec.io.RoundTripStd.round_trip_std.post, spec.io.decode_std, hd, Functor.map] at hq
   | div =>
-    obtain ⟨q, hq, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+    obtain ⟨q, hq, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
     simp [spec.io.RoundTripStd.round_trip_std.post, spec.io.decode_std, hd, Functor.map] at hq
   | ok p =>
     obtain ⟨res, after⟩ := p
@@ -67,7 +67,7 @@ theorem spec.io.RoundTripStd.round_trip_std.post_elim {T R : Type} (RT : spec.io
     · intro h; cases h
 
 /-- A lawful `RoundTripStd` decodes every encoding it produces, on every lawful reader. -/
-theorem spec.io.RoundTripStd.Lawful.decodes {T : Type} {RT : spec.io.RoundTripStd T}
+theorem spec.io.RoundTripStd.Lawful.decodes {T : Type _} {RT : spec.io.RoundTripStd T}
     (hRT : spec.io.RoundTripStd.Lawful T RT) (x : T) (bv : alloc.vec.Vec Std.U8)
     (henc : spec.io.encode RT.SerializeInst x = ok (.Ok bv)) :
     DecodesTo RT.DeserializeInst (bv : Slice Std.U8).val x := by
@@ -76,22 +76,22 @@ theorem spec.io.RoundTripStd.Lawful.decodes {T : Type} {RT : spec.io.RoundTripSt
   have hvr := StdIo.view_eq law
   have hlen : rest.length ≤ Usize.max := by
     have := law.view_le r; rw [hv, List.length_append] at this; omega
-  let rs : Slice Std.U8 := ⟨rest, hlen⟩
+  let rs : Slice Std.U8 := Slice.from rest hlen
   have hpre := spec.io.RoundTripStd.round_trip_std.pre_intro RT RI x bv r rs henc
-    (by rw [hvr, hv])
-  obtain ⟨u, -, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    (by rw [hvr, hv]; simp [rs])
+  obtain ⟨u, -, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hRT.round_trip_std_spec RI hRI x r rs hpre)
   obtain ⟨after, hd, hva⟩ := spec.io.RoundTripStd.round_trip_std.post_elim RT
     hRT.corecmpPartialEqInstLawful RI x r rs hpost
   rw [hd]
-  exact ok_triple_of ⟨rfl, by rw [← hvr]; exact hva⟩
+  exact ok_triple_of ⟨rfl, by rw [← hvr]; simpa [rs] using hva⟩
 
 /-- A lawful `NonEmptyStd`'s encodings are non-empty. -/
-theorem spec.io.NonEmptyStd.Lawful.nonempty {T : Type} {NE : spec.io.NonEmptyStd T}
+theorem spec.io.NonEmptyStd.Lawful.nonempty {T : Type _} {NE : spec.io.NonEmptyStd T}
     (h : spec.io.NonEmptyStd.Lawful T NE) (x : T) (bv : alloc.vec.Vec Std.U8)
     (henc : spec.io.encode NE.RoundTripStdInst.SerializeInst x = ok (.Ok bv)) :
     (bv : Slice Std.U8).val ≠ [] := by
-  obtain ⟨u, -, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨u, -, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.nonempty_std_spec x (pre_holds_of_ok_true rfl))
   apply holds_imp' hpost
   simp only [spec.io.NonEmptyStd.nonempty_std.post, henc, core.result.Result.is_err]
@@ -107,7 +107,7 @@ theorem spec.io.NonEmptyStd.Lawful.nonempty {T : Type} {NE : spec.io.NonEmptyStd
 
 /-- The bytes of a successful `encode` of a vector: the varint length prefix of the content size
 `N` (at most `2^30 - 1`), then the elements' encodings `B` (of length `N`). -/
-theorem Vec.encode_cases {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
+theorem Vec.encode_cases {T : Type _} {SI : Serialize T} (DbgI : core.fmt.Debug T)
     (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) :
     ∃ e, spec.io.encode (alloc.vec.Vec.Insts.Tls_codecSerialize SI DbgI) v = ok e ∧
     ∀ bv : alloc.vec.Vec Std.U8, e = .Ok bv →
@@ -116,7 +116,7 @@ theorem Vec.encode_cases {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
   have h1 := imax_eq
   have h2 := imax_ge
   obtain ⟨N, hN⟩ := SizeNat.exists hL.SizeInstLawful v.val
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.size_rel SI.SizeInst hL.SizeInstLawful v)
   have hsz' : (alloc.vec.Vec.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len v = ok sz := hsz
   obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact hL v sz hsz' hN
@@ -169,31 +169,31 @@ theorem Vec.encode_cases {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
         Shared0Slice.Insts.Tls_codecSerialize.tls_serialize, hcc, hwl, hel,
         CoreModels.alloc.vec.Vec.new]
       all_goals first
-        | (simp only [Slice.new, List.length_nil]; scalar_tac)
+        | (simp only [Slice.new_val, List.length_nil]; scalar_tac)
         | (exfalso; simp only [continue_eq_tryCF] at *; simp_all; omega)
         | (rename_i hbr; refine try_break_vc (fun e _ => ?_) hbr; mvcgen; intro _; mvcgen
            all_goals (intro hb2; refine try_break_vc (fun e _ => ?_) hb2; mvcgen)
            all_goals (intro _; exact ⟨_, rfl⟩))
-    obtain ⟨r, hr, e, he⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨r, hr, e, he⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, hr, fun bv hbv => by rw [he] at hbv; cases hbv⟩
 
-theorem Vec.encode_shape {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
+theorem Vec.encode_shape {T : Type _} {SI : Serialize T} (DbgI : core.fmt.Debug T)
     (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) (bv : alloc.vec.Vec Std.U8)
     (henc : spec.io.encode (alloc.vec.Vec.Insts.Tls_codecSerialize SI DbgI) v = ok (.Ok bv)) :
     ∃ N B, N ≤ 2 ^ 30 - 1 ∧ encAll SI v.val = some B ∧ B.length = N ∧
       (bv : Slice Std.U8).val = varint.enc N ++ B := by
   obtain ⟨e, he, h⟩ := Vec.encode_cases DbgI hL v
   rw [henc] at he
-  cases he
+  obtain rfl := RustM.ok_injective he
   exact h bv rfl
 
 /-! ### The decoding loop of `Vec<T>` on the encodings of a list of elements -/
 
 /-- Every element's encoding is non-empty and decodes back to it on every lawful reader. -/
-def ElemsDecode {T : Type} (SI : Serialize T) (DI : Deserialize T) (xs : List T) : Prop :=
+def ElemsDecode {T : Type _} (SI : Serialize T) (DI : Deserialize T) (xs : List T) : Prop :=
   ∀ x ∈ xs, ∀ bx, encOut SI x = some bx → bx ≠ [] ∧ DecodesTo DI bx x
 
-theorem encAll_nil_of_decode {T : Type} {SI : Serialize T} {DI : Deserialize T} {xs : List T}
+theorem encAll_nil_of_decode {T : Type _} {SI : Serialize T} {DI : Deserialize T} {xs : List T}
     (hxs : ElemsDecode SI DI xs) (h : encAll SI xs = some []) : xs = [] := by
   cases xs with
   | nil => rfl
@@ -209,7 +209,7 @@ theorem encAll_nil_of_decode {T : Type} {SI : Serialize T} {DI : Deserialize T} 
         exact (hxs x (by simp) bx hx).1 h.1
 
 section VecRTLoop
-variable {T : Type} {SI : Serialize T} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
+variable {T : Type _} {SI : Serialize T} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
   {RI : alloc.io.read.Read R} {v : R → List Std.U8} {a : R → Nat → R} (law : StdIo.RLaw RI v a)
 
 /-- Loop invariant: `k` elements read (the result is `xs.take k`), `m` bytes consumed out of
@@ -292,7 +292,7 @@ theorem Vec.rt_loop_body (xs : List T) (B rest : List Std.U8) (r0 : R) (L : Nat)
     · have hl := law.view_le r0
       rw [hres, List.length_take]
       omega
-    · rename_i _ tdb q el hq1 hq hne' nv hnv
+    · rename_i _ q el hq1 hq hne' nv hnv
       obtain ⟨hq1', hq2⟩ := hq
       have hel : x = el := by rw [hq1'] at hq1; exact core.result.Result.Ok.inj hq1
       subst hel
@@ -339,7 +339,7 @@ theorem Vec.rt_loop (xs : List T) (B rest : List Std.U8) (r0 : R) (L : Nat)
     (RtInv SI a xs B r0 L)
   · rintro ⟨b, t, ln, lm, rs⟩ hq
     have := Vec.rt_loop_body hL law xs B rest r0 L hB hBL hxs _ hq
-    obtain ⟨y, hy, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp this
+    obtain ⟨y, hy, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp this
     show Aeneas.Std.WP.spec (alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop.body DI RI
       b t ln lm rs) _
     rw [hy, Aeneas.Std.WP.spec_ok]
@@ -352,7 +352,7 @@ end VecRTLoop
 
 /-- `Vec<T>` decodes the encoding of `xs` (the length prefix of the content size `N`, then the
 elements' encodings `B`) back to `xs`, on every lawful reader. -/
-theorem Vec.decodes {T : Type} {SI : Serialize T} {DI : Deserialize T} (hL : Deserialize.Lawful T DI)
+theorem Vec.decodes {T : Type _} {SI : Serialize T} {DI : Deserialize T} (hL : Deserialize.Lawful T DI)
     (xs : alloc.vec.Vec T) (N : Nat) (B : List Std.U8) (hN : N ≤ 2 ^ 30 - 1)
     (hB : encAll SI xs.val = some B) (hBL : B.length = N) (hxs : ElemsDecode SI DI xs.val) :
     DecodesTo (alloc.vec.Vec.Insts.Tls_codecDeserialize DI) (varint.enc N ++ B) xs := by
@@ -361,9 +361,9 @@ theorem Vec.decodes {T : Type} {SI : Serialize T} {DI : Deserialize T} (hL : Des
   have hloop := fun r0 hB0 p hp => Vec.rt_loop hL law xs.val B rest r0 N hB0 hBL hxs p hp
   mvcgen [alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize, hr, hloop,
     alloc.io.read.Read.take.default, CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty]
-  · rename_i q hq _ val _ hz hcf
+  · rename_i q hq _ hcf' val hcu hz
     obtain ⟨⟨pr, hpr, hpr1, -⟩, hq2⟩ := hq
-    rw [continue_eq_tryCF.mp hcf] at hpr; cases hpr
+    rw [continue_eq_tryCF.mp (hcu.symm.trans hcf')] at hpr; cases hpr
     have hN0 : N = 0 := by rw [← hpr1, hz]; rfl
     subst hN0
     have hB0 : B = [] := List.eq_nil_of_length_eq_zero hBL
@@ -371,35 +371,35 @@ theorem Vec.decodes {T : Type} {SI : Serialize T} {DI : Deserialize T} (hL : Des
     have hx0 := encAll_nil_of_decode hxs hB
     refine ⟨?_, by simpa using hq2⟩
     congr 1
-    apply Subtype.ext
-    simp [Slice.new, hx0]
-  · rename_i q hq _ val _ hz hcf
+    apply Slice.ext
+    simp [Slice.new_val, hx0]
+  · rename_i q hq _ hcf' val hcu hz
     obtain ⟨⟨pr, hpr, hpr1, -⟩, hq2⟩ := hq
-    rw [continue_eq_tryCF.mp hcf] at hpr; cases hpr
+    rw [continue_eq_tryCF.mp (hcu.symm.trans hcf')] at hpr; cases hpr
     have hc : (UScalar.cast UScalarTy.U64 val.1).val = val.1.val := Usize.cast_U64_val_eq _
     have hinv : RtInv SI a xs.val B q.2 N
         ((fun t => t), q.2, UScalar.cast UScalarTy.U64 val.1, UScalar.cast UScalarTy.U64 val.1,
           Slice.new T) :=
       ⟨0, 0, fun _ => rfl, le_refl _, by omega, (law.adv_zero _).symm, by simp [hc, hpr1],
-        by simp [Slice.new], by simpa using hB⟩
+        by simp [Slice.new_val], by simpa using hB⟩
     have hl := hloop q.2 hq2 _ hinv
     mvcgen [hl]
     · rename_i y hnone hy
       obtain ⟨-, hres, hin, hback⟩ := hy
       refine ⟨?_, ?_⟩
-      · congr 1; exact Subtype.ext hres
+      · congr 1; exact Slice.ext _ _ hres
       · have hl0 := law.view_le q.2
         rw [hback, hin, law.adv_view _ _ (by rw [hq2]; simp; omega), hq2,
           List.drop_left' hBL]
     · rename_i y e he hy
       rw [hy.1] at he; cases he
-  · rename_i q hq _ _ _ hbr
+  · rename_i q hq _ hcf _ hres
     obtain ⟨⟨pr, hpr, -, -⟩, -⟩ := hq
-    exact try_break_vc (fun e he => by rw [hpr] at he; cases he) hbr
+    exact try_break_vc_of_eq (hres.symm.trans hcf) (fun e he => by rw [hpr] at he; cases he)
 
 /-! ### `Vec<T>`: the lemma traits -/
 
-theorem encOut_some {T : Type} {SI : Serialize T} {x : T} {b : List Std.U8}
+theorem encOut_some {T : Type _} {SI : Serialize T} {x : T} {b : List Std.U8}
     (h : encOut SI x = some b) :
     ∃ bv : alloc.vec.Vec Std.U8, spec.io.encode SI x = ok (.Ok bv) ∧ (bv : Slice Std.U8).val = b := by
   unfold encOut at h
@@ -410,7 +410,7 @@ theorem encOut_some {T : Type} {SI : Serialize T} {x : T} {b : List Std.U8}
   · cases h
 
 /-- The elements of a vector of `NonEmptyStd` values decode back (and are non-empty). -/
-theorem NonEmptyStd.elems_decode {T : Type} {NE : spec.io.NonEmptyStd T}
+theorem NonEmptyStd.elems_decode {T : Type _} {NE : spec.io.NonEmptyStd T}
     (hNE : spec.io.NonEmptyStd.Lawful T NE) (xs : List T) :
     ElemsDecode NE.RoundTripStdInst.SerializeInst NE.RoundTripStdInst.DeserializeInst xs := by
   intro x _ bx hbx
@@ -418,7 +418,7 @@ theorem NonEmptyStd.elems_decode {T : Type} {NE : spec.io.NonEmptyStd T}
   exact ⟨hNE.nonempty x bv he, hNE.RoundTripStdInstLawful.decodes x bv he⟩
 
 section VecLemmaTraits
-variable {T : Type} (NE : spec.io.NonEmptyStd T) (DbgI : core.fmt.Debug T)
+variable {T : Type _} (NE : spec.io.NonEmptyStd T) (DbgI : core.fmt.Debug T)
   (hNE : spec.io.NonEmptyStd.Lawful T NE)
 
 include hNE in

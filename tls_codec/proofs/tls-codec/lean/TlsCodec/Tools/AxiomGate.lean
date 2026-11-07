@@ -41,9 +41,9 @@ elab "#axiom_gate " pfx:str path:str : command => do
   let mut allowed : Std.HashSet Name := {}
   let mut opens : Std.HashSet Name := {}
   for line in content.splitOn "\n" do
-    let l := ((line.splitOn "#").headD "").trim
+    let l := ((line.splitOn "#").headD "").trimAscii.copy
     if l.isEmpty then continue
-    if l.startsWith "open " then opens := opens.insert (l.drop 5).trim.toName
+    if l.startsWith "open " then opens := opens.insert (l.drop 5).trimAscii.copy.toName
     else allowed := allowed.insert l.toName
   let pfxN := pfx.getString.toName
   let memo ← IO.mkRef ({} : Std.HashMap Name (Array Name))

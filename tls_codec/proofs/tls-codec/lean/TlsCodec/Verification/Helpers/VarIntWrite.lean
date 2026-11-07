@@ -50,7 +50,7 @@ theorem varint.TlsVarInt.write_bytes_loop0_spec (bytes : Slice Std.U8) (value : 
       x.1.val.length = bytes.val.length ∧ x.2.2.val ≤ x.1.val.length)
     (fun y : Slice Std.U8 => y.val.length = bytes.val.length)
   · rintro ⟨b, v, j⟩ ⟨hb, hj⟩
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (varint.TlsVarInt.write_bytes_loop0.body_spec b v j hj)
     dsimp only
     rw [hr, Aeneas.Std.WP.spec_ok]
@@ -97,7 +97,7 @@ theorem mapM_clone_replicate_U8 (n : Nat) (x : Std.U8) :
   | zero => rfl
   | succ n ih =>
     rw [List.replicate_succ, List.mapM_cons, ih]
-    rfl
+    simp [core.U8.Insts.CoreCloneClone.clone]
 
 /-- `vec![x; len]` for `u8`: a vector of length `len`. -/
 theorem alloc.vec.from_elem_U8_len_spec (item : Std.U8) (len : Std.Usize) :
@@ -106,17 +106,17 @@ theorem alloc.vec.from_elem_U8_len_spec (item : Std.U8) (len : Std.Usize) :
   unfold alloc.vec.from_elem rust_primitives.sequence.seq_create
   mvcgen
   · rename_i h
-    simp [Slice.new, h]
+    simp [Slice.new_val, h]
   · rename_i hne cl hcl comb hle
-    have hl := List.mapM_RustM_length hcl
+    have hl := List.mapM_RustM_length (RustM.match.isOk.mp hcl)
     simp only [List.length_replicate] at hl
-    simp only [comb, List.length_append, List.length_singleton, hl]
+    simp only [comb, Slice.from_val, List.length_append, List.length_singleton, hl]
     scalar_tac
   · rename_i hne cl hcl comb hle
-    have hl := List.mapM_RustM_length hcl
+    have hl := List.mapM_RustM_length (RustM.match.isOk.mp hcl)
     simp only [List.length_replicate] at hl
     exfalso; apply hle
-    simp only [comb, List.length_append, List.length_singleton, hl]
+    simp only [comb, Slice.from_val, List.length_append, List.length_singleton, hl]
     scalar_tac
   · rename_i hne e hcl
     rw [mapM_clone_replicate_U8] at hcl
@@ -239,11 +239,11 @@ theorem varint.TlsVarInt.write_bytes_spec (self : varint.TlsVarInt) (buf : Slice
   · refine triple_post_mono (varint.TlsVarInt.write_bytes_spec_le self buf hv) ?_
     rintro r ⟨h1, h2⟩
     exact ⟨fun h => h.elim (fun h => absurd hv (by omega)) h1, fun _ => h2⟩
-  · obtain ⟨m, hm, hmv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
+  · obtain ⟨m, hm, hmv⟩ := Aeneas.Std.triple_iff_exists_ok.mp varint.TlsVarInt.MAX_spec
     have hgt : self > m := by scalar_tac
     unfold varint.TlsVarInt.write_bytes
     rw [hm]
-    simp only [bind_tc_ok, if_pos hgt]
+    simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, if_pos hgt]
     mvcgen
     exact ⟨by simp, fun h => absurd h hv⟩
 

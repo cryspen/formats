@@ -3,8 +3,7 @@
 Obligations: none directly; the bytes-path halves of `PanicFreedom.lean` /
 `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_Usize`, `numBits_eq_64`;
-3 signature-only stubs (`core.convert.Infallible.Insts.CoreFmtDebug.fmt`,
-`core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt`, `Error.Insts.CoreFmtDebug.fmt`). -/
+1 signature-only stub (`Error.Insts.CoreFmtDebug.fmt`). -/
 import TlsCodec.Verification.Helpers.HandTranslated
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -70,9 +69,10 @@ theorem alloc.vec.Vec.extend_from_slice_U8_spec (v : alloc.vec.Vec Std.U8) (s : 
     ⦃ ⇓ r => ⌜ (r : Slice Std.U8).val = (v : Slice Std.U8).val ++ s.val ⌝ ⦄ := by
   unfold alloc.vec.Vec.extend_from_slice rust_primitives.sequence.seq_extend
   erw [mapM_clone_U8]
+  simp only [RustM.match.ok]
   have hh : (v : Slice Std.U8).val.length + s.val.length ≤ Usize.max := h
   mvcgen
-  all_goals (exfalso; simp_all +zetaDelta [List.length_append])
+  all_goals simp_all +zetaDelta [List.length_append]
 
 /-- `usize -> u8` `TryFrom`: `Ok` of the cast when it fits, an error otherwise. -/
 theorem core.U8.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from_char (x : Std.Usize) :
@@ -135,7 +135,7 @@ macro "bytevec_ser_close" : tactic => `(tactic| (
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try casesm* (∃ _, _), (_ ∧ _))
   all_goals subst_vars
-  all_goals (simp_all [Slice.len, Slice.new])
+  all_goals (simp_all [Slice.len, Slice.new_val])
   all_goals first
     | omega
     | scalar_tac
@@ -266,7 +266,7 @@ theorem tls_vec.TlsByteVecU8.serialize_bytes_bytes_content (self : tls_vec.TlsBy
 
 /-- `s.get(start..end)`, content version: if it returns `Some t`, then `t` is the corresponding sublist. -/
 theorem core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_content_spec
-    {T : Type} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ ∀ t, o = some t → r.start.val ≤ r.end.val ∧ r.end.val ≤ s.val.length ∧
         t.val = (s.val.drop r.start.val).take (r.end.val - r.start.val) ⌝ ⦄ := by
@@ -289,7 +289,7 @@ theorem core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_c
 /-- `s.get(start..end)`, exact version: `Some` of the corresponding sublist exactly when the range is
 within `s`. -/
 theorem core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_total_spec
-    {T : Type} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ r.start.val ≤ r.end.val → r.end.val ≤ s.val.length →
         ∃ t : Slice T, o = some t ∧ t.val = (s.val.drop r.start.val).take (r.end.val - r.start.val) ⌝ ⦄ := by
@@ -314,7 +314,7 @@ theorem core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_t
     scalar_tac
 
 /-- `Vec::eq` (element-wise, through a spec of the element `eq`): `decide` of list equality. -/
-theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type} [DecidableEq T]
+theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type _} [DecidableEq T]
     (inst : core.cmp.PartialEq T T) (a b : alloc.vec.Vec T)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = decide (x = y) ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq inst a b
@@ -365,7 +365,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type} [DecidableEq 
       have he' : r.2.end.val = it.end.val := by rw [he]
       have hxy : x = y := by subst hc; simpa using hdec.symm
       have hall := hres.mp hres1
-      refine ⟨⟨by omega, by omega, ⟨fun _ j hj => ?_, fun _ => trivial⟩⟩, by omega⟩
+      refine ⟨⟨by omega, by omega, ⟨fun _ j hj => ?_, fun _ => hres1⟩⟩, by omega⟩
       by_cases hji : j < it.start.val
       · exact hall j hji
       · have hj : j = it.start.val := by omega
@@ -390,7 +390,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type} [DecidableEq 
       obtain ⟨hlt, hii, hs, he⟩ := core.ops.range.Range.next_Usize_some it r i hi hnx
       subst hii
       have he' : r.2.end.val = it.end.val := by rw [he]
-      refine ⟨⟨by omega, by omega, ⟨fun h => absurd h (by simp), fun hall => ?_⟩⟩, by omega⟩
+      refine ⟨⟨by omega, by omega, ⟨fun h => absurd h hres1, fun hall => ?_⟩⟩, by omega⟩
       exfalso
       apply hres1
       apply hres.mpr
@@ -412,7 +412,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type} [DecidableEq 
       (fun y => y = decide (a.val = b.val))
     · rintro ⟨it', res'⟩ hp
       obtain ⟨hp1, hp2, hp3⟩ := hp
-      obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+      obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
         (hbody it' res' hp1 hlen hp2 hp3)
       show Aeneas.Std.WP.spec (alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_loop.body inst a b it' res') _
       rw [hv, Aeneas.Std.WP.spec_ok]
@@ -436,7 +436,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec {T : Type} [DecidableEq 
     exact hne (UScalar.eq_of_val_eq (by simp [Slice.len, hab]))
 
 /-- `Vec::eq` does not fail when the element `eq` does not fail (total). -/
-theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf {T : Type}
+theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf {T : Type _}
     (inst : core.cmp.PartialEq T T) (a b : alloc.vec.Vec T)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq inst a b ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -464,7 +464,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf {T : Type}
         p.1.end.val = a.val.length ∧ p.1.start.val ≤ p.1.end.val)
       (fun _ => True)
     · rintro ⟨it', res'⟩ ⟨hp1, hp2⟩
-      obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hbody it' res' hp1 hlen hp2)
+      obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hbody it' res' hp1 hlen hp2)
       show Aeneas.Std.WP.spec (alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_loop.body inst a b it' res') _
       rw [hv, Aeneas.Std.WP.spec_ok]
       cases v <;> exact hP
@@ -479,20 +479,20 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_pf {T : Type}
     exact h trivial
 
 /-- The parent `eq` of an `Eq`-lawful instance does not fail. -/
-theorem _root_.CoreModels.core.cmp.Eq.Lawful.eq_pf {T : Type} {inst : core.cmp.Eq T}
+theorem _root_.CoreModels.core.cmp.Eq.Lawful.eq_pf {T : Type _} {inst : core.cmp.Eq T}
     (h : core.cmp.Eq.Lawful T inst) (x y : T) :
     ⦃ ⌜ True ⌝ ⦄ inst.PartialEqInst.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hs := h.eq_spec x y
   mvcgen [hs]
 
-theorem _root_.CoreModels.core.cmp.PartialEq.Lawful.eq_pf {T : Type} {inst : core.cmp.PartialEq T T}
+theorem _root_.CoreModels.core.cmp.PartialEq.Lawful.eq_pf {T : Type _} {inst : core.cmp.PartialEq T T}
     (h : core.cmp.PartialEq.Lawful T T inst) (x y : T) :
     ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hs := h.eq_spec x y
   mvcgen [hs]
 
 /-- `Vec::eq`, when the element `eq` decides `=`, decides `=`. -/
-theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff {T : Type}
+theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff {T : Type _}
     (inst : core.cmp.PartialEq T T) (a b : alloc.vec.Vec T)
     (heq : ∀ x y, ⦃ ⌜ True ⌝ ⦄ inst.eq x y ⦃ ⇓ r => ⌜ r = true ↔ x = y ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq inst a b
@@ -508,11 +508,10 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff {T : Type}
   have h := alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_spec inst a b hdec
   mvcgen [h]
   rintro rfl
-  simp [Subtype.val_inj]
-  rfl
+  simp [Slice.eq_iff]
 
 /-- `Vec::eq`, when the element `eq` decides `HEq` (a `PartialEq.Lawful`), decides `=`. -/
-theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff_of_lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff_of_lawful {T : Type _}
     (inst : core.cmp.PartialEq T T) (a b : alloc.vec.Vec T)
     (hl : core.cmp.PartialEq.Lawful T T inst) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq inst a b
@@ -523,7 +522,7 @@ theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.eq_iff_of_lawful {T : Type}
 
 /-- `Vec<T>`'s `PartialEq.Lawful` from the element's (lives here, not in `MissingCoreModelsSpecs`,
 because it uses the `Vec::eq` loop spec above). -/
-theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful {T : Type _}
     (inst : core.cmp.PartialEq T T) (hl : core.cmp.PartialEq.Lawful T T inst) :
     core.cmp.PartialEq.Lawful (alloc.vec.Vec T) (alloc.vec.Vec T)
       (alloc.vec.Vec.Insts.CoreCmpPartialEqVec inst) := by

@@ -20,7 +20,7 @@ namespace tls_codec
 
 /-- One step of the serialisation loop (no element fails): either the iterator is exhausted, or
 the head `e` is consumed and `f e` is appended. -/
-def loop_append_step {T : Type} (f : T → List Std.U8) (it' : core.slice.iter.Iter T)
+def loop_append_step {T : Type _} (f : T → List Std.U8) (it' : core.slice.iter.Iter T)
     (o : alloc.vec.Vec Std.U8)
     (r : ControlFlow (core.slice.iter.Iter T × alloc.vec.Vec Std.U8)
       (alloc.vec.Vec Std.U8 × core.option.Option Error)) : Prop :=
@@ -31,7 +31,7 @@ def loop_append_step {T : Type} (f : T → List Std.U8) (it' : core.slice.iter.I
 /-- A `loop` that walks a slice iterator and appends `f e` to the output per element (the
 serialisation loop of the hand-translated slice serializer, when no element fails).
 `hbody`: one step. -/
-theorem loop_append_spec {T : Type} (f : T → List Std.U8) (it : core.slice.iter.Iter T)
+theorem loop_append_spec {T : Type _} (f : T → List Std.U8) (it : core.slice.iter.Iter T)
     (out : alloc.vec.Vec Std.U8)
     (body : core.slice.iter.Iter T × alloc.vec.Vec Std.U8 →
       RustM (ControlFlow (core.slice.iter.Iter T × alloc.vec.Vec Std.U8)
@@ -49,8 +49,8 @@ theorem loop_append_spec {T : Type} (f : T → List Std.U8) (it : core.slice.ite
     (fun p : core.slice.iter.Iter T × alloc.vec.Vec Std.U8 => (p.1 : Slice T).val.length)
     (fun p => p.2.val ++ (p.1 : Slice T).val.flatMap f = out.val ++ (it : Slice T).val.flatMap f)
   · rintro ⟨it', a⟩ hinv
-    have hb := Aeneas.Std.WP.exists_imp_spec
-      (Aeneas.Std.WP.triple_iff_exists_ok.mp (hbody it' a (by
+    have hb := exists_imp_spec
+      (Aeneas.Std.triple_iff_exists_ok.mp (hbody it' a (by
         simp only at hinv
         have := congrArg List.length hinv
         simp only [List.length_append] at this
@@ -104,7 +104,7 @@ theorem Shared0Slice.serialize_U8_char (s : Slice Std.U8) :
                (2 ^ 30 - 1 < s.val.length → ∃ e, r = .Err e) ⌝ ⦄ := by
   unfold Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   nth_rewrite 1 [slice_iter_ok]
-  erw [bind_tc_ok]
+  erw [Aeneas.Std.bind_ok]
   refine triple_bind_of_total (loop_len_sum_spec 1#usize _ 0#usize _ ?hlen ?hbody) ?hk
   case hlen => scalar_tac
   case hbody =>
@@ -148,7 +148,7 @@ theorem Shared0Slice.serialize_U8_char (s : Slice Std.U8) :
       obtain rfl := core.result.Result.Ok.inj hbb
       refine ⟨(it : Slice U8).val[0], ?_, ?_⟩
       · simp [List.getElem_zero, List.cons_head_tail]
-      · simp [combined, hbv, List.get_eq_getElem]; rfl
+      · simp [combined, hbv, List.get_eq_getElem]
     · -- the vector would exceed `usize`: impossible (bound)
       rename_i it o hb hne hlt bytes hv combined hncl _ _ _ _
       obtain ⟨b, hbb, hbv⟩ := hv
@@ -230,7 +230,7 @@ theorem Shared0Slice.serialize_U8_char (s : Slice Std.U8) :
 
 /-! ### `Vec::clone` does not fail, given that the element `clone` does not -/
 
-theorem vecCloneLoop_pf {T : Type} (inst : core.clone.Clone T)
+theorem vecCloneLoop_pf {T : Type _} (inst : core.clone.Clone T)
     (hc : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (it : core.slice.iter.Iter T) (w : rust_primitives.sequence.Seq T)
     (h : (w : Slice T).val.length + (it : Slice T).val.length ≤ Usize.max) :
@@ -253,12 +253,12 @@ theorem vecCloneLoop_pf {T : Type} (inst : core.clone.Clone T)
     · have hpos : 0 < (it : Slice T).val.length := by scalar_tac
       have hw : (w : Slice T).val.length < Usize.max := by omega
       simp [hz, hpos]
-      obtain ⟨r, hr, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hc ((it : Slice T).val[0]))
+      obtain ⟨r, hr, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hc ((it : Slice T).val[0]))
       simp [hr, hw]
       omega
   · exact h
 
-theorem vecClone_pf {T : Type} (inst : core.clone.Clone T)
+theorem vecClone_pf {T : Type _} (inst : core.clone.Clone T)
     (hc : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.CoreCloneClone.clone inst v ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold alloc.vec.Vec.Insts.CoreCloneClone.clone
@@ -267,10 +267,10 @@ theorem vecClone_pf {T : Type} (inst : core.clone.Clone T)
     rust_primitives.sequence.seq_to_slice, rust_primitives.sequence.seq_from_slice]
   have hl := vecCloneLoop_pf inst hc
   mvcgen [hl]
-  simp [Slice.new]; scalar_tac
+  simp [Slice.new_val]
 
 /-- Folding a slice iterator with a never-failing `call_mut` never fails. -/
-theorem Shared0Slice.fold_pf {T C : Type}
+theorem Shared0Slice.fold_pf {T C : Type _}
     (inst : core.ops.function.FnMut C (Std.Usize × T) Std.Usize)
     (h : ∀ c p, ⦃ ⌜ True ⌝ ⦄ inst.call_mut c p ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (it : core.slice.iter.Iter T) (acc : Std.Usize) (c : C) :
@@ -299,16 +299,16 @@ theorem Shared0Slice.fold_pf {T C : Type}
   · trivial
 
 /-- `<&[T]>::tls_serialized_len` does not fail when the element size does not. -/
-theorem Shared0Slice.size_pf {T : Type} (SizeInst : Size T)
+theorem Shared0Slice.size_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSize.tls_serialized_len SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   have hcall : ∀ c p, ⦃ ⌜ True ⌝ ⦄
-      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize
         SizeInst).call_mut c p ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
     rintro c ⟨a, e⟩
     have hs := SizeInstLawful.tls_serialized_len_spec
-    mvcgen [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut,
+    mvcgen [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.call_mut,
       hs]
   have hl := Shared0Slice.fold_pf _ hcall
   have hm := Shared0Slice.size_closure_map_spec SizeInst
@@ -316,16 +316,16 @@ theorem Shared0Slice.size_pf {T : Type} (SizeInst : Size T)
 
 /-- `<&[T]>::tls_serialized_len` is positive, whatever the elements: the content length, or its
 varint prefix when that is zero (and then `from_usize` succeeds). -/
-theorem Shared0Slice.size_pos {T : Type} (SizeInst : Size T)
+theorem Shared0Slice.size_pos {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSize.tls_serialized_len SizeInst self_
     ⦃ ⇓ r => ⌜ 0 < r.val ⌝ ⦄ := by
   have hcall : ∀ c p, ⦃ ⌜ True ⌝ ⦄
-      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize
         SizeInst).call_mut c p ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
     rintro c ⟨a, e⟩
     have hs := SizeInstLawful.tls_serialized_len_spec
-    mvcgen [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut,
+    mvcgen [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.call_mut,
       hs]
   have hl := Shared0Slice.fold_pf _ hcall
   have hm := Shared0Slice.size_closure_map_spec SizeInst
@@ -350,7 +350,7 @@ theorem Shared0Slice.size_pos {T : Type} (SizeInst : Size T)
     scalar_tac
 
 /-- `Vec<T>::tls_serialized_len` does not fail when the element size does not. -/
-theorem alloc.vec.Vec.size_pf {T : Type} (SizeInst : Size T)
+theorem alloc.vec.Vec.size_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by

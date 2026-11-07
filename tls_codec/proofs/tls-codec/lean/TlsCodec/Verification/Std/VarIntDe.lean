@@ -28,40 +28,41 @@ namespace tls_codec
 
 /-- A one-byte `read_exact` into a fresh array buffer: the byte read is the head of the view. -/
 theorem read1_facts {R : Type} {v : R → List Std.U8}
-    {a : R → Nat → R} (r : R)
+    {a : R → Nat → R} (r : R) (buf : Aeneas.Std.Array Std.U8 1#usize)
     (s : Slice Std.U8 × (Slice Std.U8 → Aeneas.Std.Array Std.U8 1#usize))
-    (hs : s.1.val = (Array.repeat 1#usize 0#u8).val ∧ s.2 = (Array.repeat 1#usize 0#u8).from_slice)
+    (hs : s.1.val = buf.val ∧ s.2 = buf.from_slice)
     (r5 : core.result.Result Unit core.io.error.Error × R × Slice Std.U8) (u : Unit)
     (hx : r5.1 = .Ok u)
     (hpost : (s.1.val.length ≤ (v r).length →
         r5 = (.Ok (), a r s.1.val.length, alloc.io.read.cut (v r) s.1)) ∧
       ((v r).length < s.1.val.length → r5.1 = .Err core.io.error.Error.READ_EXACT_EOF)) :
     ∃ (b : Std.U8) (t : List Std.U8), v r = b :: t ∧ r5.2.1 = a r 1 ∧ (s.2 r5.2.2).val = [b] := by
-  have hl : s.1.val.length = 1 := by rw [hs.1]; simp
+  have hl : s.1.val.length = 1 := by simpa [hs.1] using buf.property
   have hv1 : 1 ≤ (v r).length := by
     by_contra hn
     have := hpost.2 (by omega)
     rw [hx] at this; cases this
   have hr5 := hpost.1 (by omega)
-  have hs2 : s = (Array.repeat 1#usize 0#u8).to_slice_mut :=
-    Prod.ext (Subtype.ext (hs.1.trans (by simp [Array.to_slice_mut, Array.to_slice]))) hs.2
+  have hs2 : s = buf.to_slice_mut :=
+    Prod.ext (Slice.ext _ _ (hs.1.trans (by simp [Array.to_slice_mut, Array.to_slice]))) hs.2
   cases hvr : v r with
   | nil => rw [hvr] at hv1; simp at hv1
   | cons b t =>
     refine ⟨b, t, rfl, ?_, ?_⟩
     · rw [hr5, hl]
     · rw [hr5]
-      have := read_fixed (Array.repeat 1#usize 0#u8) (v r) (by simpa using hv1)
+      have := read_fixed buf (v r) (by simpa using hv1)
       rw [← hs2, hvr] at this
       rw [hvr]
       simpa using this
 
 /-- One iteration of the std varint loop (one `read_exact` of a single byte). -/
 theorem varint.std_loop.body_spec {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
-    {a : R → Nat → R} (law : StdIo.RLaw RI v a) (len : Std.Usize) (r : R) (value : Std.U64)
+    {a : R → Nat → R} (law : StdIo.RLaw RI v a) (lb : Aeneas.Std.Array Std.U8 1#usize) (len : Std.Usize)
+    (r : R) (value : Std.U64)
     (i : Std.Usize) (hi : 1 ≤ i.val) (hil : i.val ≤ len.val) (hl : len.val ≤ 8)
     (hv : value.val < 2 ^ (8 * i.val - 2)) :
-    ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize_loop.body RI len r value i
+    ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize_loop.body RI lb len r value i
     ⦃ ⇓ res => ⌜ match res with
       | .done (r', v', f) => (f = core.option.Option.None → i = len ∧ r' = r ∧ v' = value) ∧
           (∀ e, f = core.option.Option.Some e → i.val < len.val ∧ (v r).length = 0)
@@ -70,9 +71,9 @@ theorem varint.std_loop.body_spec {R : Type} {RI : alloc.io.read.Read R} {v : R 
           v'.val = value.val * 256 + b.val ⌝ ⦄ := by
   have hre := fun s => read_exact_spec law r s
   unfold varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize_loop.body
-  mvcgen [hre]
+  mvcgen [hre, as_mut_slice_spec]
   · rename_i hlt s hs r5 _ hx hpost sh h4 h5 h6 byte hidx c hc sum hsum inew hinew
-    obtain ⟨b, t, hvr, hr1, hsl⟩ := read1_facts r s hs r5 _ hx hpost
+    obtain ⟨b, t, hvr, hr1, hsl⟩ := read1_facts r _ s hs r5 _ hx hpost
     have hbb : byte = b := by
       obtain ⟨hx0, hbyte⟩ := hidx
       simp [hsl] at hbyte
@@ -99,11 +100,11 @@ theorem varint.std_loop.body_spec {R : Type} {RI : alloc.io.read.Read R} {v : R 
     scalar_tac
   · rename_i hlt s hs r5 _ hx hpost _ _ _ _ hov
     exfalso
-    obtain ⟨b, t, hvr, hr1, hsl⟩ := read1_facts r s hs r5 _ hx hpost
+    obtain ⟨b, t, hvr, hr1, hsl⟩ := read1_facts r _ s hs r5 _ hx hpost
     have : (s.2 r5.2.2).length = 1 := by simp [hsl]
     simp at hov
   · rename_i hlt s hs r5 e hx hpost
-    have hl : s.1.val.length = 1 := by rw [hs.1]; simp
+    have hl : s.1.val.length = 1 := by simpa [hs.1] using lb.property
     have hv0 : (v r).length = 0 := by
       by_contra hn
       have := hpost.1 (by omega)
@@ -121,10 +122,11 @@ theorem varint.std_loop.body_spec {R : Type} {RI : alloc.io.read.Read R} {v : R 
 /-- The std varint loop on a lawful reader: with enough input it reads `len - i` bytes and folds them
 into the value; otherwise it fails (having consumed what was there). -/
 theorem varint.std_loop_spec {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
-    {a : R → Nat → R} (law : StdIo.RLaw RI v a) (len : Std.Usize) (r : R) (value : Std.U64)
+    {a : R → Nat → R} (law : StdIo.RLaw RI v a) (lb : Aeneas.Std.Array Std.U8 1#usize) (len : Std.Usize)
+    (r : R) (value : Std.U64)
     (i : Std.Usize) (hi : 1 ≤ i.val) (hil : i.val ≤ len.val) (hl : len.val ≤ 8)
     (hv : value.val < 2 ^ (8 * i.val - 2)) :
-    ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize_loop RI r len value i
+    ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize_loop RI lb r len value i
     ⦃ ⇓ y => ⌜ (y.2.2 = core.option.Option.None → len.val - i.val ≤ (v r).length ∧
           y.1 = a r (len.val - i.val) ∧
           y.2.1.val = ((v r).take (len.val - i.val)).foldl (fun a b => a * 256 + b.val) value.val) ∧
@@ -144,8 +146,8 @@ theorem varint.std_loop_spec {R : Type} {RI : alloc.io.read.Read R} {v : R → L
         (∀ e, y.2.2 = core.option.Option.Some e → (v r).length < len.val - i.val))
   · rintro ⟨rr, vv, j⟩ ⟨hj1, hij, hjl, hjv, hjlen, hjr, hjv'⟩
     dsimp only at hj1 hij hjl hjv hjlen hjr hjv'
-    obtain ⟨res, hres, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-      (varint.std_loop.body_spec law len rr vv j hj1 hjl hl hjv)
+    obtain ⟨res, hres, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+      (varint.std_loop.body_spec law lb len rr vv j hj1 hjl hl hjv)
     dsimp only
     rw [hres, Aeneas.Std.WP.spec_ok]
     have hview : v rr = (v r).drop (j.val - i.val) := by rw [hjr]; exact law.adv_view r _ hjlen
@@ -308,14 +310,14 @@ theorem varint.std_de_content {R : Type} {RI : alloc.io.read.Read R} {v : R → 
   have hloop := varint.std_loop_spec law
   mvcgen [varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize, hre, hloop,
     varint.calculate_value_content, varint.check_min_len_char,
-    core.result.Result.map_err_spec,
+    core.result.Result.map_err_spec, core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once]
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (first | (intro h; cases h) | skip)
   · varint_std_vc_arith
   · varint_std_vc_arith
   · varint_std_vc_arith
-  · rename_i lb r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' rcheck hchk _ _ _ hk hrc2 hcast hcheck bv
+  · rename_i r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' rcheck hchk _ _ _ hk hrc2 hcast hcheck bv
     intro hval
     have hv1 := core.result.Result.Ok.inj hval
     rw [← hv1]
@@ -360,7 +362,8 @@ theorem varint.std_de_content {R : Type} {RI : alloc.io.read.Read R} {v : R → 
       mvcgen
       intro val h; cases h
   · intro h; cases h
-  · intro h; cases h
+  · -- `try_from` both `Ok` and `Err`
+    subst_vars; contradiction
   · rename_i rc hrc _ res _ hcf hk
     obtain ⟨v0, l0, h1, -⟩ := hrc
     rw [h1] at hcf
@@ -369,8 +372,8 @@ theorem varint.std_de_content {R : Type} {RI : alloc.io.read.Read R} {v : R → 
     exfalso
     have h := lb1.property
     simp at h hov
-  · rename_i lb r1 hr1 _ res _ hcf
-    have hl : (lb.to_slice_mut.1 : Slice Std.U8).val.length = 1 := to_slice_mut_len lb
+  · rename_i r1 hr1 _ res _ hcf
+    have hl : ((Array.repeat 1#usize 0#u8).to_slice_mut.1 : Slice Std.U8).val.length = 1 := to_slice_mut_len _
     by_cases h1 : 1 ≤ (v r).length
     · rw [hr1.1 (by rw [hl]; exact h1)] at hcf; simp [tryCF] at hcf
     · rw [hr1.2 (by rw [hl]; omega)] at hcf
@@ -418,13 +421,13 @@ theorem varint.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List 
   have hchk := fun (value : Std.U64) (len : Std.Usize) hv hl => varint.check_min_len_total value len hv hl
   mvcgen [varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize, hre, hloop, hchk,
     varint.calculate_value_content,
-    core.result.Result.map_err_spec,
+    core.result.Result.map_err_spec, core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once]
   all_goals (try simp only [continue_eq_tryCF] at *)
   · varint_std_vc_arith
   · varint_std_vc_arith
   · varint_std_vc_arith
-  · rename_i lb r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' hk hrc2 hcast
+  · rename_i r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' hk hrc2 hcast
     obtain ⟨hL, hview, hra, hv1⟩ := std_de_ok_facts law r N _ t0 hvr hpf hlt64 r1 u hr1 hk lb1 rfl
       byte hidx rc val hrc hrc2 rcast t val1 hrcast hat hcast
     have h1 : (1#usize).val = 1 := by simp
@@ -432,7 +435,7 @@ theorem varint.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List 
     rw [h1, hview, hL, hv1] at hfold'
     rw [hfold'.trans hfold]
     exact hN
-  · rename_i lb r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' hk hrc2 hcast
+  · rename_i r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' hk hrc2 hcast
     obtain ⟨hL, hview, hra, hv1⟩ := std_de_ok_facts law r N _ t0 hvr hpf hlt64 r1 u hr1 hk lb1 rfl
       byte hidx rc val hrc hrc2 rcast t val1 hrcast hat hcast
     have h1 : (1#usize).val = 1 := by simp
@@ -440,7 +443,7 @@ theorem varint.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List 
     rw [h1, hview, hL, hv1] at hfold'
     rw [hfold'.trans hfold]
     exact hL
-  · rename_i lb r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' rcheck hchk _ _ _ hk hrc2 hcast hcheck
+  · rename_i r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl hnone hloop' rcheck hchk _ _ _ hk hrc2 hcast hcheck
     obtain ⟨hL, hview, hra, hv1⟩ := std_de_ok_facts law r N _ t0 hvr hpf hlt64 r1 u hr1 hk lb1 rfl
       byte hidx rc val hrc hrc2 rcast t val1 hrcast hat hcast
     have h1 : (1#usize).val = 1 := by simp
@@ -450,7 +453,7 @@ theorem varint.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List 
   · rename_i rcheck hchk _ res _ hcf _ _ _
     rw [hchk] at hcf
     simp [tryCF] at hcf
-  · rename_i lb r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl e hsome hloop' hk hrc2 hcast
+  · rename_i r1 hr1 _ u _ lb1 byte hidx rc hrc _ val _ rcast hrcast t hat _ val1 _ rl e hsome hloop' hk hrc2 hcast
     obtain ⟨hL, hview, hra, hv1⟩ := std_de_ok_facts law r N _ t0 hvr hpf hlt64 r1 u hr1 hk lb1 rfl
       byte hidx rc val hrc hrc2 rcast t val1 hrcast hat hcast
     have h1 : (1#usize).val = 1 := by simp
@@ -468,8 +471,8 @@ theorem varint.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List 
     exfalso
     have h := lb1.property
     simp at h hov
-  · rename_i lb r1 hr1 _ res _ hcf
-    have hl : (lb.to_slice_mut.1 : Slice Std.U8).val.length = 1 := to_slice_mut_len lb
+  · rename_i r1 hr1 _ res _ hcf
+    have hl : ((Array.repeat 1#usize 0#u8).to_slice_mut.1 : Slice Std.U8).val.length = 1 := to_slice_mut_len _
     rw [hr1.1 (by rw [hl, hvr]; simp)] at hcf
     simp [tryCF] at hcf
 
@@ -495,7 +498,7 @@ theorem varint.de_runs : DeRuns varint.TlsVarInt.Insts.Tls_codecDeserialize Vari
   obtain ⟨n, hn, hadv, hde⟩ := hp val hval
   obtain ⟨sz, hsz, hszv⟩ : ∃ sz : Std.Usize, varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len val = ok sz ∧
       sz.val = varint.lenOf val.val := by
-    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec val)
+    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec val)
     exact ⟨sz, hsz, (varint.lenOf_char _ _ hP).1⟩
   have hLv : n = varint.lenOf val.val := by obtain ⟨_, _, _, _, h, -⟩ := hde; exact h
   exact ⟨n, sz, hn, hadv, hsz, by rw [hszv, ← hLv], hde⟩
@@ -591,7 +594,7 @@ theorem ContentLength.de_runs : DeRuns quic_vec.ContentLength.Insts.Tls_codecDes
   obtain ⟨sz, hsz, hszv⟩ : ∃ sz : Std.Usize,
       quic_vec.ContentLength.Insts.Tls_codecSize.tls_serialized_len val = ok sz ∧
         sz.val = varint.lenOf val.val := by
-    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec val)
+    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec val)
     exact ⟨sz, hsz, (varint.lenOf_char _ _ hP).1⟩
   have hLv : n = varint.lenOf val.val := by obtain ⟨_, _, _, _, h, -⟩ := hde; exact h
   exact ⟨n, sz, hn, hadv, hsz, by rw [hszv, ← hLv], hde, hle⟩

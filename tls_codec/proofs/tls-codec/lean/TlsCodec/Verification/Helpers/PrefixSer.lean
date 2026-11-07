@@ -43,7 +43,10 @@ theorem alloc.vec.Vec.resize_U8_len_spec (v : alloc.vec.Vec Std.U8) (n : Std.Usi
   unfold alloc.vec.Vec.resize rust_primitives.sequence.seq_create
   simp only [mapM_clone_replicate_U8]
   mvcgen
-  all_goals (simp_all +zetaDelta [Slice.new] <;> scalar_tac)
+  -- `seq_create` matches on `(mapM clone (replicate …)).match`: `simp_all` leaves `replicate … = cloned`
+  all_goals (simp_all +zetaDelta [Slice.new_val]
+    <;> (try obtain rfl := ‹List.replicate _ _ = _›)
+    <;> (try simp_all) <;> scalar_tac)
 
 /-- `VLBytes::tls_serialize_bytes` never panics: a payload of at most `2^30 - 1` bytes gives the
 varint length prefix followed by the payload (only the length is tracked), a longer one an error. -/
@@ -144,8 +147,8 @@ theorem quic_vec.VLByteSlice.serialize_char (self : quic_vec.VLByteSlice) :
     cases hv'
     have hv2 : self.val.length ≤ 2 ^ 30 - 1 := hv.2
     have hlo : varint.lenOf val.val ≤ 8 := by unfold varint.lenOf; split_ifs <;> omega
-    simp only [comb, List.length_append, hl]
-    simp only [Slice.new, List.length_nil]
+    simp only [comb, Slice.from_val, List.length_append, hl]
+    simp only [Slice.new_val, List.length_nil]
     scalar_tac
   · rename_i val r hr _ v1 out comb hcomb hout hv1 hv _
     obtain ⟨v, hv', hl⟩ := hv1.1 (by omega)
@@ -153,8 +156,8 @@ theorem quic_vec.VLByteSlice.serialize_char (self : quic_vec.VLByteSlice) :
     have hv2 : self.val.length ≤ 2 ^ 30 - 1 := hv.2
     have hvl : val.val = self.val.length := hv.1
     refine ⟨fun _ => ⟨out, rfl, ?_⟩, fun h => by omega⟩
-    simp only [hout, comb, List.length_append, hl, hvl]
-    simp only [Slice.new, List.length_nil]
+    simp only [hout, comb, Slice.from_val, List.length_append, hl, hvl]
+    simp only [Slice.new_val, List.length_nil]
     omega
   · rename_i val r hr _ v1 comb hcomb hv1 hv _
     obtain ⟨v, hv', hl⟩ := hv1.1 (by omega)
@@ -162,8 +165,8 @@ theorem quic_vec.VLByteSlice.serialize_char (self : quic_vec.VLByteSlice) :
     have hv2 : self.val.length ≤ 2 ^ 30 - 1 := hv.2
     have hlo : varint.lenOf val.val ≤ 8 := by unfold varint.lenOf; split_ifs <;> omega
     exfalso; apply hcomb
-    simp only [comb, List.length_append, hl]
-    simp only [Slice.new, List.length_nil]
+    simp only [comb, Slice.from_val, List.length_append, hl]
+    simp only [Slice.new_val, List.length_nil]
     scalar_tac
   · -- the prefix serializes
     rename_i val r hr _ x hx resid hv _
@@ -190,7 +193,7 @@ theorem Shared0Slice.size_fold_U8_spec (it : core.slice.iter.Iter Std.U8) (acc :
     (h : acc.val + (it : Slice Std.U8).val.length ≤ Usize.max) :
     ⦃ ⌜ True ⌝ ⦄
     core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
-      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize
         U8.Insts.Tls_codecSize) it acc ()
     ⦃ ⇓ r => ⌜ r.val = acc.val + (it : Slice Std.U8).val.length ⌝ ⦄ := by
   simp only [core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold,
@@ -205,7 +208,7 @@ theorem Shared0Slice.size_fold_U8_spec (it : core.slice.iter.Iter Std.U8) (acc :
     simp only [core.iter.traits.iterator.iter_fold_loop.body,
       core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.next,
       rust_primitives.sequence.seq_len, rust_primitives.sequence.seq_remove,
-      quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut,
+      quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.call_mut,
       U8.Insts.Tls_codecSize.tls_serialized_len, len_add_ok] at hinv ⊢
     by_cases hz : Slice.len it' = 0#usize
     · have : (it' : Slice Std.U8).val = [] := by
@@ -229,7 +232,7 @@ theorem Shared0Slice.size_fold_U8_spec (it : core.slice.iter.Iter Std.U8) (acc :
 
 /-- `Result::map` with the length closure of `<&[T]>::tls_serialized_len`: an `Ok` content length
 is mapped to `Ok` of its varint length, an `Err` is passed through. -/
-theorem Shared0Slice.size_closure_map_spec {T : Type} (SizeInst : Size T)
+theorem Shared0Slice.size_closure_map_spec {T : Type _} (SizeInst : Size T)
     (x : core.result.Result quic_vec.ContentLength Error) :
     ⦃ ⌜ True ⌝ ⦄
     core.result.Result.map
@@ -288,7 +291,7 @@ theorem alloc.string.String.deserialize_char (bytes : Slice Std.U8) :
     ⦃ ⇓ r => ⌜ ∀ t rem, r = .Ok (t, rem) → ∃ raw : quic_vec.VLByteVec,
         quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes = ok (.Ok (raw, rem)) ∧
         alloc.string.String.utf8U8 t = raw.vec.val ⌝ ⦄ := by
-  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
+  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLByteVec.deserialize_char bytes)
   unfold alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   rw [hr0]
   mvcgen [core.result.Result.map_err_spec, alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from,
@@ -314,19 +317,19 @@ theorem alloc.string.String.deserialize_char (bytes : Slice Std.U8) :
 /-- `usize::try_from(u8)` through the blanket `TryFrom` impl for `Into` (`Error = Infallible`):
 `Ok` of the widening cast. -/
 @[spec]
-theorem core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U8_spec (x : Std.U8) :
+theorem core.convert.TryFromTUNever.Blanket.try_from_Usize_U8_spec (x : Std.U8) :
     ⦃ ⌜ True ⌝ ⦄
-    core.convert.TryFromTUInfallible.Blanket.try_from
+    core.convert.TryFromTUNever.Blanket.try_from
       (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU8) x
     ⦃ ⇓ r => ⌜ r = .Ok (UScalar.cast .Usize x) ⌝ ⦄ := by
-  unfold core.convert.TryFromTUInfallible.Blanket.try_from core.convert.Into.Blanket
+  unfold core.convert.TryFromTUNever.Blanket.try_from core.convert.Into.Blanket
   mvcgen [core.convert.Into.Blanket.into, CoreModels.core.Usize.Insts.CoreConvertFromU8.from_spec]
   subst_vars; rfl
 
 /-- `Result::unwrap` of a value that is `Ok` (the `Err` case panics, so it is excluded by
 hypothesis; used for `Result<_, Infallible>`). -/
 @[spec]
-theorem core.result.Result.unwrap_ok_spec {T E : Type} (fmtDebugInst : core.fmt.Debug E)
+theorem core.result.Result.unwrap_ok_spec {T E : Type _} (fmtDebugInst : core.fmt.Debug E)
     (x : core.result.Result T E) (h : ∃ t, x = .Ok t) :
     ⦃ ⌜ True ⌝ ⦄ core.result.Result.unwrap fmtDebugInst x ⦃ ⇓ r => ⌜ x = .Ok r ⌝ ⦄ := by
   obtain ⟨t, rfl⟩ := h
@@ -364,7 +367,7 @@ theorem core.num.Usize.checked_add_spec (x y : Std.Usize) :
 elements. -/
 @[spec]
 theorem core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get_some_spec
-    {T : Type} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
+    {T : Type _} (r : core.ops.range.Range Std.Usize) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexSliceSlice.get r s
     ⦃ ⇓ o => ⌜ ∀ t, o = some t → r.start.val ≤ r.end.val ∧ r.end.val ≤ s.val.length ∧
         t.val.length = r.end.val - r.start.val ⌝ ⦄ := by
@@ -397,12 +400,12 @@ theorem core.Usize.Insts.CoreConvertFromU16.from_spec (x : Std.U16) :
 
 /-- `usize::try_from(u16)` through the blanket `TryFrom` impl for `Into` (`Error = Infallible`). -/
 @[spec]
-theorem core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U16_spec (x : Std.U16) :
+theorem core.convert.TryFromTUNever.Blanket.try_from_Usize_U16_spec (x : Std.U16) :
     ⦃ ⌜ True ⌝ ⦄
-    core.convert.TryFromTUInfallible.Blanket.try_from
+    core.convert.TryFromTUNever.Blanket.try_from
       (core.convert.Into.Blanket core.Usize.Insts.CoreConvertFromU16) x
     ⦃ ⇓ r => ⌜ r = .Ok (UScalar.cast .Usize x) ⌝ ⦄ := by
-  unfold core.convert.TryFromTUInfallible.Blanket.try_from core.convert.Into.Blanket
+  unfold core.convert.TryFromTUNever.Blanket.try_from core.convert.Into.Blanket
   mvcgen [core.convert.Into.Blanket.into, core.Usize.Insts.CoreConvertFromU16.from_spec]
   subst_vars; rfl
 
@@ -487,15 +490,15 @@ theorem Usize.Insts.CoreConvertFromU24.from_pf (value : U24) :
     core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     core.slice.Slice.copy_from_slice_U8_total, core.num.Usize.from_be_bytes,
     rust_primitives.arithmetic.from_be_bytes_usize]
-  · rename_i bytes0 n hn i1 hi1 hle
-    have : (Std.Array.to_slice_mut bytes0).1.length = 8 := by
-      simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+  · rename_i n hn i1 hi1 hle
+    have : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.length = 8 := by
+      simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     scalar_tac
-  · rename_i bytes0 n hn i1 hi1 hle p back hp
+  · rename_i n hn i1 hi1 hle p back hp
     obtain ⟨hp1, _⟩ := hp
     have hl2 : (Std.Array.to_slice value).val.length = 3 := by simp [Std.Array.to_slice]
     have hl1 : p.1.val.length = 8 - i1.val := by
-      rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+      rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     rw [hl1, hl2]
     scalar_tac
   all_goals (exfalso; scalar_tac)
@@ -510,46 +513,47 @@ theorem Usize.Insts.CoreConvertFromU24.from_content (value : U24) :
     core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice,
     core.slice.Slice.copy_from_slice_U8_spec, core.num.Usize.from_be_bytes,
     rust_primitives.arithmetic.from_be_bytes_usize]
-  · rename_i bytes0 n hn i1 hi1 hle
+  · rename_i n hn i1 hi1 hle
     have hnb := System.Platform.numBits_eq
-    have : (Std.Array.to_slice_mut bytes0).1.length = 8 := by
-      simp [Std.Array.to_slice_mut, Std.Array.to_slice, bytes0]
+    have : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.length = 8 := by
+      simp [Std.Array.to_slice_mut, Std.Array.to_slice, Std.Array.repeat_val]
     scalar_tac
-  · rename_i bytes0 n hn i1 hi1 hle p back hp s2 bytes1 hc
+  · rename_i n hn i1 hi1 hle p back hp s2 bytes1 hc
     have hnb := System.Platform.numBits_eq
     obtain ⟨hp1, hp2⟩ := hp
     obtain ⟨hlen, hs2⟩ := hc
-    obtain ⟨vl, hvl⟩ := value
-    obtain ⟨b0, b1, b2, rfl⟩ := List.length_eq_three.mp (by simpa using hvl)
-    have hb0 : bytes0.val = List.replicate 8 0#u8 := rfl
+    have hvl : value.val.length = 3 := value.property
+    obtain ⟨b0, b1, b2, hv3⟩ := List.length_eq_three.mp hvl
+    have hb0 : (Std.Array.repeat 8#usize 0#u8).val = List.replicate 8 0#u8 := by
+      simp [Std.Array.repeat_val]
     have hl1 : p.1.val.length = 8 - i1.val := by
       rw [hp1]; simp [Std.Array.to_slice_mut, Std.Array.to_slice, hb0]
-    have hl2 : (Std.Array.to_slice (⟨[b0, b1, b2], hvl⟩ : U24)).val.length = 3 := by
-      simp [Std.Array.to_slice]
+    have hl2 : (Std.Array.to_slice value).val.length = 3 := by
+      simp [Std.Array.to_slice, hvl]
     have hi5 : i1.val = 5 := by
       rw [hl1, hl2] at hlen
       omega
     have hn8 : n.val = 8 := by scalar_tac
     have hnb64 : System.Platform.numBits = 64 := by omega
     have hbytes1 : bytes1.val = [0#u8, 0#u8, 0#u8, 0#u8, 0#u8, b0, b1, b2] := by
-      have e2 : (Std.Array.to_slice_mut bytes0).1.val = bytes0.val := rfl
+      have e2 : (Std.Array.to_slice_mut (Std.Array.repeat 8#usize 0#u8)).1.val = (Std.Array.repeat 8#usize 0#u8).val := rfl
       have e3 : (p.2 s2).val.length = 8 := by
         rw [hp2 s2, List.length_setSlice!, e2, hb0]; simp
       have e1 : bytes1.val = (p.2 s2).val :=
-        Std.Array.from_slice_val bytes0 (p.2 s2) (by rw [e3]; rfl)
+        Std.Array.from_slice_val (Std.Array.repeat 8#usize 0#u8) (p.2 s2) (by rw [e3]; rfl)
       rw [e1, hp2 s2, hs2, hi5, e2, hb0]
-      simp [Std.Array.to_slice]
+      simp [Std.Array.to_slice, hv3]
       rfl
     rw [hbytes1]
     intro c0 c1 c2 hc012
     have hv := usize_from_zero5_val b0 b1 b2 hnb64
-    have h3 : [b0, b1, b2] = [c0, c1, c2] := hc012
+    have h3 : [b0, b1, b2] = [c0, c1, c2] := hv3.symm.trans hc012
     simp only [List.cons.injEq, and_true] at h3
     obtain ⟨rfl, rfl, rfl⟩ := h3
     exact hv
 
 /-- A list of length 8 is a literal list. -/
-theorem list_eq_eight {α : Type} (l : List α) (h : l.length = 8) :
+theorem list_eq_eight {α : Type _} (l : List α) (h : l.length = 8) :
     ∃ a0 a1 a2 a3 a4 a5 a6 a7, l = [a0, a1, a2, a3, a4, a5, a6, a7] := by
   match l, h with
   | [a0, a1, a2, a3, a4, a5, a6, a7], _ => exact ⟨_, _, _, _, _, _, _, _, rfl⟩
@@ -651,23 +655,23 @@ theorem Usize.Insts.CoreConvertFromU24.from_char (value : U24) :
 
 /-- `usize::try_from(U24)` through the blanket `TryFrom` impl for `Into` never fails: it is
 `Ok` of the big-endian value of the three bytes. -/
-theorem core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_content (x : U24) :
+theorem core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_content (x : U24) :
     ⦃ ⌜ True ⌝ ⦄
-    core.convert.TryFromTUInfallible.Blanket.try_from
+    core.convert.TryFromTUNever.Blanket.try_from
       (core.convert.Into.Blanket Usize.Insts.CoreConvertFromU24) x
     ⦃ ⇓ r => ⌜ ∃ y, r = .Ok y ∧ ∀ b0 b1 b2 : Std.U8, x.val = [b0, b1, b2] →
         y.val = b0.val * 65536 + b1.val * 256 + b2.val ⌝ ⦄ := by
-  unfold core.convert.TryFromTUInfallible.Blanket.try_from core.convert.Into.Blanket
+  unfold core.convert.TryFromTUNever.Blanket.try_from core.convert.Into.Blanket
   mvcgen [core.convert.Into.Blanket.into, Usize.Insts.CoreConvertFromU24.from_char]
   exact ⟨_, rfl, ‹_›⟩
 
 /-- `usize::try_from(U24)` (blanket `Into` impl) never fails. -/
-theorem core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_ok (x : U24) :
+theorem core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_ok (x : U24) :
     ⦃ ⌜ True ⌝ ⦄
-    core.convert.TryFromTUInfallible.Blanket.try_from
+    core.convert.TryFromTUNever.Blanket.try_from
       (core.convert.Into.Blanket Usize.Insts.CoreConvertFromU24) x
     ⦃ ⇓ r => ⌜ ∃ y, r = .Ok y ⌝ ⦄ :=
-  triple_post_mono (core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_content x)
+  triple_post_mono (core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_content x)
     fun _ ⟨y, hy, _⟩ => ⟨y, hy⟩
 
 end tls_codec

@@ -21,22 +21,22 @@ namespace tls_codec
 theorem String.bytes_ok (x : alloc.string.String) :
     ∃ bs, alloc.string.String.as_bytes x = ok bs ∧
       bs.val = (alloc.string.String.utf8U8 x).take Usize.max := by
-  obtain ⟨bs, hbs, hv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.string.String.as_bytes_spec x)
+  obtain ⟨bs, hbs, hv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.string.String.as_bytes_spec x)
   exact ⟨bs, hbs, hv⟩
 
 theorem String.size_eq (x : alloc.string.String) (bs : Slice Std.U8)
     (hbs : alloc.string.String.as_bytes x = ok bs) :
     alloc.string.String.Insts.Tls_codecSize.tls_serialized_len x =
       (Shared0Slice.Insts.Tls_codecSize U8.Insts.Tls_codecSize).tls_serialized_len bs := by
-  simp only [alloc.string.String.Insts.Tls_codecSize.tls_serialized_len, hbs, bind_tc_ok]
+  simp only [alloc.string.String.Insts.Tls_codecSize.tls_serialized_len, hbs, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
 
-theorem String.ser_eq {W : Type} (WI : core.io.write.Write W) (x : alloc.string.String)
+theorem String.ser_eq {W : Type _} (WI : core.io.write.Write W) (x : alloc.string.String)
     (bs : Slice Std.U8) (hbs : alloc.string.String.as_bytes x = ok bs) (w : W) :
     (alloc.string.String.Insts.Tls_codecSerialize).tls_serialize WI x w =
       (quic_vec.VLByteSlice.Insts.Tls_codecSerialize).tls_serialize WI bs w := by
   show alloc.string.String.Insts.Tls_codecSerialize.tls_serialize WI x w =
       quic_vec.VLByteSlice.Insts.Tls_codecSerialize.tls_serialize WI bs w
-  simp only [alloc.string.String.Insts.Tls_codecSerialize.tls_serialize, hbs, bind_tc_ok]
+  simp only [alloc.string.String.Insts.Tls_codecSerialize.tls_serialize, hbs, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
 
 /-- The size of a `&[u8]` of at most `2^30 - 1` bytes: the length and its prefix. -/
 theorem Slice.u8_sizeS (bs : Slice Std.U8) (hs : bs.val.length ≤ 2 ^ 30 - 1) (szS : Std.Usize)
@@ -44,7 +44,7 @@ theorem Slice.u8_sizeS (bs : Slice Std.U8) (hs : bs.val.length ≤ 2 ^ 30 - 1) (
     szS.val = bs.val.length + varint.lenOf bs.val.length := by
   have hmax : 2 ^ 32 ≤ Usize.max + 1 := by
     rcases System.Platform.numBits_eq with h | h <;> simp [Usize.max, Usize.numBits, h]
-  obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact U8.lawful bs szS hS (SizeNat.u8 bs.val)
+  obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact U8.lawful bs szS ((Shared0Slice.size_eq _ bs).symm.trans hS) (SizeNat.u8 bs.val)
   have hlen := varint.lenOf_le bs.val.length
   have hb : bs.val.length ≤ Usize.max := by omega
   rw [hszv, hc, min_eq_left hb, if_pos hs]
@@ -58,11 +58,11 @@ theorem Slice.u8_size_small (bs : Slice Std.U8) (hs : bs.val.length ≤ 2 ^ 30 -
     szS.val = szV.val := by
   have hmax : 2 ^ 32 ≤ Usize.max + 1 := by
     rcases System.Platform.numBits_eq with h | h <;> simp [Usize.max, Usize.numBits, h]
-  obtain ⟨r, hr, hrv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hrv⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.tls_serialize_bytes_len_char bs hs)
   have : szV = r := ok.inj (hV.symm.trans hr)
   subst this
-  obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact U8.lawful bs szS hS (SizeNat.u8 bs.val)
+  obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact U8.lawful bs szS ((Shared0Slice.size_eq _ bs).symm.trans hS) (SizeNat.u8 bs.val)
   have hlen := varint.lenOf_le bs.val.length
   have hb : bs.val.length ≤ Usize.max := by omega
   rw [hszv, hc, min_eq_left hb, if_pos hs, hrv]
@@ -100,7 +100,7 @@ theorem String.serSpec (x : alloc.string.String) :
       exact hV.runs szV hszV W WI hWI w hroom
     · rw [if_neg hs]
       have := imax_le
-      obtain ⟨p, hp, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+      obtain ⟨p, hp, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp
         (rw_bytes.ser_triple hWI.law' w bs (fun h => absurd h hs))
       refine ⟨p.1, p.2, hp, fun b hb => (by cases hb), fun _ => (hpost.2 (by omega)).1⟩
 
@@ -110,8 +110,17 @@ theorem String.size_ex (x : alloc.string.String) :
   obtain ⟨sz, h⟩ := Shared0Slice.size_ex U8.lawful bs
   exact ⟨sz, (String.size_eq x bs hbs).trans h⟩
 
+theorem Str.size_ex (x : Str) : ∃ sz, Str.Insts.Tls_codecSize.tls_serialized_len x = ok sz := by
+  obtain ⟨sz, h⟩ := Shared0Slice.size_ex U8.lawful x
+  exact ⟨sz, by rw [Str.Insts.Tls_codecSize.tls_serialized_len, Str.as_bytes_ok, ← h]; exact Aeneas.Std.bind_ok _ _⟩
+
+theorem Shared0Str.size_ex (x : Str) :
+    ∃ sz, Shared0Str.Insts.Tls_codecSize.tls_serialized_len x = ok sz := by
+  obtain ⟨sz, h⟩ := Shared0Slice.size_ex U8.lawful x
+  exact ⟨sz, by rw [Shared0Str.Insts.Tls_codecSize.tls_serialized_len, Str.as_bytes_ok, ← h]; exact Aeneas.Std.bind_ok _ _⟩
+
 /-- What a successful `String` decode read: the bytes of a `VLByteVec` decode. -/
-theorem String.std_de_content {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
+theorem String.std_de_content {R : Type _} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
     {a : R → Nat → R} (law : StdIo.RLaw RI v a) (r : R) :
     ⦃ ⌜ True ⌝ ⦄ alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize RI r
     ⦃ ⇓ p => ⌜ ∀ t, p.1 = .Ok t → ∃ n, n ≤ (v r).length ∧ p.2 = a r n ∧

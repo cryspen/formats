@@ -21,23 +21,25 @@ namespace tls_codec
 
 theorem U32.ser_runs (x : Std.U32) : SerRuns U32.Insts.Tls_codecSerialize x 4#usize
     (some (Aeneas.Std.core.num.U32.to_be_bytes x).val) := by
+  rw [← Array.val_to_slice]
   apply ser_runs_of_write_all U32.Insts.Tls_codecSerialize x
     (Array.to_slice (Aeneas.Std.core.num.U32.to_be_bytes x)) 4#usize
     (by simpa [Array.to_slice] using (Aeneas.Std.core.num.U32.to_be_bytes x).property.symm)
   intro W WI w w' hw
-  obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U32.to_be_bytes_spec x)
-  simp only [U32.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
-  rfl
+  obtain ⟨_, he, rfl⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.num.U32.to_be_bytes_spec x)
+  simp [U32.Insts.Tls_codecSerialize.tls_serialize, he, lift, core.array.Array.as_slice,
+    rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hw, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 theorem U64.ser_runs (x : Std.U64) : SerRuns U64.Insts.Tls_codecSerialize x 8#usize
     (some (Aeneas.Std.core.num.U64.to_be_bytes x).val) := by
+  rw [← Array.val_to_slice]
   apply ser_runs_of_write_all U64.Insts.Tls_codecSerialize x
     (Array.to_slice (Aeneas.Std.core.num.U64.to_be_bytes x)) 8#usize
     (by simpa [Array.to_slice] using (Aeneas.Std.core.num.U64.to_be_bytes x).property.symm)
   intro W WI w w' hw
-  obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U64.to_be_bytes_spec x)
-  simp only [U64.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
-  rfl
+  obtain ⟨_, he, rfl⟩ := Aeneas.Std.triple_iff_exists_ok.mp (core.num.U64.to_be_bytes_spec x)
+  simp [U64.Insts.Tls_codecSerialize.tls_serialize, he, lift, core.array.Array.as_slice,
+    rust_primitives.slice.array_as_slice, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, hw, core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch]
 
 theorem U32.fixed_runs : FixedRuns U32.Insts.Tls_codecDeserialize 4#usize
     Aeneas.Std.core.num.U32.from_be_bytes := by
@@ -96,17 +98,17 @@ theorem U64.de_spec {R : Type} (RI : alloc.io.read.Read R) (hRI : alloc.io.read.
 contract only depends on the serializer's runs and the size, so it transports. -/
 
 /-- The trait-level contract of `tls_serialize`, for one value. -/
-def SerSpec {T : Type} (SI : Serialize T) (x : T) : Prop :=
+def SerSpec {T : Type _} (SI : Serialize T) (x : T) : Prop :=
   ∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI → ∀ w,
     (Serialize.tls_serialize.pre WI SI.SizeInst SI x w).holds →
     ⦃ ⌜ True ⌝ ⦄ SI.tls_serialize WI x w
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize.post WI SI.SizeInst SI x w r).holds ⌝ ⦄
 
-theorem SerSpec.runs {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
+theorem SerSpec.runs {T : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz) :
     SerRuns SI x sz (encOut SI x) := by
   intro W WI hWI w hroom
-  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h W WI hWI w (Serialize.tls_serialize.pre_of_bound SI WI x w sz hsz hroom))
   obtain ⟨e, he, hok, herr⟩ := Serialize.tls_serialize.post_elim SI WI x w _ hp
   refine ⟨r, w', hr, ?_, ?_⟩
@@ -123,23 +125,23 @@ theorem SerSpec.runs {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     | Ok bv => rw [encOut_ok he] at hn; cases hn
     | Err err => exact herr err rfl
 
-theorem SerSpec.enc_len {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
+theorem SerSpec.enc_len {T : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz) (hroom : sz.val ≤ imax) :
     ∀ b, encOut SI x = some b → b.length = sz.val := by
   intro b hb
   obtain ⟨e, he, hes, -⟩ := encode_of_runs SI x sz _ (h.runs sz hsz) hroom
   obtain ⟨bv, rfl, hbv⟩ := hes b hb
-  obtain ⟨⟨r2, w2⟩, hr2, hp2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (h _ _ StdIo.vec_lawful ⟨[], by simp⟩
-      (Serialize.tls_serialize.pre_of_bound SI _ x _ sz hsz (by rw [StdIo.vec_sink]; simpa using hroom)))
+  obtain ⟨⟨r2, w2⟩, hr2, hp2⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (h _ _ StdIo.vec_lawful (Slice.new _)
+      (Serialize.tls_serialize.pre_of_bound SI _ x _ sz hsz (by rw [StdIo.vec_sink]; simpa [Slice.new_val] using hroom)))
   obtain ⟨e2, he2, hok2, -⟩ := Serialize.tls_serialize.post_elim SI _ x _ _ hp2
-  rw [he] at he2; cases he2
+  rw [he] at he2; obtain rfl := RustM.ok_injective he2
   obtain ⟨h1, -, -⟩ := hok2 bv rfl
-  rw [hsz] at h1; cases h1
+  rw [hsz] at h1; obtain rfl := RustM.ok_injective h1
   rw [← hbv]; simp [Slice.len_val, Slice.length]
 
 /-- Transport: a serializer running as `SI`'s on `x`, with the same size, meets the contract. -/
-theorem SerSpec.transport {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
+theorem SerSpec.transport {T : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     (SI' : Serialize T)
     (hser : ∀ (W : Type) (WI : core.io.write.Write W) w, SI'.tls_serialize WI x w = SI.tls_serialize WI x w)
     (hsz : SI'.SizeInst.tls_serialized_len x = SI.SizeInst.tls_serialized_len x)
@@ -154,12 +156,12 @@ theorem SerSpec.transport {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI 
     (fun hle b hb => h.enc_len sz hsz0 hle b hb) hr WI hWI w hpre
 
 /-- The trait-level contract of `tls_deserialize`. -/
-def DeSpec {T : Type} (DI : Deserialize T) : Prop :=
+def DeSpec {T : Type _} (DI : Deserialize T) : Prop :=
   ∀ (R : Type) (RI : alloc.io.read.Read R), alloc.io.read.Read.Lawful R RI → ∀ r,
     ⦃ ⌜ True ⌝ ⦄ DI.tls_deserialize RI r
     ⦃ ⇓ p => ⌜ (Deserialize.tls_deserialize.post RI DI.SizeInst DI r p).holds ⌝ ⦄
 
-theorem DeSpec.runs {T : Type} {DI : Deserialize T} (h : DeSpec DI) :
+theorem DeSpec.runs {T : Type _} {DI : Deserialize T} (h : DeSpec DI) :
     DeRuns DI (fun _ _ _ => True) := by
   intro R RI v a law r
   have hRI : alloc.io.read.Read.Lawful R RI := ⟨⟨v, a, law⟩⟩
@@ -172,7 +174,7 @@ theorem DeSpec.runs {T : Type} {DI : Deserialize T} (h : DeSpec DI) :
   exact ⟨n, sz, hn, hp2, hsz, by omega, trivial⟩
 
 /-- Transport: a deserializer running as `DI`'s, with the same sizes, meets the contract. -/
-theorem DeSpec.transport {T : Type} {DI : Deserialize T} (h : DeSpec DI) (DI' : Deserialize T)
+theorem DeSpec.transport {T : Type _} {DI : Deserialize T} (h : DeSpec DI) (DI' : Deserialize T)
     (hde : ∀ (R : Type) (RI : alloc.io.read.Read R) r, DI'.tls_deserialize RI r = DI.tls_deserialize RI r)
     (hsz : ∀ x, DI'.SizeInst.tls_serialized_len x = DI.SizeInst.tls_serialized_len x) :
     DeSpec DI' := by
@@ -187,7 +189,7 @@ theorem DeSpec.transport {T : Type} {DI : Deserialize T} (h : DeSpec DI) (DI' : 
   exact Deserialize.tls_deserialize_spec_of_runs DI' hr RI hRI r
 
 /-- The `?`-rewrap of a deserializer result (`Ok(T::tls_deserialize(r)?)`) is the identity. -/
-theorem rewrap_de_eq {T R : Type} (m : RustM (core.result.Result T Error × R)) :
+theorem rewrap_de_eq {T : Type _} {R : Type} (m : RustM (core.result.Result T Error × R)) :
     (do
       let (r, bytes1) ← m
       let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
@@ -197,12 +199,15 @@ theorem rewrap_de_eq {T R : Type} (m : RustM (core.result.Result T Error × R)) 
         let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
           T (core.convert.From.Blanket Error) residual
         ok (r1, bytes1) : RustM (core.result.Result T Error × R)) = m := by
-  rcases m with ⟨res, b⟩ | e | _
-  · cases res <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok p =>
+    obtain ⟨res, b⟩ := p
+    cases res <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch, core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from]
+  | fail e => simp
+  | div => simp
 
-theorem Box.de_eq {T R : Type} (DI : Deserialize T) (RI : alloc.io.read.Read R) (r : R) :
+theorem Box.de_eq {T : Type _} {R : Type} (DI : Deserialize T) (RI : alloc.io.read.Read R) (r : R) :
     Box.Insts.Tls_codecDeserialize.tls_deserialize DI RI r = DI.tls_deserialize RI r :=
   rewrap_de_eq _
 
@@ -211,13 +216,19 @@ theorem SecretVLBytes.de_eq {R : Type} (RI : alloc.io.read.Read R) (r : R) :
       quic_vec.VLBytes.Insts.Tls_codecDeserialize.tls_deserialize RI r := by
   unfold quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize.tls_deserialize
   generalize quic_vec.VLBytes.Insts.Tls_codecDeserialize.tls_deserialize RI r = m
-  rcases m with ⟨res, b⟩ | e | _
-  · cases res <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok p =>
+    obtain ⟨res, b⟩ := p
+    cases res <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch, core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from]
+  | fail e => simp
+  | div => simp
 
-/-- The default `tls_serialize_detached`, from the contract of `tls_serialize` on one value. -/
-theorem SerSpec.detached {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
+/-- The default `tls_serialize_detached`, from the contract of `tls_serialize` on one value.
+Elaborated without the expected type: against an `impl_def` field `(I …).tls_serialize_detached x`
+(defeq to `….default (I …) x`), elaborating with it fails ("invalid projection (….tls_serialize_detached x).1"). -/
+@[elab_without_expected_type]
+theorem SerSpec.detached {T : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     (hS : ∃ sz, SI.SizeInst.tls_serialized_len x = ok sz) :
     ⦃ ⌜ True ⌝ ⦄ Serialize.tls_serialize_detached.default SI x
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize_detached.post SI.SizeInst SI x r).holds ⌝ ⦄ := by
@@ -226,17 +237,17 @@ theorem SerSpec.detached {T : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x
     (fun w hpre => h _ _ StdIo.vec_lawful w hpre)
 
 /-- The default `tls_deserialize_exact`, from the contract of `tls_deserialize`. -/
-theorem DeSpec.exact {T T1 : Type} {DI : Deserialize T} (h : DeSpec DI)
+theorem DeSpec.exact {T : Type _} {T1 : Type} {DI : Deserialize T} (h : DeSpec DI)
     (AI : core.convert.AsRef T1 (Slice Std.U8)) (hAI : core.convert.AsRef.Lawful T1 (Slice Std.U8) AI)
     (bytes : T1) :
     ⦃ ⌜ True ⌝ ⦄ Deserialize.tls_deserialize_exact.default DI AI bytes
     ⦃ ⇓ r => ⌜ (Deserialize.tls_deserialize_exact.post DI.SizeInst DI AI bytes r).holds ⌝ ⦄ :=
   Deserialize.tls_deserialize_exact.default_spec DI AI hAI bytes (fun s => h _ _ StdIo.slice_lawful s)
 
-theorem Serialize.Lawful.serSpec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T) :
+theorem Serialize.Lawful.serSpec {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T) :
     SerSpec SI x := fun _ WI hWI w h => hL.tls_serialize_spec WI hWI x w h
 
-theorem Deserialize.Lawful.deSpec {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
+theorem Deserialize.Lawful.deSpec {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
     DeSpec DI := fun _ RI hRI r => hL.tls_deserialize_spec RI hRI r (pre_holds_of_ok_true rfl)
 
 /-! #### Per-type contracts -/
@@ -259,7 +270,7 @@ theorem VLBytes.deSpec : DeSpec quic_vec.VLBytes.Insts.Tls_codecDeserialize :=
 
 theorem VLBytes.size_ex (x : quic_vec.VLBytes) :
     ∃ sz, quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len x = ok sz := by
-  obtain ⟨sz, h, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
+  obtain ⟨sz, h, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
   exact ⟨sz, h⟩
 
 /-- `&u8` .. `&u64`: as the integer. -/
@@ -276,20 +287,31 @@ theorem Shared0VLBytes.serSpec (x : quic_vec.VLBytes) :
   (VLBytes.serSpec x).transport _ (fun _ _ _ => rfl) rfl (VLBytes.size_ex x)
 
 /-- `&Option<T>`: as `Option<T>`. -/
-theorem Shared0Option.serSpec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
+theorem Shared0Option.serSpec {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI)
     (x : core.option.Option T) : SerSpec (Shared0Option.Insts.Tls_codecSerialize SI) x :=
   (show SerSpec (core.option.Option.Insts.Tls_codecSerialize SI) x from
     fun _ WI hWI w h => Option.ser_spec hL WI hWI x w h).transport _ (fun _ _ _ => rfl) rfl
     (Option.size_ok hL.SizeInstLawful x)
 
 /-- `Box<T>`: as `T`. -/
-theorem Box.serSpec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T) :
-    SerSpec (Box.Insts.Tls_codecSerialize SI) x :=
-  (hL.serSpec x).transport _ (fun _ _ _ => rfl) rfl (Size.lawful_ok _ hL.SizeInstLawful x)
+theorem Box.size_eq {T : Type _} (S : Size T) (x : T) :
+    Box.Insts.Tls_codecSize.tls_serialized_len S x = S.tls_serialized_len x := by
+  simp [Box.Insts.Tls_codecSize.tls_serialized_len, alloc.Box.Insts.CoreConvertAsRef.as_ref]
 
-theorem Box.deSpec {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
+theorem Box.size_ex {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T) :
+    ∃ sz, (Box.Insts.Tls_codecSerialize SI).SizeInst.tls_serialized_len x = ok sz := by
+  obtain ⟨n, h⟩ := Size.lawful_ok _ hL.SizeInstLawful x
+  exact ⟨n, (Box.size_eq _ x).trans h⟩
+
+theorem Box.serSpec {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T) :
+    SerSpec (Box.Insts.Tls_codecSerialize SI) x :=
+  (hL.serSpec x).transport _ (fun _ _ _ => by
+    simp [Box.Insts.Tls_codecSerialize.tls_serialize, alloc.Box.Insts.CoreConvertAsRef.as_ref])
+    (Box.size_eq _ x) (Size.lawful_ok _ hL.SizeInstLawful x)
+
+theorem Box.deSpec {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
     DeSpec (Box.Insts.Tls_codecDeserialize DI) :=
-  hL.deSpec.transport _ (fun _ RI r => Box.de_eq DI RI r) (fun _ => rfl)
+  hL.deSpec.transport _ (fun _ RI r => Box.de_eq DI RI r) (Box.size_eq _)
 
 /-- `SecretVLBytes`: as `VLBytes`. -/
 theorem SecretVLBytes.serSpec (x : quic_vec.secret_bytes.SecretVLBytes) :

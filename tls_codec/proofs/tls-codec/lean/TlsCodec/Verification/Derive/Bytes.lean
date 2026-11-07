@@ -5,8 +5,8 @@ points: `derive_size_lawful`, `derive_ser_lawful`, `derive_deser_lawful`, `deriv
 `derive_rt_lawful`, `derive_ne_lawful`.
 
 Obligations: none in TlsCodec; the downstream projects' derive obligations are one call each.
-Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `append_bytes_spec`; 1 signature-only stub
-(`append_bytes`). -/
+Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `append_bytes` (opaque),
+`append_bytes_spec`. -/
 import Aeneas
 import CoreModels
 import Hax
@@ -29,27 +29,29 @@ open tls_codec
 /-! ## Core operations of the derived serializers -/
 
 /-- `Vec::with_capacity` (CoreModels: an empty vector; the capacity is not modelled). -/
-theorem vec_with_capacity_spec (T : Type) (c : Std.Usize) :
+theorem vec_with_capacity_spec (T : Type _) (c : Std.Usize) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.with_capacity T c ⦃ ⇓ r => ⌜ (r : Slice T).val = [] ⌝ ⦄ := by
   mvcgen [alloc.vec.Vec.with_capacity, alloc.vec.Vec.new_spec]
-  simp_all [Slice.new]
+  simp_all [Slice.new_val]
 
 /-- `Vec::append`: the concatenation, when it fits in a `usize`. -/
-theorem vec_append_spec {T : Type} (a b : alloc.vec.Vec T) :
+theorem vec_append_spec {T : Type _} (a b : alloc.vec.Vec T) :
     ⦃ ⌜ (a : Slice T).val.length + (b : Slice T).val.length ≤ Std.Usize.max ⌝ ⦄
     alloc.vec.Vec.append a b
     ⦃ ⇓ r => ⌜ (r.1 : Slice T).val = (a : Slice T).val ++ (b : Slice T).val ⌝ ⦄ := by
   apply triple_pre_prop; intro h
   mvcgen [alloc.vec.Vec.append, rust_primitives.sequence.seq_concat]
-  rename_i hc
-  simp +zetaDelta only [List.length_append] at hc
-  omega
+  · simp +zetaDelta [Slice.from_val]
+  · rename_i hc
+    simp +zetaDelta only [List.length_append] at hc
+    omega
 
 /-- `Vec::append`, partial (for the `⇓?` triples of the round-trip proofs: no fit condition). -/
-theorem vec_append_spec_partial {T : Type} (a b : alloc.vec.Vec T) :
+theorem vec_append_spec_partial {T : Type _} (a b : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.append a b
     ⦃ ⇓? r => ⌜ (r.1 : Slice T).val = (a : Slice T).val ++ (b : Slice T).val ⌝ ⦄ := by
   mvcgen [alloc.vec.Vec.append, rust_primitives.sequence.seq_concat]
+  simp +zetaDelta [Slice.from_val]
 
 /-! ## The crate's length helpers
 
@@ -84,22 +86,22 @@ type's trait-level contracts in a flat form for `mvcgen` (`have h := ser_spec hl
 `Sz.tls_serialized_len x`), so that after `mvcgen` every fact is an equation between values. -/
 
 /-- The value of a `Size` call, when it returns one (it always does under `Size.Lawful`). -/
-noncomputable def szv {T : Type} (Sz : Size T) (x : T) : Std.Usize :=
+noncomputable def szv {T : Type _} (Sz : Size T) (x : T) : Std.Usize :=
   open Classical in if h : ∃ n, Sz.tls_serialized_len x = ok n then h.choose else 0#usize
 
-theorem szv_eq {T : Type} {Sz : Size T} {x : T} {n : Std.Usize}
+theorem szv_eq {T : Type _} {Sz : Size T} {x : T} {n : Std.Usize}
     (h : Sz.tls_serialized_len x = ok n) : szv Sz x = n := by
   have h' : ∃ n, Sz.tls_serialized_len x = ok n := ⟨n, h⟩
   unfold szv; rw [dif_pos h']; exact ok.inj (h'.choose_spec.symm.trans h)
 
-theorem size_ok {T : Type} {Sz : Size T} (h : Size.Lawful T Sz) (x : T) :
+theorem size_ok {T : Type _} {Sz : Size T} (h : Size.Lawful T Sz) (x : T) :
     Sz.tls_serialized_len x = ok (szv Sz x) := by
-  obtain ⟨n, hn, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨n, hn, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.tls_serialized_len_spec x (pre_holds_of_ok_true rfl))
   rw [hn, szv_eq hn]
 
 /-- A `Size` call returns `szv`. -/
-theorem size_spec {T : Type} {Sz : Size T} (h : Size.Lawful T Sz) (x : T) :
+theorem size_spec {T : Type _} {Sz : Size T} (h : Size.Lawful T Sz) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ Sz.tls_serialized_len x ⦃ ⇓ n => ⌜ n = szv Sz x ⌝ ⦄ := by
   rw [size_ok h x]; apply RustM.ok_spec; rfl
 
@@ -115,22 +117,22 @@ def OkLen (r : core.result.Result (alloc.vec.Vec Std.U8) tls_codec.Error) (n : N
   simp [OkLen]
 
 /-- "An `Ok (v, rem)` consumed `szv v` bytes of `s`, and `rem` is a suffix of `s`". -/
-def OkRem {T : Type} (Sz : Size T) (s : Slice Std.U8)
+def OkRem {T : Type _} (Sz : Size T) (s : Slice Std.U8)
     (r : core.result.Result (T × Slice Std.U8) tls_codec.Error) : Prop :=
   ∀ v rem, r = .Ok (v, rem) → rem.val.length + (szv Sz v).val = s.val.length ∧ rem.val <:+ s.val
 
-@[simp] theorem OkRem_ok {T : Type} (Sz : Size T) (s : Slice Std.U8) (p : T × Slice Std.U8) :
+@[simp] theorem OkRem_ok {T : Type _} (Sz : Size T) (s : Slice Std.U8) (p : T × Slice Std.U8) :
     OkRem Sz s (.Ok p) ↔ p.2.val.length + (szv Sz p.1).val = s.val.length ∧ p.2.val <:+ s.val := by
   obtain ⟨v, rem⟩ := p; simp [OkRem]
 
-@[simp] theorem OkRem_err {T : Type} (Sz : Size T) (s : Slice Std.U8) (e : tls_codec.Error) :
+@[simp] theorem OkRem_err {T : Type _} (Sz : Size T) (s : Slice Std.U8) (e : tls_codec.Error) :
     OkRem Sz s (.Err e) ↔ True := by
   simp [OkRem]
 
 /-- A serializer call returns `ok r`; an `Ok b` has `szv` bytes. -/
-theorem ser_spec {T : Type} {S : SerializeBytes T} (h : SerializeBytes.Lawful T S) (x : T) :
+theorem ser_spec {T : Type _} {S : SerializeBytes T} (h : SerializeBytes.Lawful T S) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ S.tls_serialize_bytes x ⦃ ⇓ r => ⌜ OkLen r (szv S.SizeInst x).val ⌝ ⦄ := by
-  obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.tls_serialize_bytes_spec x (pre_holds_of_ok_true rfl))
   rw [hr]; apply RustM.ok_spec
   intro b hb
@@ -138,10 +140,10 @@ theorem ser_spec {T : Type} {S : SerializeBytes T} (h : SerializeBytes.Lawful T 
   rw [szv_eq hn, hl]
 
 /-- A deserializer call returns `ok r`; an `Ok (v, rem)` consumed `szv v` bytes. -/
-theorem deser_spec {T : Type} {D : DeserializeBytes T} (h : DeserializeBytes.Lawful T D)
+theorem deser_spec {T : Type _} {D : DeserializeBytes T} (h : DeserializeBytes.Lawful T D)
     (s : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ D.tls_deserialize_bytes s ⦃ ⇓ r => ⌜ OkRem D.SizeInst s r ⌝ ⦄ := by
-  obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.tls_deserialize_bytes_spec s (pre_holds_of_ok_true rfl))
   rw [hr]; apply RustM.ok_spec
   intro v rem hv
@@ -156,16 +158,16 @@ theorem deser_spec {T : Type} {D : DeserializeBytes T} (h : DeserializeBytes.Law
 @[szv_simps] theorem szv_U64 (x : Std.U64) : szv U64.Insts.Tls_codecSize x = 8#usize := szv_eq rfl
 
 /-- The trait-level post of `tls_serialize_bytes` on `Ok out`, from a size triple. -/
-theorem ser_post_ok {T : Type} (Sz : Size T) (S : SerializeBytes T) (x : T)
+theorem ser_post_ok {T : Type _} (Sz : Size T) (S : SerializeBytes T) (x : T)
     (out : alloc.vec.Vec Std.U8)
     (hsz : ⦃ ⌜ True ⌝ ⦄ Sz.tls_serialized_len x ⦃ ⇓ n => ⌜ n.val = (out : Slice Std.U8).val.length ⌝ ⦄) :
     (SerializeBytes.tls_serialize_bytes.post Sz S x (.Ok out)).holds := by
-  obtain ⟨n, hn, hl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hsz
+  obtain ⟨n, hn, hl⟩ := Aeneas.Std.triple_iff_exists_ok.mp hsz
   exact SerializeBytes.post_ok _ _ _ _ n hn hl.symm
 
 /-- The trait-level post of `tls_serialize_bytes` on any result whose `Ok` has `n` bytes, from a
 size triple (for a serializer that passes another one's result through). -/
-theorem ser_post_of_oklen {T : Type} (Sz : Size T) (S : SerializeBytes T) (x : T)
+theorem ser_post_of_oklen {T : Type _} (Sz : Size T) (S : SerializeBytes T) (x : T)
     (r : core.result.Result (alloc.vec.Vec Std.U8) tls_codec.Error) (n : Nat)
     (hsz : ⦃ ⌜ True ⌝ ⦄ Sz.tls_serialized_len x ⦃ ⇓ m => ⌜ m.val = n ⌝ ⦄) (h : OkLen r n) :
     (SerializeBytes.tls_serialize_bytes.post Sz S x r).holds := by
@@ -175,16 +177,16 @@ theorem ser_post_of_oklen {T : Type} (Sz : Size T) (S : SerializeBytes T) (x : T
 
 /-- The trait-level post of `tls_deserialize_bytes` on `Ok (v, rem)`, from a suffix fact and a
 size triple (in this order: the suffix goal comes first after `apply`). -/
-theorem deser_post_ok {T : Type} (Sz : Size T) (D : DeserializeBytes T) (s : Slice Std.U8) (v : T)
+theorem deser_post_ok {T : Type _} (Sz : Size T) (D : DeserializeBytes T) (s : Slice Std.U8) (v : T)
     (rem : Slice Std.U8) (hsuf : rem.val <:+ s.val)
     (hsz : ⦃ ⌜ True ⌝ ⦄ Sz.tls_serialized_len v ⦃ ⇓ n => ⌜ rem.val.length + n.val = s.val.length ⌝ ⦄) :
     (DeserializeBytes.tls_deserialize_bytes.post Sz D s (.Ok (v, rem))).holds := by
-  obtain ⟨n, hn, hl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hsz
+  obtain ⟨n, hn, hl⟩ := Aeneas.Std.triple_iff_exists_ok.mp hsz
   exact DeserializeBytes.post_ok _ _ _ _ _ n hn hl hsuf
 
 /-- The provided `tls_deserialize_exact_bytes` meets its trait-level spec when
 `tls_deserialize_bytes` does. -/
-theorem exact_bytes_spec {T : Type} (D : DeserializeBytes T)
+theorem exact_bytes_spec {T : Type _} (D : DeserializeBytes T)
     (hd : ∀ b, ⦃ ⌜ True ⌝ ⦄ D.tls_deserialize_bytes b
       ⦃ ⇓ r => ⌜ (DeserializeBytes.tls_deserialize_bytes.post D.SizeInst D b r).holds ⌝ ⦄)
     (b : Slice Std.U8) :
@@ -201,12 +203,12 @@ A field type's `RoundTrip.Lawful` gives `Dec` for every `Ok` output of its seria
 concatenation, one field at a time (`dec_spec` + `dec_forward`). Both triples are
 value-agnostic, so fields of the same type do not confuse `mvcgen`. -/
 
-def Dec {T : Type} (D : DeserializeBytes T) (x : T) (b : List Std.U8) : Prop :=
+def Dec {T : Type _} (D : DeserializeBytes T) (x : T) (b : List Std.U8) : Prop :=
   ∀ (s : Slice Std.U8) (R : List Std.U8), s.val = b ++ R →
     ∃ s' : Slice Std.U8, D.tls_deserialize_bytes s = ok (.Ok (x, s')) ∧ s'.val = R
 
 /-- From `RoundTrip.Lawful`: an `Ok b` of the serializer decodes back (TlsCodec's `Lawful.dec`). -/
-theorem Dec_of_lawful {T : Type} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.Lawful T RT)
+theorem Dec_of_lawful {T : Type _} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.Lawful T RT)
     (x : T) (b : alloc.vec.Vec Std.U8)
     (hb : RT.SerializeBytesInst.tls_serialize_bytes x = ok (.Ok b)) :
     Dec RT.DeserializeBytesInst x (b : Slice Std.U8).val := by
@@ -215,20 +217,20 @@ theorem Dec_of_lawful {T : Type} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.La
     have := s.property; rw [hs, List.length_append] at this; omega
   have hlen : (b : Slice Std.U8).val.length + R.length ≤ Std.Usize.max := by
     have := s.property; rw [hs, List.length_append] at this; omega
-  obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (hl.dec x ⟨R, hR⟩ b hb hlen s)
-  obtain ⟨p, rfl, h1, h2⟩ := hp hs
+  obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (hl.dec x (Slice.from R hR) b hb (by simpa using hlen) s)
+  obtain ⟨p, rfl, h1, h2⟩ := hp (by simpa using hs)
   obtain ⟨v, s'⟩ := p
-  simp only at h1 h2
+  simp only [Slice.from_val] at h1 h2
   subst h1
   exact ⟨s', hr, h2⟩
 
 /-- The `∃` of `Dec`, from a total triple. -/
-theorem dec_of_triple {T : Type} {m : RustM (core.result.Result (T × Slice Std.U8) tls_codec.Error)}
+theorem dec_of_triple {T : Type _} {m : RustM (core.result.Result (T × Slice Std.U8) tls_codec.Error)}
     {x : T} {R : List Std.U8}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ ∃ s' : Slice Std.U8, r = .Ok (x, s') ∧ s'.val = R ⌝ ⦄) :
     ∃ s' : Slice Std.U8, m = ok (.Ok (x, s')) ∧ s'.val = R := by
-  obtain ⟨r, hr, s', rfl, hs'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨r, hr, s', rfl, hs'⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   exact ⟨s', hr, hs'⟩
 
 /-- Scalar equality by value (for the decoded discriminant against the `match` literals). -/
@@ -240,23 +242,23 @@ theorem uscalar_mk_val {ty : UScalarTy} (bv : BitVec ty.numBits) : (UScalar.mk b
   rfl
 
 /-- "An `Ok b` has `n` bytes and decodes back to `x`". -/
-def OkDec {T : Type} (D : DeserializeBytes T) (x : T)
+def OkDec {T : Type _} (D : DeserializeBytes T) (x : T)
     (r : core.result.Result (alloc.vec.Vec Std.U8) tls_codec.Error) (n : Nat) : Prop :=
   ∀ b, r = .Ok b → (b : Slice Std.U8).val.length = n ∧ Dec D x (b : Slice Std.U8).val
 
-@[simp] theorem OkDec_ok {T : Type} (D : DeserializeBytes T) (x : T) (b : alloc.vec.Vec Std.U8)
+@[simp] theorem OkDec_ok {T : Type _} (D : DeserializeBytes T) (x : T) (b : alloc.vec.Vec Std.U8)
     (n : Nat) : OkDec D x (.Ok b) n ↔ (b : Slice Std.U8).val.length = n ∧ Dec D x (b : Slice Std.U8).val := by
   simp [OkDec]
 
-@[simp] theorem OkDec_err {T : Type} (D : DeserializeBytes T) (x : T) (e : tls_codec.Error)
+@[simp] theorem OkDec_err {T : Type _} (D : DeserializeBytes T) (x : T) (e : tls_codec.Error)
     (n : Nat) : OkDec D x (.Err e) n ↔ True := by
   simp [OkDec]
 
 /-- A field serializer call, for round trips: an `Ok b` has `szv` bytes and decodes back. -/
-theorem ser_dec_spec {T : Type} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.Lawful T RT) (x : T) :
+theorem ser_dec_spec {T : Type _} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.Lawful T RT) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ RT.SerializeBytesInst.tls_serialize_bytes x
     ⦃ ⇓ r => ⌜ OkDec RT.DeserializeBytesInst x r (szv RT.SerializeBytesInst.SizeInst x).val ⌝ ⦄ := by
-  obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (ser_spec hl.SerializeBytesInstLawful x)
+  obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp (ser_spec hl.SerializeBytesInstLawful x)
   rw [hr]; apply RustM.ok_spec
   intro b hb
   subst hb
@@ -264,12 +266,12 @@ theorem ser_dec_spec {T : Type} {RT : spec.RoundTrip T} (hl : spec.RoundTrip.Law
 
 /-- A field deserializer call, for round trips: on an input `b ++ R` with `Dec D x b`, it
 returned `x` and `R`. -/
-theorem dec_spec {T : Type} {D : DeserializeBytes T} (h : DeserializeBytes.Lawful T D)
+theorem dec_spec {T : Type _} {D : DeserializeBytes T} (h : DeserializeBytes.Lawful T D)
     (s : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ D.tls_deserialize_bytes s
     ⦃ ⇓ r => ⌜ ∀ (b R : List Std.U8) (x : T), s.val = b ++ R → Dec D x b →
       ∃ s' : Slice Std.U8, r = .Ok (x, s') ∧ s'.val = R ⌝ ⦄ := by
-  obtain ⟨r, hr, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.tls_deserialize_bytes_spec s (pre_holds_of_ok_true rfl))
   rw [hr]; apply RustM.ok_spec
   intro b R x hs hd
@@ -309,7 +311,7 @@ elab "dec_forward" : tactic => do
       if ok then progress := true; break
 
 /-- The `RoundTrip` lemma method of the OpenMLS copies (`fn round_trip(&self, _rest) {}`). -/
-theorem rt_of_dec {T : Type} (RT : spec.RoundTrip T)
+theorem rt_of_dec {T : Type _} (RT : spec.RoundTrip T)
     (hS : SerializeBytes.Lawful T RT.SerializeBytesInst)
     (hD : DeserializeBytes.Lawful T RT.DeserializeBytesInst)
     (hE : core.cmp.PartialEq.Lawful T T RT.corecmpPartialEqInst)
@@ -349,10 +351,10 @@ def OkLenPos (r : core.result.Result (alloc.vec.Vec Std.U8) tls_codec.Error) (n 
   simp [OkLenPos]
 
 /-- A `NonEmpty` field's serializer call: an `Ok b` has `szv` bytes, at least one. -/
-theorem ser_ne_spec {T : Type} {NE : spec.NonEmpty T} (h : spec.NonEmpty.Lawful T NE) (x : T) :
+theorem ser_ne_spec {T : Type _} {NE : spec.NonEmpty T} (h : spec.NonEmpty.Lawful T NE) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ NE.RoundTripInst.SerializeBytesInst.tls_serialize_bytes x
     ⦃ ⇓ r => ⌜ OkLenPos r (szv NE.RoundTripInst.SerializeBytesInst.SizeInst x).val ⌝ ⦄ := by
-  obtain ⟨r, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (ser_spec h.RoundTripInstLawful.SerializeBytesInstLawful x)
   rw [hr]; apply RustM.ok_spec
   intro b hb
@@ -361,7 +363,7 @@ theorem ser_ne_spec {T : Type} {NE : spec.NonEmpty T} (h : spec.NonEmpty.Lawful 
 
 /-- `NonEmpty.Lawful` of a copy (lemma method overridden by `ok ()`) from the positivity of
 its serializer's `Ok` outputs. -/
-theorem ne_of_pos {T : Type} (NE : spec.NonEmpty T) (hrt : spec.RoundTrip.Lawful T NE.RoundTripInst)
+theorem ne_of_pos {T : Type _} (NE : spec.NonEmpty T) (hrt : spec.RoundTrip.Lawful T NE.RoundTripInst)
     (hne : ∀ x, NE.nonempty x = ok ())
     (hpos : ∀ x, ⦃ ⌜ True ⌝ ⦄ NE.RoundTripInst.SerializeBytesInst.tls_serialize_bytes x
       ⦃ ⇓? r => ⌜ ∀ v, r = .Ok v → 0 < v.val.length ⌝ ⦄) :
@@ -435,7 +437,13 @@ def freshNames (p : String) (n : Nat) : Array Lean.Ident :=
 /-- Close the VCs left by `mvcgen` on derived code: `?` breaks, `tryCF` continues, the
 `OkLen` / `OkRem` facts of `Ok` results, then arithmetic. -/
 macro "derive_vcs" : tactic => `(tactic| (
-  all_goals (first | (apply try_break_vc; intro e he; (try subst he); mvcgen) | skip)
+  all_goals (first
+    | (apply try_break_vc; intro e he; (try subst he); mvcgen
+       -- the `From` residual: `r = e → PostCond.ok Q (Err r)`, reduced to the post on `Err`
+       all_goals (try (intro h; subst h; simp only [PostCond.ok, SPred.down_pure])))
+    | skip)
+  -- a failed `assert` (panic) left by a direct `mvcgen` run as `(ExceptConds.false.1 _).down`
+  all_goals (try (simp only [ExceptConds.fst_false, ExceptConds.snd_false]; simp only [SPred.down_pure]))
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try subst_vars)
   all_goals (try simp only [OkLen_ok, OkRem_ok, OkDec_ok, szv_simps] at *)
@@ -504,6 +512,7 @@ macro_rules
       all_goals (first
         | (apply ser_post_ok; mvcgen [$xs,*]; derive_vcs; derive_arith; done)
         | (intro h; apply ser_post_of_oklen _ _ _ _ _ _ h; mvcgen [$xs,*]; derive_vcs; derive_arith; done)
+        | exact SerializeBytes.post_err _ _ _ _
         | skip)
       derive_arith))
 
@@ -548,15 +557,18 @@ macro_rules
 
 /-- `PartialEq.Lawful` of a derived `PartialEq` (`ds`: its `eq`, and for an enum the type's
 `read_discriminant`; `Ls`: the `PartialEq.Lawful` of the fields compared through an instance; fields
-of primitive type are compared with `=`). -/
+of primitive type are compared with `=`, or through the `u8` / `u16` instance). -/
 syntax "derive_eq_lawful " "[" Lean.Parser.Tactic.simpArg,* "]" " [" term,* "]" : tactic
 macro_rules
   | `(tactic| derive_eq_lawful [$ds,*] [$ls,*]) => do
     let ls := ls.getElems
     let ns := freshNames "h_eq" ls.size
     let hs ← haves ns ls fun l => `(CoreModels.core.cmp.PartialEq.Lawful.eq_spec $l)
-    let xs ← mvArgs ds.getElems ns
-    let ys ← mvArgs ds.getElems (ns.push (Lean.mkIdent ``CoreModels.core.cmp.PartialEq.ne.default))
+    -- `u8` / `u16` fields compared through the scalar `PartialEq` instance (a projection: no spec key)
+    let prims := #[Lean.mkIdent ``CoreModels.core.U8.Insts.CoreCmpPartialEqU8.eq_decide_spec,
+      Lean.mkIdent ``tls_codec.core.U16.Insts.CoreCmpPartialEqU16.eq_decide_spec]
+    let xs ← mvArgs ds.getElems (ns ++ prims)
+    let ys ← mvArgs ds.getElems ((ns ++ prims).push (Lean.mkIdent ``CoreModels.core.cmp.PartialEq.ne.default))
     `(tactic| (
       $hs:tactic
       constructor

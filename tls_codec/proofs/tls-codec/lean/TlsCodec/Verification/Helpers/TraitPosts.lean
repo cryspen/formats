@@ -20,7 +20,7 @@ namespace tls_codec
 /-! ### `DeserializeBytes::tls_deserialize_exact_bytes` (trait default) -/
 
 /-- The default `tls_deserialize_exact_bytes` does not fail when `tls_deserialize_bytes` does not. -/
-theorem DeserializeBytes.exact_default_pf {Self : Type} (inst : DeserializeBytes Self)
+theorem DeserializeBytes.exact_default_pf {Self : Type _} (inst : DeserializeBytes Self)
     (h : ∀ b, ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes b ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ DeserializeBytes.tls_deserialize_exact_bytes.default inst bytes
@@ -36,7 +36,7 @@ theorem DeserializeBytes.exact_default_pf {Self : Type} (inst : DeserializeBytes
 
 /-- The default `tls_deserialize_exact_bytes` meets its post given the post of
 `tls_deserialize_bytes` (on the `ok` outcomes). -/
-theorem DeserializeBytes.exact_default_fc {Self : Type} (inst : DeserializeBytes Self)
+theorem DeserializeBytes.exact_default_fc {Self : Type _} (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8)
     (h : ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes bytes
       ⦃ ⇓? res => ⌜ (DeserializeBytes.tls_deserialize_bytes.post inst.SizeInst inst bytes res).holds ⌝ ⦄) :
@@ -71,8 +71,8 @@ theorem DeserializeBytes.exact_default_fc {Self : Type} (inst : DeserializeBytes
         subst this
         simp only [DeserializeBytes.tls_deserialize_bytes.post, core.result.Result.is_err,
           core.result.Result.is_ok_and,
-          __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool,
-          __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once,
+          __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool,
+          __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.call_once,
           DeserializeBytes.tls_deserialize_exact_bytes.post,
           __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool,
           __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once, hl,
@@ -116,7 +116,7 @@ theorem DeserializeBytes.exact_default_fc {Self : Type} (inst : DeserializeBytes
 /-! ### Trait-level `tls_deserialize_bytes` post from a characterization of the result -/
 
 /-- An `Err` result meets the trait-level post of `tls_deserialize_bytes`. -/
-theorem DeserializeBytes.post_err {Self : Type} (SizeInst : Size Self) (inst : DeserializeBytes Self)
+theorem DeserializeBytes.post_err {Self : Type _} (SizeInst : Size Self) (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) (e : Error) :
     (DeserializeBytes.tls_deserialize_bytes.post SizeInst inst bytes (.Err e)).holds := by
   simp [DeserializeBytes.tls_deserialize_bytes.post, core.result.Result.is_err, RustM.holds]
@@ -124,7 +124,7 @@ theorem DeserializeBytes.post_err {Self : Type} (SizeInst : Size Self) (inst : D
 
 /-- An `Ok (v, rem)` result meets the trait-level post of `tls_deserialize_bytes` when the size
 of `v` is `n`, `rem.len + n = bytes.len` and `rem` is a suffix of `bytes`. -/
-theorem DeserializeBytes.post_ok {Self : Type} (SizeInst : Size Self) (inst : DeserializeBytes Self)
+theorem DeserializeBytes.post_ok {Self : Type _} (SizeInst : Size Self) (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) (v : Self) (rem : Slice Std.U8) (n : Std.Usize)
     (hn : SizeInst.tls_serialized_len v = ok n)
     (hrem : rem.val.length + n.val = bytes.val.length)
@@ -153,7 +153,7 @@ theorem DeserializeBytes.post_ok {Self : Type} (SizeInst : Size Self) (inst : De
     | div => rw [hc] at this; exact this.elim
   simp only [DeserializeBytes.tls_deserialize_bytes.post, core.result.Result.is_err,
     core.result.Result.is_ok_and,
-    __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once,
+    __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.call_once,
     hl, core.slice.Slice.ends_with_u8_eq]
   simp [hn, hadd, RustM.holds, hsuf]
   have hle : (rem.val.length ≤ bytes.val.length) := by omega
@@ -177,7 +177,7 @@ theorem alloc.string.String.size_char (t : alloc.string.String)
 /-! ### Trait-level `tls_serialize_bytes` post from a characterization of the result -/
 
 /-- An `Err` result meets the trait-level post of `tls_serialize_bytes`. -/
-theorem SerializeBytes.post_err {Self : Type} (SizeInst : Size Self) (inst : SerializeBytes Self)
+theorem SerializeBytes.post_err {Self : Type _} (SizeInst : Size Self) (inst : SerializeBytes Self)
     (self_ : Self) (e : Error) :
     (SerializeBytes.tls_serialize_bytes.post SizeInst inst self_ (.Err e)).holds := by
   simp [SerializeBytes.tls_serialize_bytes.post, core.result.Result.is_err, RustM.holds]
@@ -185,13 +185,13 @@ theorem SerializeBytes.post_err {Self : Type} (SizeInst : Size Self) (inst : Ser
 
 /-- An `Ok out` result meets the trait-level post of `tls_serialize_bytes` when the size of `self_`
 is `n` and `out.len = n`. -/
-theorem SerializeBytes.post_ok {Self : Type} (SizeInst : Size Self) (inst : SerializeBytes Self)
+theorem SerializeBytes.post_ok {Self : Type _} (SizeInst : Size Self) (inst : SerializeBytes Self)
     (self_ : Self) (out : alloc.vec.Vec Std.U8) (n : Std.Usize)
     (hn : SizeInst.tls_serialized_len self_ = ok n)
     (hout : (out : Slice Std.U8).val.length = n.val) :
     (SerializeBytes.tls_serialize_bytes.post SizeInst inst self_ (.Ok out)).holds := by
   have hl : alloc.vec.Vec.len out = ok (Slice.len (out : Slice Std.U8)) := by
-    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec out)
+    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec out)
     rw [hl, hl']
   simp only [SerializeBytes.tls_serialize_bytes.post, core.result.Result.is_err,
     core.result.Result.is_ok_and,
@@ -214,7 +214,7 @@ theorem alloc.string.String.size_pos (t : alloc.string.String) :
   split_ifs at h with hc <;> omega
 
 /-- `Vec<T>::tls_serialized_len` is positive when the element size does not fail. -/
-theorem alloc.vec.Vec.size_pos {T : Type} (SizeInst : Size T)
+theorem alloc.vec.Vec.size_pos {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len SizeInst self_
     ⦃ ⇓ r => ⌜ 0 < r.val ⌝ ⦄ := by
@@ -237,6 +237,15 @@ theorem pre_holds_of_ok_true {m : RustM Bool} (h : m = ok true) :
   unfold RustM.holds
   mvcgen
 
+/-- `pure` is `ok` (for `simp`: the `RustM Bool → RustM Prop` coercion of the posts ends in a
+`pure`, and binds on `ok` no longer reduce by `whnf` since `RustM` became an ITree). -/
+@[simp] theorem RustM.pure_eq_ok {α : Type _} (x : α) : (pure x : RustM α) = ok x := rfl
+
+/-- `simp` set normalising a coerced `RustM Bool` post on `ok` values. -/
+macro "holds_norm" " at " h:ident : tactic => `(tactic|
+  simp only [Aeneas.Std.bind_tc_ok, Aeneas.Std.bind_ok, RustM.map_ok, RustM.pure_eq_ok,
+    Bool.false_eq_true, if_false, if_true, ↓reduceIte] at $h:ident)
+
 /-- `RustM.holds` of a pure proposition. -/
 theorem holds_ok_iff {p : Prop} : (ok p : RustM Prop).holds ↔ p := by
   unfold RustM.holds
@@ -246,12 +255,12 @@ theorem holds_ok_iff {p : Prop} : (ok p : RustM Prop).holds ↔ p := by
 
 /-- Converse of `SerializeBytes.post_ok`: an `Ok out` meeting the trait-level post of
 `tls_serialize_bytes` has the length given by `tls_serialized_len`. -/
-theorem SerializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst : SerializeBytes Self)
+theorem SerializeBytes.post_ok_elim {Self : Type _} (SizeInst : Size Self) (inst : SerializeBytes Self)
     (self_ : Self) (out : alloc.vec.Vec Std.U8)
     (h : (SerializeBytes.tls_serialize_bytes.post SizeInst inst self_ (.Ok out)).holds) :
     ∃ n, SizeInst.tls_serialized_len self_ = ok n ∧ (out : Slice Std.U8).val.length = n.val := by
   have hl : alloc.vec.Vec.len out = ok (Slice.len (out : Slice Std.U8)) := by
-    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec out)
+    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec out)
     rw [hl, hl']
   simp only [SerializeBytes.tls_serialize_bytes.post, core.result.Result.is_err,
     core.result.Result.is_ok_and,
@@ -260,6 +269,7 @@ theorem SerializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst :
   | ok n =>
     refine ⟨n, rfl, ?_⟩
     simp only [hn] at h
+    holds_norm at h
     have h2 : decide (Slice.len out = n) = true := holds_ok_iff.mp h
     have h3 := of_decide_eq_true h2
     have := congrArg UScalar.val h3
@@ -277,7 +287,7 @@ theorem SerializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst :
 
 /-- An `Ok (v, rem)` meeting the trait-level post of `tls_deserialize_bytes` has `rem` a suffix
 of `bytes`. -/
-theorem DeserializeBytes.post_ok_suffix {Self : Type} (SizeInst : Size Self)
+theorem DeserializeBytes.post_ok_suffix {Self : Type _} (SizeInst : Size Self)
     (inst : DeserializeBytes Self) (bytes : Slice Std.U8) (v : Self) (rem : Slice Std.U8)
     (h : (DeserializeBytes.tls_deserialize_bytes.post SizeInst inst bytes (.Ok (v, rem))).holds) :
     rem.val <:+ bytes.val := by
@@ -288,15 +298,16 @@ theorem DeserializeBytes.post_ok_suffix {Self : Type} (SizeInst : Size Self)
       = ok false := by
     simp only [DeserializeBytes.tls_deserialize_bytes.post, core.result.Result.is_err,
       core.result.Result.is_ok_and,
-      __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once,
-      hl, core.slice.Slice.ends_with_u8_eq, hsuf, decide_false, Aeneas.Std.bind_tc_ok]
+      __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.call_once,
+      hl, core.slice.Slice.ends_with_u8_eq, hsuf, decide_false, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
     split <;> simp_all
   rw [hpost] at h
+  holds_norm at h
   exact absurd (holds_ok_iff.mp h) (by simp)
 
 /-- Converse of `DeserializeBytes.post_ok`: an `Ok (v, rem)` meeting the trait-level post of
 `tls_deserialize_bytes` has `rem.len + size v = bytes.len`. -/
-theorem DeserializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst : DeserializeBytes Self)
+theorem DeserializeBytes.post_ok_elim {Self : Type _} (SizeInst : Size Self) (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) (v : Self) (rem : Slice Std.U8)
     (h : (DeserializeBytes.tls_deserialize_bytes.post SizeInst inst bytes (.Ok (v, rem))).holds) :
     ∃ n, SizeInst.tls_serialized_len v = ok n ∧ rem.val.length + n.val = bytes.val.length := by
@@ -305,8 +316,8 @@ theorem DeserializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst
   have hsuf := DeserializeBytes.post_ok_suffix SizeInst inst bytes v rem h
   simp only [DeserializeBytes.tls_deserialize_bytes.post, core.result.Result.is_err,
     core.result.Result.is_ok_and,
-    __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once,
-    hl, core.slice.Slice.ends_with_u8_eq, hsuf, decide_true, Aeneas.Std.bind_tc_ok,
+    __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.call_once,
+    hl, core.slice.Slice.ends_with_u8_eq, hsuf, decide_true, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok,
     if_true] at h
   cases hn : SizeInst.tls_serialized_len v with
   | ok n =>
@@ -320,6 +331,7 @@ theorem DeserializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst
         rw [hadd] at hz
         obtain ⟨_, hz, _⟩ := hz
         simp only [hadd, hsuf, if_true] at h
+        holds_norm at h
         have h2 : decide (z = Slice.len bytes) = true := holds_ok_iff.mp h
         have h3 := congrArg UScalar.val (of_decide_eq_true h2)
         simp only [Slice.len_val, Slice.length] at hz h3 ⊢
@@ -336,6 +348,7 @@ theorem DeserializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst
         simp [Std.Do.wp, Std.Do.PredTrans.apply] at this
     · exfalso
       simp only [hle, if_false] at h
+      holds_norm at h
       have := holds_ok_iff.mp h
       simp at this
   | fail e =>
@@ -356,7 +369,7 @@ theorem DeserializeBytes.post_ok_elim {Self : Type} (SizeInst : Size Self) (inst
 a suffix fact, so proofs that reason about the length post keep their shape. -/
 
 /-- The length clause of the `tls_deserialize_bytes` post (closure body). -/
-def DeserializeBytes.PostLen.call_once {Self : Type} (SizeInst : Size Self)
+def DeserializeBytes.PostLen.call_once {Self : Type _} (SizeInst : Size Self)
     (c : Slice Std.U8) (tupled_args : Self × Slice Std.U8) : RustM Bool := do
   let (value, remainder) := tupled_args
   let i ← core.slice.Slice.len remainder
@@ -369,13 +382,13 @@ def DeserializeBytes.PostLen.call_once {Self : Type} (SizeInst : Size Self)
   else ok false
 
 @[reducible]
-def DeserializeBytes.PostLen.inst {Self : Type} (SizeInst : Size Self) :
+def DeserializeBytes.PostLen.inst {Self : Type _} (SizeInst : Size Self) :
     core.ops.function.FnOnce (Slice Std.U8) (Self × Slice Std.U8) Bool :=
   { call_once := DeserializeBytes.PostLen.call_once SizeInst }
 
 /-- The trait-level `tls_deserialize_bytes` post without its suffix clause. -/
 @[reducible]
-def DeserializeBytes.post_len {Self : Type} (SizeInst : Size Self) (_inst : DeserializeBytes Self)
+def DeserializeBytes.post_len {Self : Type _} (SizeInst : Size Self) (_inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) (res : core.result.Result (Self × Slice Std.U8) Error) : RustM Bool := do
   let b ← core.result.Result.is_err res
   if b
@@ -383,7 +396,7 @@ def DeserializeBytes.post_len {Self : Type} (SizeInst : Size Self) (_inst : Dese
   else core.result.Result.is_ok_and (DeserializeBytes.PostLen.inst SizeInst) res bytes
 
 /-- The trait-level post from its length part and the suffix fact. -/
-theorem DeserializeBytes.post_of_len {Self : Type} (SizeInst : Size Self) (inst : DeserializeBytes Self)
+theorem DeserializeBytes.post_of_len {Self : Type _} (SizeInst : Size Self) (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) (r : core.result.Result (Self × Slice Std.U8) Error)
     (h : (DeserializeBytes.post_len SizeInst inst bytes r).holds)
     (hs : ∀ v rem, r = .Ok (v, rem) → rem.val <:+ bytes.val) :
@@ -397,14 +410,14 @@ theorem DeserializeBytes.post_of_len {Self : Type} (SizeInst : Size Self) (inst 
         DeserializeBytes.post_len SizeInst inst bytes (.Ok (v, rem)) := by
       simp only [DeserializeBytes.tls_deserialize_bytes.post, DeserializeBytes.post_len,
         core.result.Result.is_err, core.result.Result.is_ok_and,
-        __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once,
+        __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.call_once,
         DeserializeBytes.PostLen.call_once, core.slice.Slice.ends_with_u8_eq, hsuf, decide_true,
-        Aeneas.Std.bind_tc_ok, if_true]
+        Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok, if_true]
       simp [hsuf]
     rw [hpost]; exact h
 
 /-- `post_of_len` for partial triples. -/
-theorem DeserializeBytes.fc_of_len {Self : Type} (SizeInst : Size Self) (inst : DeserializeBytes Self)
+theorem DeserializeBytes.fc_of_len {Self : Type _} (SizeInst : Size Self) (inst : DeserializeBytes Self)
     (bytes : Slice Std.U8) {m : RustM (core.result.Result (Self × Slice Std.U8) Error)}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? r => ⌜ (DeserializeBytes.post_len SizeInst inst bytes r).holds ⌝ ⦄)
     (hs : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ ∀ v rem, r = .Ok (v, rem) → rem.val <:+ bytes.val ⌝ ⦄) :

@@ -39,6 +39,10 @@ variable
   (hU8d : tls_codec.Deserialize.Lawful U8 tls_codec.U8.Insts.Tls_codecDeserialize)
   (hP2sz : tls_codec.Size.Lawful Pair2 Pair2.Insts.Tls_codecSize)
   (hChsz : tls_codec.Size.Lawful Choice Choice.Insts.Tls_codecSize)
+  (hU8sb : tls_codec.SerializeBytes.Lawful U8 tls_codec.U8.Insts.Tls_codecSerializeBytes)
+  (hU8db : tls_codec.DeserializeBytes.Lawful U8 tls_codec.U8.Insts.Tls_codecDeserializeBytes)
+  (hVLeq : core.cmp.PartialEq.Lawful tls_codec.quic_vec.VLBytes tls_codec.quic_vec.VLBytes
+    tls_codec.quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes)
 
 /-! ### Bytes path: the derive tactics moved into TlsCodec (`Derive/Bytes.lean`) -/
 
@@ -63,6 +67,33 @@ theorem Pair2.deserBytes_lawful :
 include hVLsz hU16sz in
 theorem Choice.size_lawful : tls_codec.Size.Lawful Choice Choice.Insts.Tls_codecSize := by
   derive_size_lawful [Choice.Insts.Tls_codecSize.tls_serialized_len] [hVLsz, hU16sz]
+
+include hChsz hVLsb hU16sb hU8sb in
+theorem Choice.serBytes_lawful :
+    tls_codec.SerializeBytes.Lawful Choice Choice.Insts.Tls_codecSerializeBytes := by
+  derive_ser_lawful hChsz [Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes,
+    SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Num,
+    SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Bytes,
+    SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Empty,
+    Shared0Choice.Insts.Tls_codecSize.tls_serialized_len, Choice.Insts.Tls_codecSize.tls_serialized_len]
+    [hU8sb, hVLsb, hU16sb]
+
+include hChsz hVLdb hU16db hU8db in
+theorem Choice.deserBytes_lawful :
+    tls_codec.DeserializeBytes.Lawful Choice Choice.Insts.Tls_codecDeserializeBytes := by
+  derive_deser_lawful hChsz [Choice.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes,
+    DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Num,
+    DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Bytes,
+    DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Empty,
+    Choice.Insts.Tls_codecSize.tls_serialized_len] [hU8db, hVLdb, hU16db]
+
+include hVLeq in
+theorem Pair2.eq_lawful : core.cmp.PartialEq.Lawful Pair2 Pair2 Pair2.Insts.CoreCmpPartialEqPair2 := by
+  derive_eq_lawful [Pair2.Insts.CoreCmpPartialEqPair2.eq] [hVLeq]
+
+include hVLeq in
+theorem Choice.eq_lawful : core.cmp.PartialEq.Lawful Choice Choice Choice.Insts.CoreCmpPartialEqChoice := by
+  derive_eq_lawful [Choice.Insts.CoreCmpPartialEqChoice.eq, Choice.read_discriminant] [hVLeq]
 
 /-! ### `std` path (`Derive/Std.lean`) -/
 

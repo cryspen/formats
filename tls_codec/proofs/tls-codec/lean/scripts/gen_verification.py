@@ -734,7 +734,7 @@ set_option mvcgen.warning false
 /-- Total correctness = termination without exception (`⇓ _ => True`) plus partial
 correctness (`⇓?`). Holds in any `WPMonad`, by conjunctivity of `wp`. -/
 theorem triple_of_panic_freedom_of_functional_correctness
-    {{m : Type → Type}} {{ps : PostShape}} [Monad m] [WPMonad m ps] {{α : Type}}
+    {{m : Type _ → Type _}} {{ps : PostShape}} [Monad m] [WPMonad m ps] {{α : Type _}}
     {{x : m α}} {{P : Assertion ps}} {{Q : α → Assertion ps}}
     (hpf : ⦃ P ⦄ x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (hfc : ⦃ P ⦄ x ⦃ ⇓? r => Q r ⦄) :
     ⦃ P ⦄ x ⦃ ⇓ r => Q r ⦄ :=
@@ -744,7 +744,7 @@ theorem triple_of_panic_freedom_of_functional_correctness
 
 /-- A post that always holds: panic freedom alone gives the total triple. -/
 theorem triple_of_panic_freedom_of_post_holds
-    {{α : Type}} {{x : RustM α}} {{Q : α → Prop}}
+    {{α : Type _}} {{x : RustM α}} {{Q : α → Prop}}
     (hpf : ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (hQ : ∀ r, Q r) :
     ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓ r => ⌜ Q r ⌝ ⦄ :=
   Triple.of_entails_right _ hpf

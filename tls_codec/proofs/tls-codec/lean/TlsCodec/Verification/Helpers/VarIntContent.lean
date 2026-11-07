@@ -77,7 +77,7 @@ theorem varint.TlsVarInt.write_bytes_loop0_content (bytes : Slice Std.U8) (value
           then x.val ||| ((value.val >>> (8 * (i.val - 1 - k))) % 256) else x.val))
   · rintro ⟨b, v, j⟩ ⟨hji, hb, hv, hk⟩
     dsimp only at hji hb hv hk
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (varint.TlsVarInt.write_bytes_loop0.body_content b v j (by omega))
     dsimp only
     rw [hr, Aeneas.Std.WP.spec_ok]
@@ -179,7 +179,7 @@ theorem alloc.vec.from_elem_U8_content (item : Std.U8) (len : Std.Usize) :
   unfold alloc.vec.from_elem rust_primitives.sequence.seq_create
   mvcgen
   · rename_i h
-    simp [Slice.new, h]
+    simp [Slice.new_val, h]
   · rename_i hne cl hcl comb hle
     rw [mapM_clone_replicate_U8] at hcl
     cases hcl
@@ -187,7 +187,7 @@ theorem alloc.vec.from_elem_U8_content (item : Std.U8) (len : Std.Usize) :
       rw [← List.replicate_succ']; congr 1; omega
     simpa [comb] using this
   · rename_i hne cl hcl comb hle
-    have hl := List.mapM_RustM_length hcl
+    have hl := List.mapM_RustM_length (RustM.match.isOk.mp hcl)
     simp only [List.length_replicate] at hl
     exfalso; apply hle
     simp only [comb, List.length_append, List.length_singleton, hl]
@@ -258,7 +258,7 @@ theorem varint.TlsVarInt.write_bytes_content (self : varint.TlsVarInt) (buf : Sl
     have hle : len.val ≤ buf.val.length := by scalar_tac
     refine ⟨⟨_, rfl, ?_⟩, ?_⟩
     · scalar_tac
-    · exact varint.write_bytes_case self buf len _ hc.1 (by simp; omega) hle hc.2 p hp 0#u8
+    · exact varint.write_bytes_case self buf len _ hc.1 (by simp) hle hc.2 p hp 0#u8
         (by simp [varint.pfx, hx]) s s2 hs hl2
   · rename_i len hlc blen hnlt hbl p hx hp ha
     have hc := varint.lenOf_char _ _ hlc
@@ -275,7 +275,7 @@ theorem varint.TlsVarInt.write_bytes_content (self : varint.TlsVarInt) (buf : Sl
     have hle : len.val ≤ buf.val.length := by scalar_tac
     refine ⟨⟨_, rfl, ?_⟩, ?_⟩
     · scalar_tac
-    · exact varint.write_bytes_case self buf len _ hc.1 (by simp; omega) hle hc.2 p hp 64#u8
+    · exact varint.write_bytes_case self buf len _ hc.1 (by simp) hle hc.2 p hp 64#u8
         (by simp [varint.pfx, hx]) s s2 hs hl2
   · rename_i len hlc blen hnlt hbl p hx hp ha
     have hc := varint.lenOf_char _ _ hlc
@@ -292,7 +292,7 @@ theorem varint.TlsVarInt.write_bytes_content (self : varint.TlsVarInt) (buf : Sl
     have hle : len.val ≤ buf.val.length := by scalar_tac
     refine ⟨⟨_, rfl, ?_⟩, ?_⟩
     · scalar_tac
-    · exact varint.write_bytes_case self buf len _ hc.1 (by simp; omega) hle hc.2 p hp 128#u8
+    · exact varint.write_bytes_case self buf len _ hc.1 (by simp) hle hc.2 p hp 128#u8
         (by simp [varint.pfx, hx]) s s2 hs hl2
   · rename_i len hlc blen hnlt hbl p hx hp ha
     have hc := varint.lenOf_char _ _ hlc
@@ -309,7 +309,7 @@ theorem varint.TlsVarInt.write_bytes_content (self : varint.TlsVarInt) (buf : Sl
     have hle : len.val ≤ buf.val.length := by scalar_tac
     refine ⟨⟨_, rfl, ?_⟩, ?_⟩
     · scalar_tac
-    · exact varint.write_bytes_case self buf len _ hc.1 (by simp; omega) hle hc.2 p hp 192#u8
+    · exact varint.write_bytes_case self buf len _ hc.1 (by simp) hle hc.2 p hp 192#u8
         (by simp [varint.pfx, hx]) s s2 hs hl2
   · rename_i len hlc blen hnlt hbl p hx hp ha
     have hc := varint.lenOf_char _ _ hlc
@@ -597,7 +597,7 @@ The `Lawful` structures of `u16` (the generic `Vec<T>` results take them as hypo
 
 theorem U16.size_lawful : Size.Lawful Std.U16 U16.Insts.Tls_codecSize :=
   ⟨fun x _ => by
-    obtain ⟨v, hv, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨v, hv, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (show ⦃ ⌜ True ⌝ ⦄ U16.Insts.Tls_codecSize.tls_serialized_len x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ by
         mvcgen [U16.Insts.Tls_codecSize.tls_serialized_len])
     show ⦃ ⌜ True ⌝ ⦄ U16.Insts.Tls_codecSize.tls_serialized_len x

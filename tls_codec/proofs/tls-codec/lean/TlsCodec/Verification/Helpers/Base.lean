@@ -21,6 +21,30 @@ set_option hax_mvcgen.warnings false
 
 namespace tls_codec
 
+/-- Injectivity of `ok` under its pre-ITree name (`RustM.ok` is no longer a constructor). -/
+theorem _root_.Aeneas.Std.RustM.ok.inj {α : Type _} {a b : α} (h : RustM.ok a = RustM.ok b) :
+    a = b :=
+  RustM.ok_injective h
+
+/-- `cases` on an equation, seeing through `RustM.ok` (an ITree constructor now: `ok a = ok b`
+is no longer a constructor equation). -/
+macro "ok_cases " h:ident : tactic => `(tactic| first
+  | cases $h:ident
+  | (replace $h:ident := RustM.ok_injective $h:ident; cases $h:ident))
+
+/-- `ok` / `fail` / `div` case analysis on `RustM` (now an ITree, whose own eliminator gives
+`ret` / `vis` / `div`). Registered as the `cases` eliminator for every file importing this one. -/
+@[elab_as_elim, cases_eliminator]
+def RustM.casesOkFailDiv {α : Type _} {motive : RustM α → Sort _} (x : RustM α)
+    (ok : ∀ a, motive (RustM.ok a)) (fail : ∀ e, motive (RustM.fail e)) (div : motive RustM.div) :
+    motive x :=
+  RustM.cases (motive := motive) x ok
+    (fun i k => match i, k with
+      | .fail e, k => by
+        have : k = PEmpty.elim := funext fun x => nomatch x
+        subst this; exact fail e)
+    div
+
 /-- Value of a saturating add: capped at the type's maximum. -/
 @[simp, scalar_tac_simps] theorem UScalar.saturating_add_val {ty : UScalarTy} (x y : UScalar ty) :
     (UScalar.saturating_add x y).val = min (UScalar.max ty) (x.val + y.val) := by
@@ -169,27 +193,39 @@ matcher, which no rewrite lemma can target). `mvcgen` then leaves, per `?`:
   closes. -/
 
 /-- The control flow of `x?`. -/
-def tryCF {T E : Type} : core.result.Result T E →
+def tryCF {T E : Type _} : core.result.Result T E →
     core.ops.control_flow.ControlFlow (core.result.Result core.convert.Infallible E) T
   | .Ok v => .Continue v
   | .Err e => .Break (.Err e)
 
 /-- `branch`, with the result as `tryCF x`. `high`: wins over MissingSpecs' `branch_spec`. -/
-@[spec high] theorem branch_tryCF_spec {T E : Type} (x : core.result.Result T E) :
+@[spec high] theorem branch_tryCF_spec {T E : Type _} (x : core.result.Result T E) :
     ⦃ ⌜ True ⌝ ⦄ core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch x
     ⦃ ⇓ r => ⌜ r = tryCF x ⌝ ⦄ := by
   mvcgen [CoreModels.core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch_spec]
 
-theorem continue_eq_tryCF {T E : Type} {x : core.result.Result T E} {v : T} :
+theorem continue_eq_tryCF {T E : Type _} {x : core.result.Result T E} {v : T} :
     (.Continue v = tryCF x) ↔ x = .Ok v := by
   cases x <;> simp [tryCF, eq_comm]
 
+/-- `continue_eq_tryCF`, other orientation (what `subst` leaves after a cross-universe bind). -/
+theorem tryCF_eq_continue {T E : Type _} {x : core.result.Result T E} {v : T} :
+    (tryCF x = .Continue v) ↔ x = .Ok v := by
+  cases x <;> simp [tryCF]
+
 /-- The `Break` VC of `x?`: the residual is `Err e`, with `x = Err e`. -/
-theorem try_break_vc {T E : Type} {x : core.result.Result T E}
+theorem try_break_vc {T E : Type _} {x : core.result.Result T E}
     {res : core.result.Result core.convert.Infallible E} {P : E → Prop}
     (h : ∀ e, x = .Err e → P e) :
     .Break res = tryCF x → ∃ e, res = .Err e ∧ P e := by
   cases x <;> simp_all [tryCF]
+
+/-- `try_break_vc` with the `Break` equation as a hypothesis: the shape of the VC after a
+cross-universe bind (`Tools/MvcgenUniv`), where the `branch` post is already introduced. -/
+theorem try_break_vc_of_eq {T E : Type _} {x : core.result.Result T E}
+    {res : core.result.Result core.convert.Infallible E} {P : E → Prop}
+    (hb : .Break res = tryCF x) (h : ∀ e, x = .Err e → P e) : ∃ e, res = .Err e ∧ P e :=
+  try_break_vc h hb
 
 /-- Close the `Break` VCs of `?` (see above). Other goals are left untouched: `apply
 try_break_vc` fails at once on them. The optional list goes to the `mvcgen` that proves
@@ -200,7 +236,13 @@ syntax "try_vcs" (" [" Lean.Parser.Tactic.simpLemma,* "]")? : tactic
 macro_rules
   | `(tactic| try_vcs) => `(tactic| try_vcs [])
   | `(tactic| try_vcs [$ts,*]) =>
-    `(tactic| all_goals (first | (apply try_break_vc; intros; mvcgen [$ts,*]) | skip))
+    `(tactic| all_goals (first
+      | (show (core.ops.control_flow.ControlFlow.Break _ = tryCF _) → _
+         apply try_break_vc; intros; mvcgen [$ts,*])
+      | (show ∃ e, _ = core.result.Result.Err e ∧ _
+         refine try_break_vc_of_eq (hb := by subst_vars; first | assumption | (apply Eq.symm; assumption)) ?_
+         intros; mvcgen [$ts,*])
+      | skip))
 
 /-- Close the `Err` (`?` break) branches of a round-trip proof: the trait-level post of
 `spec.X.post arg res` holds vacuously on `Err`. Other goals are left untouched. -/
@@ -255,7 +297,7 @@ theorem Usize.hcast_Isize_MAX_val :
 bound as their only hypothesis, so the VC is `i < len`. `high`: they must win over the generic ones. -/
 
 /-- `v[i]` on a `Vec`, `i : usize` in bounds. -/
-@[spec high] theorem alloc.vec.Vec.index_usize_spec {T : Type} (v : alloc.vec.Vec T) (i : Std.Usize)
+@[spec high] theorem alloc.vec.Vec.index_usize_spec {T : Type _} (v : alloc.vec.Vec T) (i : Std.Usize)
     (h : i.val < v.val.length) :
     ⦃ ⌜ True ⌝ ⦄
     alloc.vec.Vec.Insts.CoreOpsIndexIndex.index (core.Usize.Insts.CoreSliceIndexSliceIndexSliceT T) v i
@@ -433,7 +475,7 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
 /-! ### `len` of the vector wrappers -/
 
 /-- `TlsVecU8::len` is the length of the inner vector. -/
-@[spec] theorem tls_vec.TlsVecU8.len_spec {T : Type} (self : tls_vec.TlsVecU8 T) :
+@[spec] theorem tls_vec.TlsVecU8.len_spec {T : Type _} (self : tls_vec.TlsVecU8 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU8.len self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU8.len]
   intro h; subst h; simp [Slice.len]
@@ -443,14 +485,14 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
   mvcgen [tls_vec.TlsByteVecU8.len]
   intro h; subst h; simp [Slice.len]
 
-@[spec] theorem tls_vec.SecretTlsVecU8.len_spec {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+@[spec] theorem tls_vec.SecretTlsVecU8.len_spec {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
     (self : tls_vec.SecretTlsVecU8 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.SecretTlsVecU8.len zeroizeZeroizeInst self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU8.len]
   intro h; subst h; simp [Slice.len]
 
 /-- `TlsVecU16::len` is the length of the inner vector. -/
-@[spec] theorem tls_vec.TlsVecU16.len_spec {T : Type} (self : tls_vec.TlsVecU16 T) :
+@[spec] theorem tls_vec.TlsVecU16.len_spec {T : Type _} (self : tls_vec.TlsVecU16 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU16.len self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU16.len]
   intro h; subst h; simp [Slice.len]
@@ -460,14 +502,14 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
   mvcgen [tls_vec.TlsByteVecU16.len]
   intro h; subst h; simp [Slice.len]
 
-@[spec] theorem tls_vec.SecretTlsVecU16.len_spec {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+@[spec] theorem tls_vec.SecretTlsVecU16.len_spec {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
     (self : tls_vec.SecretTlsVecU16 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.SecretTlsVecU16.len zeroizeZeroizeInst self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU16.len]
   intro h; subst h; simp [Slice.len]
 
 /-- `TlsVecU24::len` is the length of the inner vector. -/
-@[spec] theorem tls_vec.TlsVecU24.len_spec {T : Type} (self : tls_vec.TlsVecU24 T) :
+@[spec] theorem tls_vec.TlsVecU24.len_spec {T : Type _} (self : tls_vec.TlsVecU24 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU24.len self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU24.len]
   intro h; subst h; simp [Slice.len]
@@ -477,14 +519,14 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
   mvcgen [tls_vec.TlsByteVecU24.len]
   intro h; subst h; simp [Slice.len]
 
-@[spec] theorem tls_vec.SecretTlsVecU24.len_spec {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+@[spec] theorem tls_vec.SecretTlsVecU24.len_spec {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
     (self : tls_vec.SecretTlsVecU24 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.SecretTlsVecU24.len zeroizeZeroizeInst self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU24.len]
   intro h; subst h; simp [Slice.len]
 
 /-- `TlsVecU32::len` is the length of the inner vector. -/
-@[spec] theorem tls_vec.TlsVecU32.len_spec {T : Type} (self : tls_vec.TlsVecU32 T) :
+@[spec] theorem tls_vec.TlsVecU32.len_spec {T : Type _} (self : tls_vec.TlsVecU32 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsVecU32.len self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.TlsVecU32.len]
   intro h; subst h; simp [Slice.len]
@@ -494,7 +536,7 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
   mvcgen [tls_vec.TlsByteVecU32.len]
   intro h; subst h; simp [Slice.len]
 
-@[spec] theorem tls_vec.SecretTlsVecU32.len_spec {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+@[spec] theorem tls_vec.SecretTlsVecU32.len_spec {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
     (self : tls_vec.SecretTlsVecU32 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.SecretTlsVecU32.len zeroizeZeroizeInst self ⦃ ⇓ r => ⌜ r.val = self.vec.val.length ⌝ ⦄ := by
   mvcgen [tls_vec.SecretTlsVecU32.len]
@@ -504,7 +546,7 @@ through. (Specialised: a generic `P` is not inferred by `mvcgen`.) -/
 
 /-- Length arithmetic of the `pop` postconditions: `pop` removes the last element (if any), so the
 new length is the old length minus `1` when an element was returned, and equal otherwise. -/
-theorem pop_len_eq {α : Type} (l l' : List α) (o : Option α) (n m : Std.Usize)
+theorem pop_len_eq {α : Type _} (l l' : List α) (o : Option α) (n m : Std.Usize)
     (r : UScalar UScalarTy.Usize)
     (ho : o = l.getLast?) (hl' : l' = l.dropLast) (hn : n.val = l.length) (hm : m.val = l'.length)
     (hr : r.val = n.val - (if o.isSome = true then 1#usize else 0#usize).val) : m = r := by
@@ -519,7 +561,7 @@ theorem pop_len_eq {α : Type} (l l' : List α) (o : Option α) (n m : Std.Usize
     omega
 
 /-- `pop` returns an element iff the vector is non-empty. -/
-theorem pop_isSome_eq {α : Type} (l : List α) (n : Std.Usize) (hn : n.val = l.length) :
+theorem pop_isSome_eq {α : Type _} (l : List α) (n : Std.Usize) (hn : n.val = l.length) :
     ((l.getLast?).isSome = true) = ¬ (decide (n = 0#usize) = true) := by
   rcases l with _ | ⟨x, xs⟩
   · have h0 : n = 0#usize := UScalar.eq_of_val_eq (by simpa using hn)
@@ -529,7 +571,7 @@ theorem pop_isSome_eq {α : Type} (l : List α) (n : Std.Usize) (hn : n.val = l.
     simp [h0]
 
 /-- The amount `pop` subtracts from the length is at most the length. -/
-theorem pop_sub_le {α : Type} (l : List α) (o : Option α) (n : Std.Usize)
+theorem pop_sub_le {α : Type _} (l : List α) (o : Option α) (n : Std.Usize)
     (ho : o = l.getLast?) (hn : n.val = l.length) :
     (if o.isSome = true then 1#usize else 0#usize).val ≤ n.val := by
   subst ho
@@ -552,9 +594,20 @@ macro_rules
 
 /-! ### Partial triples with a trivial post -/
 
+/-- `spec` from an `ok` outcome (replaces aeneas' removed `WP.exists_imp_spec`). -/
+theorem exists_imp_spec {α : Type _} {m : RustM α} {P : α → Prop} (h : ∃ y, m = ok y ∧ P y) :
+    Aeneas.Std.WP.spec m P := by
+  obtain ⟨y, rfl, hy⟩ := h
+  exact (Aeneas.Std.WP.spec_ok y).2 hy
+
+/-- `<$>` on an `ok` value (`List.mapM` over `RustM` builds its result with it). -/
+@[simp] theorem RustM.map_ok {α β : Type _} (f : α → β) (x : α) :
+    f <$> (ok x : RustM α) = ok (f x) := by
+  simp [Functor.map]
+
 /-- A partial (`⇓?`) triple whose post is the constant `ok true` holds for any program: only
 `ok` outcomes matter and the post cannot panic. -/
-theorem partial_triple_ok_true {α : Type} (x : RustM α) (p : α → RustM Bool)
+theorem partial_triple_ok_true {α : Type _} (x : RustM α) (p : α → RustM Bool)
     (hp : ∀ a, p a = ok true) :
     ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓? a => ⌜ (p a).holds ⌝ ⦄ := by
   simp only [hp]
@@ -562,7 +615,7 @@ theorem partial_triple_ok_true {α : Type} (x : RustM α) (p : α → RustM Bool
     <;> simp [Std.Do.wp, Std.Do.PredTrans.apply]
 
 /-- A partial (`⇓?`) triple from a statement about the `ok` outcomes only. -/
-theorem partial_triple_of_ok {α : Type} {x : RustM α} {P : α → Prop}
+theorem partial_triple_of_ok {α : Type _} {x : RustM α} {P : α → Prop}
     (h : ∀ r, x = ok r → P r) :
     ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓? r => ⌜ P r ⌝ ⦄ := by
   cases hx : x with
@@ -574,19 +627,19 @@ theorem partial_triple_of_ok {α : Type} {x : RustM α} {P : α → Prop}
   | div => simp [Std.Do.Triple, Std.Do.PostCond.mayThrow]; simp [Std.Do.wp, Std.Do.PredTrans.apply]
 
 /-- Converse: a partial (`⇓?`) triple gives its post on every `ok` outcome. -/
-theorem ok_of_partial_triple {α : Type} {x : RustM α} {P : α → Prop} {r : α}
+theorem ok_of_partial_triple {α : Type _} {x : RustM α} {P : α → Prop} {r : α}
     (h : ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓? r => ⌜ P r ⌝ ⦄) (hr : x = ok r) : P r := by
   subst hr
   simpa [Std.Do.Triple, Std.Do.PostCond.mayThrow, Std.Do.wp, Std.Do.PredTrans.apply] using h
 
 /-- A total triple with post `True` gives an `ok` value. -/
-theorem triple_true_ok {α : Type} {m : RustM α}
+theorem triple_true_ok {α : Type _} {m : RustM α}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ _ => ⌜ True ⌝ ⦄) : ∃ v, m = .ok v := by
   cases m <;> simp [Triple, WP.wp, PredTrans.apply] at h ⊢
 
 
 /-- A total triple from panic freedom and a partial triple. -/
-theorem total_of_pf_partial {α : Type} {m : RustM α} {P : α → Prop}
+theorem total_of_pf_partial {α : Type _} {m : RustM α} {P : α → Prop}
     (hpf : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? r => ⌜ P r ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ⌝ ⦄ := by
   obtain ⟨v, hv⟩ := triple_true_ok hpf
@@ -596,37 +649,37 @@ theorem total_of_pf_partial {α : Type} {m : RustM α} {P : α → Prop}
   exact hP
 
 /-- Conjunction of the posts of two total triples. -/
-theorem triple_and {α : Type} {m : RustM α} {P Q : α → Prop}
+theorem triple_and {α : Type _} {m : RustM α} {P Q : α → Prop}
     (hP : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ⌝ ⦄) (hQ : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ∧ Q r ⌝ ⦄ := by
-  obtain ⟨v, hv, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hP
-  obtain ⟨w, hw, hq⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hQ
+  obtain ⟨v, hv, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp hP
+  obtain ⟨w, hw, hq⟩ := Aeneas.Std.triple_iff_exists_ok.mp hQ
   rw [hv] at hw
-  cases hw
+  obtain rfl := RustM.ok_injective hw
   rw [hv]
   apply RustM.ok_spec
   exact ⟨hp, hq⟩
 
 /-- Weakening the post of a total triple. -/
-theorem triple_post_mono {α : Type} {m : RustM α} {P Q : α → Prop}
+theorem triple_post_mono {α : Type _} {m : RustM α} {P Q : α → Prop}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ⌝ ⦄) (hPQ : ∀ r, P r → Q r) :
     ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   rw [hv]
   apply RustM.ok_spec
   exact hPQ v hP
 
 
 /-- A total triple is a partial one. -/
-theorem partial_of_total {α : Type} {m : RustM α} {P : α → Prop}
+theorem partial_of_total {α : Type _} {m : RustM α} {P : α → Prop}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ⌝ ⦄) : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? r => ⌜ P r ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
-  exact partial_triple_of_ok fun r hr => by rw [hv] at hr; cases hr; exact hP
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
+  exact partial_triple_of_ok fun r hr => by rw [hv] at hr; obtain rfl := RustM.ok_injective hr; exact hP
 
 /-- A total triple gives panic freedom. -/
-theorem pf_of_total {α : Type} {m : RustM α} {P : α → Prop}
+theorem pf_of_total {α : Type _} {m : RustM α} {P : α → Prop}
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ P r ⌝ ⦄) : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   rw [hv]
   apply RustM.ok_spec
   trivial

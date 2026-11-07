@@ -4,7 +4,7 @@
 Obligations: none directly; the `std`-path halves (`Serialize` / `Deserialize` `Lawful` fields,
 lemma traits) of `PanicFreedom.lean` / `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): nothing ASSUMED; 1 signature-only stub
-(`core.io.error.Error.Insts.CoreFmtDebug.fmt`); `native_decide` (1). -/
+(`core.io.error.Error.Insts.CoreFmtDebug.fmt`). -/
 import Aeneas
 import CoreModels
 import Hax
@@ -27,12 +27,12 @@ namespace tls_codec
 
 open Classical in
 /-- The encoding of `x` as an option (`none`: `encode` returns `Err`). -/
-noncomputable def encOut {T : Type} (SI : Serialize T) (x : T) : Option (List Std.U8) :=
+noncomputable def encOut {T : Type _} (SI : Serialize T) (x : T) : Option (List Std.U8) :=
   if h : ∃ bv : alloc.vec.Vec Std.U8, spec.io.encode SI x = ok (.Ok bv) then
     some (Classical.choose h : Slice Std.U8).val
   else none
 
-theorem encOut_ok {T : Type} {SI : Serialize T} {x : T} {bv : alloc.vec.Vec Std.U8}
+theorem encOut_ok {T : Type _} {SI : Serialize T} {x : T} {bv : alloc.vec.Vec Std.U8}
     (h : spec.io.encode SI x = ok (.Ok bv)) : encOut SI x = some (bv : Slice Std.U8).val := by
   have hex : ∃ bv : alloc.vec.Vec Std.U8, spec.io.encode SI x = ok (.Ok bv) := ⟨bv, h⟩
   unfold encOut
@@ -41,20 +41,20 @@ theorem encOut_ok {T : Type} {SI : Serialize T} {x : T} {bv : alloc.vec.Vec Std.
   simp only [ok.injEq, core.result.Result.Ok.injEq] at h2
   exact congrArg (fun z : alloc.vec.Vec Std.U8 => some (z : Slice Std.U8).val) h2
 
-theorem encOut_err {T : Type} {SI : Serialize T} {x : T} {err : Error}
+theorem encOut_err {T : Type _} {SI : Serialize T} {x : T} {err : Error}
     (h : spec.io.encode SI x = ok (.Err err)) : encOut SI x = none := by
   unfold encOut
   rw [dif_neg]
   rintro ⟨bv, hbv⟩
   rw [h] at hbv
-  cases hbv
+  simp [RustM.ok.injEq] at hbv
 
 /-- A serializer meeting its trait-level contract behaves uniformly on lawful writers. -/
-theorem Serialize.Lawful.runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T)
+theorem Serialize.Lawful.runs {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz) :
     SerRuns SI x sz (encOut SI x) := by
   intro W WI hWI w hroom
-  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hL.tls_serialize_spec WI hWI x w (Serialize.tls_serialize.pre_of_bound SI WI x w sz hsz hroom))
   obtain ⟨e, he, hok, herr⟩ := Serialize.tls_serialize.post_elim SI WI x w _ hp
   refine ⟨r, w', hr, ?_, ?_⟩
@@ -72,27 +72,27 @@ theorem Serialize.Lawful.runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawf
     | Err err => exact herr err rfl
 
 /-- The length of an element's encoding, given room for it. -/
-theorem Serialize.Lawful.enc_len {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T)
+theorem Serialize.Lawful.enc_len {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (x : T)
     (sz : Std.Usize) (hsz : SI.SizeInst.tls_serialized_len x = ok sz) (hroom : sz.val ≤ imax) :
     ∀ b, encOut SI x = some b → b.length = sz.val := by
   intro b hb
-  obtain ⟨r, w', -, hs, -⟩ := hL.runs x sz hsz _ _ StdIo.vec_lawful ⟨[], by simp⟩
-    (by rw [StdIo.vec_sink]; simpa using hroom)
+  obtain ⟨r, w', -, hs, -⟩ := hL.runs x sz hsz _ _ StdIo.vec_lawful (Slice.new _)
+    (by rw [StdIo.vec_sink]; simpa [Slice.new_val] using hroom)
   obtain ⟨-, hv⟩ := hs b hb
   obtain ⟨e, he, hes, -⟩ := encode_of_runs SI x sz _ (hL.runs x sz hsz) hroom
   obtain ⟨bv, rfl, hbv⟩ := hes b hb
-  obtain ⟨⟨r2, w2⟩, hr2, hp2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (hL.tls_serialize_spec _ StdIo.vec_lawful x ⟨[], by simp⟩
-      (Serialize.tls_serialize.pre_of_bound SI _ x _ sz hsz (by rw [StdIo.vec_sink]; simpa using hroom)))
+  obtain ⟨⟨r2, w2⟩, hr2, hp2⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (hL.tls_serialize_spec _ StdIo.vec_lawful x (Slice.new _)
+      (Serialize.tls_serialize.pre_of_bound SI _ x _ sz hsz (by rw [StdIo.vec_sink]; simpa [Slice.new_val] using hroom)))
   obtain ⟨e2, he2, hok2, -⟩ := Serialize.tls_serialize.post_elim SI _ x _ _ hp2
-  rw [he] at he2; cases he2
+  rw [he] at he2; obtain rfl := RustM.ok_injective he2
   obtain ⟨h1, -, -⟩ := hok2 bv rfl
-  rw [hsz] at h1; cases h1
+  rw [hsz] at h1; obtain rfl := RustM.ok_injective h1
   rw [← hbv]; simp [Slice.len_val, Slice.length]
 
 /-- A deserializer meeting its trait-level contract consumes exactly the size of its value, on
 every lawful reader. -/
-theorem Deserialize.Lawful.runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
+theorem Deserialize.Lawful.runs {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
     DeRuns DI (fun _ _ _ => True) := by
   intro R RI v a law r
   have hRI : alloc.io.read.Read.Lawful R RI := ⟨⟨v, a, law⟩⟩
@@ -110,11 +110,11 @@ theorem lenAddVal_sat (a b : Std.Usize) (h : Usize.max < a.val + b.val) :
     (lenAddVal a b).val = Usize.max := by
   obtain ⟨r, hr, hrv⟩ := len_add_spec_sat a b h
   rw [len_add_ok] at hr
-  cases hr
+  obtain rfl := RustM.ok_injective hr
   exact hrv
 
 /-- `SerRuns` as a triple (the form `mvcgen` consumes). -/
-theorem SerRuns.spec {T : Type} {SI : Serialize T} {x : T} {sz : Std.Usize}
+theorem SerRuns.spec {T : Type _} {SI : Serialize T} {x : T} {sz : Std.Usize}
     {out : Option (List Std.U8)} (h : SerRuns SI x sz out) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI) (w : W)
     (hroom : (core.io.write.Write.view WI w).length + sz.val ≤ imax) :
@@ -128,7 +128,7 @@ theorem SerRuns.spec {T : Type} {SI : Serialize T} {x : T} {sz : Std.Usize}
 
 /-- `SerRuns` as a triple with the room as precondition (for `mvcgen`, which leaves the room as
 a verification condition). -/
-theorem SerRuns.spec' {T : Type} {SI : Serialize T} {x : T} {sz : Std.Usize}
+theorem SerRuns.spec' {T : Type _} {SI : Serialize T} {x : T} {sz : Std.Usize}
     {out : Option (List Std.U8)} (h : SerRuns SI x sz out) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI) (w : W) :
     ⦃ ⌜ (core.io.write.Write.view WI w).length + sz.val ≤ imax ⌝ ⦄ SI.tls_serialize WI x w
@@ -149,11 +149,11 @@ theorem write_all_spec {W : Type} {WI : core.io.write.Write W}
   exact ok_triple_of ⟨rfl, hv⟩
 
 /-- The encoding of an `Option`: a tag byte, then the encoding of the value. -/
-noncomputable def optOut {T : Type} (SI : Serialize T) : core.option.Option T → Option (List Std.U8)
+noncomputable def optOut {T : Type _} (SI : Serialize T) : core.option.Option T → Option (List Std.U8)
   | .None => some [0#u8]
   | .Some e => (encOut SI e).map (List.cons 1#u8)
 
-theorem Option.ser_runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
+theorem Option.ser_runs {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI)
     (o : core.option.Option T) (sz : Std.Usize)
     (hsz : (core.option.Option.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len o = ok sz) :
     SerRuns (core.option.Option.Insts.Tls_codecSerialize SI) o sz (optOut SI o) := by
@@ -163,7 +163,7 @@ theorem Option.ser_runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T S
       ⦃ ⇓ p => ⌜ (∀ b, optOut SI o = some b → (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
         core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         (optOut SI o = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   cases o with
   | none =>
@@ -181,7 +181,7 @@ theorem Option.ser_runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T S
     · rename_i p hp _ _ _ hbr
       rw [hp.1] at hbr; simp [tryCF] at hbr
   | some e =>
-    obtain ⟨se, hse, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨se, hse, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (hL.SizeInstLawful.tls_serialized_len_spec e (pre_holds_of_ok_true rfl))
     have h0 := (Option_size_some SI.SizeInst e se hse).symm.trans hsz
     simp only [ok.injEq] at h0; subst h0
@@ -222,7 +222,7 @@ theorem Option.ser_runs {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T S
     · rename_i p hp _ _ _ hbr
       rw [hp.1] at hbr; simp [tryCF] at hbr
 
-theorem Option.ser_spec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) {W : Type}
+theorem Option.ser_spec {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI)
     (o : core.option.Option T) (w : W)
     (hpre : (Serialize.tls_serialize.pre WI (core.option.Option.Insts.Tls_codecSerialize SI).SizeInst
@@ -240,7 +240,7 @@ theorem Option.ser_spec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T S
     simp only [optOut, Option.some.injEq] at hb; subst hb
     rw [lenAddVal_val _ _ (by simp; scalar_tac), e1, e0]; rfl
   | some e =>
-    obtain ⟨se, hse, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨se, hse, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (hL.SizeInstLawful.tls_serialized_len_spec e (pre_holds_of_ok_true rfl))
     refine Serialize.tls_serialize_spec_of_runs' _ (core.option.Option.Some e) _ (Option_size_some SI.SizeInst e se hse) _ ?_
       (Option.ser_runs hL (core.option.Option.Some e) _ (Option_size_some SI.SizeInst e se hse)) WI hWI w hpre
@@ -255,7 +255,7 @@ theorem Option.ser_spec {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T S
       simp only [optOut, hb', Option.map_some, Option.some.injEq] at hb; subst hb
       rw [hfit.2, List.length_cons, hL.enc_len e se hse (by omega) b' hb']; omega
 
-theorem Option.de_runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
+theorem Option.de_runs {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) :
     DeRuns (core.option.Option.Insts.Tls_codecDeserialize DI) (fun _ _ _ => True) := by
   intro R RI v a law r
   have hre := read_exact_spec law r
@@ -276,14 +276,15 @@ theorem Option.de_runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful 
     by_cases h1 : 1 ≤ (v r).length
     · exact ⟨h1, by rw [hp1 (by rw [hl]; exact h1), hl]⟩
     · rw [hp2 (by rw [hl]; omega)] at hcf; simp [tryCF] at hcf
-  mvcgen [core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize, hre, hT]
-  · rename_i arr p hp _ u _ _ hcf _ _ _
-    obtain ⟨h1, h2⟩ := tag arr p u hp.1 hp.2 hcf
+  mvcgen [core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize, hre, hT,
+    core.array.Array.as_mut_slice, rust_primitives.slice.array_as_mut_slice]
+  · rename_i p hp cf hcf u hcu _ _ _
+    obtain ⟨h1, h2⟩ := tag _ p u hp.1 hp.2 (hcu.symm.trans hcf)
     intro val hval; cases hval
     refine ⟨1, _, h1, h2, Option_size_none DI.SizeInst, ?_⟩
     rw [lenAddVal_val _ _ (by simp; scalar_tac), e1, e0]
-  · rename_i arr p hp _ u _ _ hcf _ _ _ q _ t _ hct hq
-    obtain ⟨h1, h2⟩ := tag arr p u hp.1 hp.2 hcf
+  · rename_i p hp cf hcf u hcu _ _ _ q hq _ t _ hct
+    obtain ⟨h1, h2⟩ := tag _ p u hp.1 hp.2 (hcu.symm.trans hcf)
     intro val hval; cases hval
     obtain ⟨n, sz, hn, hq2, hsz, hszn⟩ := hq t (continue_eq_tryCF.mp hct)
     rw [h2, law.adv_view r 1 h1, List.length_drop] at hn
@@ -291,8 +292,8 @@ theorem Option.de_runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful 
     refine ⟨1 + n, _, by omega, hq2, Option_size_some DI.SizeInst t sz hsz, ?_⟩
     have := law.view_le r
     rw [lenAddVal_val _ _ (by rw [e1]; omega), e1, hszn]
-  · rename_i q _ res _ hbr _
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ res _ hbr
+    refine try_break_vc_of_eq hbr (fun e _ => ?_)
     mvcgen
     intro _
     mvcgen
@@ -301,8 +302,10 @@ theorem Option.de_runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful 
   · rename_i hlen0
     revert hlen0
     simp [Aeneas.Std.Array.length]
-  · rename_i arr p hp _ res _ hbr
-    have hl : (arr.to_slice_mut.1 : Slice Std.U8).val.length = 1 := to_slice_mut_len arr
+  · rename_i p hp cf hcf res hres
+    have hbr := hres.symm.trans hcf
+    have hl : ((Aeneas.Std.Array.repeat 1#usize 0#u8).to_slice_mut.1 : Slice Std.U8).val.length = 1 :=
+      to_slice_mut_len _
     by_cases h1 : 1 ≤ (v r).length
     · rw [hp.1 (by rw [hl]; exact h1)] at hbr; simp [tryCF] at hbr
     · rw [hp.2 (by rw [hl]; omega)] at hbr
@@ -314,7 +317,7 @@ theorem Option.de_runs {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful 
       mvcgen
       intro _ h; cases h
 
-theorem Option.de_spec {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
+theorem Option.de_spec {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
     (RI : alloc.io.read.Read R) (hRI : alloc.io.read.Read.Lawful R RI) (r : R) :
     ⦃ ⌜ True ⌝ ⦄ (core.option.Option.Insts.Tls_codecDeserialize DI).tls_deserialize RI r
     ⦃ ⇓ p => ⌜ (Deserialize.tls_deserialize.post RI
@@ -322,12 +325,12 @@ theorem Option.de_spec {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful 
       (core.option.Option.Insts.Tls_codecDeserialize DI) r p).holds ⌝ ⦄ :=
   Deserialize.tls_deserialize_spec_of_runs _ (Option.de_runs hL) RI hRI r
 
-theorem Option.size_ok {T : Type} {S : Size T} (hS : Size.Lawful T S) (o : core.option.Option T) :
+theorem Option.size_ok {T : Type _} {S : Size T} (hS : Size.Lawful T S) (o : core.option.Option T) :
     ∃ sz, (core.option.Option.Insts.Tls_codecSize S).tls_serialized_len o = ok sz := by
   cases o with
   | none => exact ⟨_, Option_size_none S⟩
   | some e =>
-    obtain ⟨se, hse, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨se, hse, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (hS.tls_serialized_len_spec e (pre_holds_of_ok_true rfl))
     exact ⟨_, Option_size_some S e se hse⟩
 
@@ -338,7 +341,7 @@ The loop terminates because an element that consumes nothing is rejected and one
 the `takeView` / `takeAdv` law) pins the new `Take` to `takeAdv _ n`. -/
 
 section VecLoop
-variable {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
+variable {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
   {RI : alloc.io.read.Read R} {v : R → List Std.U8} {a : R → Nat → R} (law : StdIo.RLaw RI v a)
 
 /-- Loop invariant: `m` bytes consumed out of `L` (`limit = L - m`), the elements read so far have
@@ -385,11 +388,11 @@ theorem Vec.de_loop_body (r0 : R) (L : Nat)
     core.io.util.Take.impl.limit, hT, core.convert.Into.Blanket.into]
   · exact toStr_utf8 _ _
   · intro h; cases h
-  · rename_i _ _ q el hq1 hne hq
+  · rename_i _ q el hq1 hq hne
     obtain ⟨n, sz, hn0, -, hmv, -, -, -, -⟩ := step q el hq1 hq hne
     have := law.view_le r0
     omega
-  · rename_i _ _ q el hq1 hne nv hnv hq
+  · rename_i _ q el hq1 hq hne nv hnv
     obtain ⟨n, sz, hn0, hmn, hmv, hlim', hinner, hsz, hszn⟩ := step q el hq1 hq hne
     refine ⟨⟨m + n, lenAddVal c sz, fun x => by simp +zetaDelta [hback], hmv, hinner,
       by show q.2.limit.val + (m + n) = L; omega, ?_, ?_, ?_⟩,
@@ -420,7 +423,7 @@ theorem Vec.de_loop (r0 : R) (L : Nat)
     (VecInv DI v a r0 L)
   · rintro ⟨b, t, ln, lm, rs⟩ hq
     have := Vec.de_loop_body hL law r0 L _ hq
-    obtain ⟨y, hy, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp this
+    obtain ⟨y, hy, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp this
     show Aeneas.Std.WP.spec (alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop.body DI RI
       b t ln lm rs) _
     rw [hy, Aeneas.Std.WP.spec_ok]
@@ -440,7 +443,7 @@ def ReadLengthRuns : Prop :=
     ⦃ ⇓ p => ⌜ ∀ len ll, p.1 = .Ok (len, ll) → len.val ≤ 2 ^ 30 - 1 ∧
       varint.lenOf len.val ≤ (v r).length ∧ p.2 = a r (varint.lenOf len.val) ⌝ ⦄
 
-theorem Vec.de_runs (hrl : ReadLengthRuns) {T : Type} {DI : Deserialize T}
+theorem Vec.de_runs (hrl : ReadLengthRuns) {T : Type _} {DI : Deserialize T}
     (hL : Deserialize.Lawful T DI) :
     DeRuns (alloc.vec.Vec.Insts.Tls_codecDeserialize DI) (fun _ _ _ => True) := by
   intro R RI v a law r
@@ -448,22 +451,22 @@ theorem Vec.de_runs (hrl : ReadLengthRuns) {T : Type} {DI : Deserialize T}
   have hloop := fun r0 L p hp => Vec.de_loop hL law r0 L p hp
   mvcgen [alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize, hr, hloop,
     alloc.io.read.Read.take.default, CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty]
-  · rename_i q hq _ val _ hz hcf
-    obtain ⟨hlen, hlenv, hq2⟩ := hq val.1 val.2 (continue_eq_tryCF.mp hcf)
+  · rename_i q hq _ hcf' val hcu hz
+    obtain ⟨hlen, hlenv, hq2⟩ := hq val.1 val.2 (continue_eq_tryCF.mp (hcu.symm.trans hcf'))
     intro x hx; cases hx
     have hl0 : varint.lenOf 0 = 1 := by simp [varint.lenOf]
     obtain ⟨n, hn, hnv⟩ := alloc.vec.Vec.size_ok DI.SizeInst hL.SizeInstLawful (Slice.new T) 0#usize
       (.nil _) (by simp [hl0]; scalar_tac)
     refine ⟨varint.lenOf val.1.val, n, hlenv, hq2, hn, ?_⟩
     rw [hnv, hz]; simp
-  · rename_i q hq _ val _ hz hcf
-    obtain ⟨hlen, hlenv, hq2⟩ := hq val.1 val.2 (continue_eq_tryCF.mp hcf)
+  · rename_i q hq _ hcf' val hcu hz
+    obtain ⟨hlen, hlenv, hq2⟩ := hq val.1 val.2 (continue_eq_tryCF.mp (hcu.symm.trans hcf'))
     have hc : (UScalar.cast UScalarTy.U64 val.1).val = val.1.val := Usize.cast_U64_val_eq _
     have hinv : VecInv DI v a q.2 val.1.val
         ((fun t => t), q.2, UScalar.cast UScalarTy.U64 val.1, UScalar.cast UScalarTy.U64 val.1,
           Slice.new T) :=
       ⟨0, 0#usize, fun _ => rfl, by simp, (law.adv_zero _).symm, by simp [hc], .nil _, rfl,
-        by simp [Slice.new]⟩
+        by simp [Slice.new_val]⟩
     have hl := hloop q.2 val.1.val _ hinv
     mvcgen [hl]
     · rename_i y hnone hy
@@ -477,8 +480,8 @@ theorem Vec.de_runs (hrl : ReadLengthRuns) {T : Type} {DI : Deserialize T}
       · rw [hback, hin, hq2, law.adv_adv r _ _ (by omega)]
       · rw [hnv, hcL, if_pos hlen]; omega
     · intro x hx; cases hx
-  · rename_i q _ _ res _ hbr
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf res hres
+    refine try_break_vc_of_eq (hres.symm.trans hcf) (fun e _ => ?_)
     mvcgen
     intro _
     mvcgen

@@ -381,19 +381,19 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 #### Integer primitives (primitives.rs) (15)
 
 - `U8.Insts.Tls_codecDeserializeBytes.Lawful`
-- `U16.Insts.Tls_codecDeserializeBytes.Lawful`
-- `U24.Insts.Tls_codecDeserializeBytes.Lawful`
-- `U32.Insts.Tls_codecDeserializeBytes.Lawful`
-- `U64.Insts.Tls_codecDeserializeBytes.Lawful`
 - `Shared0U8.Insts.Tls_codecSerializeBytes.Lawful`
-- `Shared0U16.Insts.Tls_codecSerializeBytes.Lawful`
-- `Shared0U24.Insts.Tls_codecSerializeBytes.Lawful`
-- `Shared0U32.Insts.Tls_codecSerializeBytes.Lawful`
-- `Shared0U64.Insts.Tls_codecSerializeBytes.Lawful`
 - `U8.Insts.Tls_codecSerializeBytes.Lawful`
+- `U16.Insts.Tls_codecDeserializeBytes.Lawful`
+- `Shared0U16.Insts.Tls_codecSerializeBytes.Lawful`
 - `U16.Insts.Tls_codecSerializeBytes.Lawful`
+- `U24.Insts.Tls_codecDeserializeBytes.Lawful`
+- `Shared0U24.Insts.Tls_codecSerializeBytes.Lawful`
 - `U24.Insts.Tls_codecSerializeBytes.Lawful`
+- `U32.Insts.Tls_codecDeserializeBytes.Lawful`
+- `Shared0U32.Insts.Tls_codecSerializeBytes.Lawful`
 - `U32.Insts.Tls_codecSerializeBytes.Lawful`
+- `U64.Insts.Tls_codecDeserializeBytes.Lawful`
+- `Shared0U64.Insts.Tls_codecSerializeBytes.Lawful`
 - `U64.Insts.Tls_codecSerializeBytes.Lawful`
 
 #### Option / tuples / PhantomData / Box (primitives.rs) (10)
@@ -467,36 +467,36 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 #### Integer primitives (primitives.rs) (10)
 
 - `U8.Insts.Tls_codecSize.Lawful`
-- `U16.Insts.Tls_codecSize.Lawful`
-- `U24.Insts.Tls_codecSize.Lawful`
-- `U32.Insts.Tls_codecSize.Lawful`
-- `U64.Insts.Tls_codecSize.Lawful`
 - `Shared0U8.Insts.Tls_codecSize.Lawful`
+- `U16.Insts.Tls_codecSize.Lawful`
 - `Shared0U16.Insts.Tls_codecSize.Lawful`
+- `U24.Insts.Tls_codecSize.Lawful`
 - `Shared0U24.Insts.Tls_codecSize.Lawful`
+- `U32.Insts.Tls_codecSize.Lawful`
 - `Shared0U32.Insts.Tls_codecSize.Lawful`
+- `U64.Insts.Tls_codecSize.Lawful`
 - `Shared0U64.Insts.Tls_codecSize.Lawful`
 
 #### `tls_vec`: SecretTlsVecU* (8)
 
 - `tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful`
 - `Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful`
 - `Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful`
 - `Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful`
 - `Shared0SecretTlsVecU32.Insts.Tls_codecSize.Lawful`
 
 #### `tls_vec`: TlsByteSliceU* (8)
 
 - `Shared0TlsByteSliceU8.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsByteSliceU16.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsByteSliceU16.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsByteSliceU32.Insts.Tls_codecSize.Lawful`
 
 #### `tls_vec`: TlsByteVecU* (8)
@@ -513,23 +513,23 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 #### `tls_vec`: TlsSliceU* (8)
 
 - `Shared0TlsSliceU8.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful`
-- `Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsSliceU8.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsSliceU16.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsSliceU24.Insts.Tls_codecSize.Lawful`
+- `Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful`
 - `tls_vec.TlsSliceU32.Insts.Tls_codecSize.Lawful`
 
 #### `tls_vec`: TlsVecU* (8)
 
 - `tls_vec.TlsVecU8.Insts.Tls_codecSize.Lawful`
-- `tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful`
-- `tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful`
-- `tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful`
 - `Shared0TlsVecU8.Insts.Tls_codecSize.Lawful`
+- `tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful`
 - `Shared0TlsVecU16.Insts.Tls_codecSize.Lawful`
+- `tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful`
 - `Shared0TlsVecU24.Insts.Tls_codecSize.Lawful`
+- `tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful`
 - `Shared0TlsVecU32.Insts.Tls_codecSize.Lawful`
 
 #### Option / tuples / PhantomData / Box (primitives.rs) (7)
@@ -579,19 +579,19 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 #### Integer primitives (primitives.rs) (15)
 
 - `U8.Insts.Tls_codecDeserialize.Lawful`
-- `U16.Insts.Tls_codecDeserialize.Lawful`
-- `U24.Insts.Tls_codecDeserialize.Lawful`
-- `U32.Insts.Tls_codecDeserialize.Lawful`
-- `U64.Insts.Tls_codecDeserialize.Lawful`
 - `U8.Insts.Tls_codecSerialize.Lawful`
-- `U16.Insts.Tls_codecSerialize.Lawful`
-- `U24.Insts.Tls_codecSerialize.Lawful`
-- `U32.Insts.Tls_codecSerialize.Lawful`
-- `U64.Insts.Tls_codecSerialize.Lawful`
 - `Shared0U8.Insts.Tls_codecSerialize.Lawful`
+- `U16.Insts.Tls_codecDeserialize.Lawful`
+- `U16.Insts.Tls_codecSerialize.Lawful`
 - `Shared0U16.Insts.Tls_codecSerialize.Lawful`
+- `U24.Insts.Tls_codecDeserialize.Lawful`
+- `U24.Insts.Tls_codecSerialize.Lawful`
 - `Shared0U24.Insts.Tls_codecSerialize.Lawful`
+- `U32.Insts.Tls_codecDeserialize.Lawful`
+- `U32.Insts.Tls_codecSerialize.Lawful`
 - `Shared0U32.Insts.Tls_codecSerialize.Lawful`
+- `U64.Insts.Tls_codecDeserialize.Lawful`
+- `U64.Insts.Tls_codecSerialize.Lawful`
 - `Shared0U64.Insts.Tls_codecSerialize.Lawful`
 
 #### Option / tuples / PhantomData / Box (primitives.rs) (13)
@@ -613,68 +613,68 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 #### `tls_vec`: SecretTlsVecU* (12)
 
 - `tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful`
-- `Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful`
-- `Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful`
-- `Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful`
+- `Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful`
+- `Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful`
+- `Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.Lawful`
 
 #### `tls_vec`: TlsByteVecU* (12)
 
 - `tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.Lawful`
 - `Shared0TlsByteVecU8.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteVecU16.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteVecU24.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteVecU16.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteVecU24.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.Lawful`
 
 #### `tls_vec`: TlsVecU* (12)
 
 - `tls_vec.TlsVecU8.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsVecU16.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsVecU24.Insts.Tls_codecSerialize.Lawful`
-- `tls_vec.TlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `Shared0TlsVecU8.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsVecU16.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsVecU24.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsVecU16.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsVecU16.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsVecU24.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsVecU24.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.Lawful`
+- `tls_vec.TlsVecU32.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsVecU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.Lawful`
 
 #### `tls_vec`: TlsByteSliceU* (8)
 
 - `Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful`
 
 #### `tls_vec`: TlsSliceU* (8)
 
 - `Shared0TlsSliceU8.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsSliceU16.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsSliceU24.Insts.Tls_codecSerialize.Lawful`
-- `Shared0TlsSliceU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsSliceU16.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsSliceU24.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.Lawful`
+- `Shared0TlsSliceU32.Insts.Tls_codecSerialize.Lawful`
 - `tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.Lawful`
 
 #### Arrays (arrays.rs) (2)
@@ -687,11 +687,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `varint.TlsVarInt.Insts.Tls_codecDeserialize.Lawful`
 - `varint.TlsVarInt.Insts.Tls_codecSerialize.Lawful`
 
-## 2d. Per-impl `Lawful`: core / third-party traits (428)
+## 2d. Per-impl `Lawful`: core / third-party traits (429)
 
-#### `core.ops.function.FnOnce` (114)
+#### `core.ops.function.FnOnce` (115)
 
-- `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.Lawful`
+- `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENShared0SliceU8Bool.Lawful`
 - `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
 - `__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.Lawful`
 - `__5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
@@ -699,28 +699,29 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful`
 - `__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful`
-- `__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful`
+- `__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful`
 - `__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful`
 - `primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful`
 - `primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
+- `primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0U8Bool.Lawful`
 - `primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
-- `primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.Lawful`
+- `primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionShared0SliceU8Bool.Lawful`
 - `primitives.DeserializeBytesU8.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
+- `primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8Shared0SliceU8Bool.Lawful`
 - `primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
+- `primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16Shared0SliceU8Bool.Lawful`
 - `primitives.DeserializeBytesU24.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
+- `primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24Shared0SliceU8Bool.Lawful`
 - `primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
+- `primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32Shared0SliceU8Bool.Lawful`
 - `primitives.DeserializeBytesU64.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
-- `primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool.Lawful`
-- `primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool.Lawful`
-- `primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool.Lawful`
-- `primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool.Lawful`
-- `primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool.Lawful`
+- `primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64Shared0SliceU8Bool.Lawful`
 - `primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful`
 - `primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful`
 - `quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.Lawful`
 - `varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.Lawful`
 - `quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.Lawful`
-- `quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
+- `quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared2TUsize.Lawful`
 - `quic_vec.tls_serialize_bytes_len.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.Lawful`
 - `quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.Lawful`
@@ -769,41 +770,41 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful`
-- `spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful`
-- `spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful`
+- `spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful`
+- `spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful`
 - `spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
-- `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.Lawful`
-- `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.Lawful`
+- `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecShared0SliceU8Bool.Lawful`
+- `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringShared0SliceU8Bool.Lawful`
 - `string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.Lawful`
-- `tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool.Lawful`
-- `tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool.Lawful`
-- `tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool.Lawful`
-- `tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool.Lawful`
-- `tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool.Lawful`
-- `tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool.Lawful`
+- `tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8Shared0SliceU8Bool.Lawful`
+- `tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16Shared0SliceU8Bool.Lawful`
+- `tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24Shared0SliceU8Bool.Lawful`
+- `tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32Shared0SliceU8Bool.Lawful`
 - `tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
+- `tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8Shared0SliceU8Bool.Lawful`
 - `tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
+- `tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16Shared0SliceU8Bool.Lawful`
 - `tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
+- `tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24Shared0SliceU8Bool.Lawful`
 - `tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
-- `varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool.Lawful`
+- `tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32Shared0SliceU8Bool.Lawful`
+- `tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8Shared0SliceU8Bool.Lawful`
+- `tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16Shared0SliceU8Bool.Lawful`
+- `tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24Shared0SliceU8Bool.Lawful`
+- `tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32Shared0SliceU8Bool.Lawful`
+- `tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful`
+- `varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntShared0SliceU8Bool.Lawful`
 - `varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 
 #### `core.convert.From` (56)
@@ -813,56 +814,56 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `Error.Insts.CoreConvertFromTryFromSliceError.Lawful`
 - `Error.Insts.CoreConvertFromTryFromIntError.Lawful`
 - `quic_vec.VLBytes.Insts.CoreConvertFromVecU8.Lawful`
-- `quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.Lawful`
-- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.Lawful`
-- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.Lawful`
 - `quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful`
 - `quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
-- `quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
-- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
-- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.Lawful`
+- `quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.Lawful`
+- `quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful`
+- `quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
+- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.Lawful`
+- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful`
+- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful`
 - `tls_vec.TlsVecU8.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.TlsVecU16.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.TlsVecU24.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.TlsVecU32.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.Lawful`
 - `tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful`
 - `alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.Lawful`
+- `tls_vec.TlsVecU16.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful`
 - `alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.Lawful`
+- `tls_vec.TlsVecU24.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful`
 - `alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.Lawful`
+- `tls_vec.TlsVecU32.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful`
 - `alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.Lawful`
-- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.Lawful`
-- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.Lawful`
-- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.Lawful`
-- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.Lawful`
-- `tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.Lawful`
-- `tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.Lawful`
-- `tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.Lawful`
-- `tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.Lawful`
+- `tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.Lawful`
+- `tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.Lawful`
+- `tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.Lawful`
+- `tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.Lawful`
+- `tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.Lawful`
+- `tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.Lawful`
 - `alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.Lawful`
-- `Error.Insts.CoreConvertFromInfallible.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful`
+- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful`
+- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful`
+- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful`
+- `alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.Lawful`
+- `Error.Insts.CoreConvertFromNever.Lawful`
 - `U64.Insts.CoreConvertFromTlsVarInt.Lawful`
 
 #### `core.fmt.Debug` (20)
@@ -871,21 +872,21 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `U24.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.VLBytes.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.VLByteVec.Insts.CoreFmtDebug.Lawful`
+- `quic_vec.VLByteSlice.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.Lawful`
-- `quic_vec.VLByteSlice.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsVecU8.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsVecU16.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreFmtDebug.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreFmtDebug.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreFmtDebug.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.Lawful`
 - `varint.TlsVarInt.Insts.CoreFmtDebug.Lawful`
 
 #### `core.clone.Clone` (19)
@@ -900,14 +901,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreCloneClone.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreCloneClone.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreCloneClone.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.Lawful`
 - `varint.TlsVarInt.Insts.CoreCloneClone.Lawful`
 
 #### `core.cmp.PartialEq` (19)
@@ -943,14 +944,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreCmpEq.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreCmpEq.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreCmpEq.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.Lawful`
 - `varint.TlsVarInt.Insts.CoreCmpEq.Lawful`
 
 #### `core.hash.Hash` (17)
@@ -963,14 +964,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreHashHash.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreHashHash.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreHashHash.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreHashHash.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreHashHash.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreHashHash.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreHashHash.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreHashHash.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreHashHash.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreHashHash.Lawful`
 - `varint.TlsVarInt.Insts.CoreHashHash.Lawful`
 
 #### `spec.NonEmpty` (15)
@@ -1016,30 +1017,30 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreDefaultDefault.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreDefaultDefault.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.Lawful`
 
 #### `core.ops.function.FnMut` (13)
 
-- `quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
-- `tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful`
+- `quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.Lawful`
+- `tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful`
+- `tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful`
+- `tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful`
 
 #### `core.borrow.Borrow` (12)
 
@@ -1047,14 +1048,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreBorrowBorrowSliceU8.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreBorrowBorrowSliceU8.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreBorrowBorrowSliceU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful`
 
 #### `core.iter.traits.collect.FromIterator` (12)
 
@@ -1062,14 +1063,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful`
 
 #### `core.ops.index.IndexMut` (12)
 
@@ -1077,14 +1078,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful`
 
 #### `core.ops.index.Index` (12)
 
@@ -1092,14 +1093,14 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful`
 - `tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful`
 - `tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful`
 - `tls_vec.TlsByteVecU8.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU16.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU24.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful`
 
 #### `spec.io.DecodersAgree` (8)
 

@@ -207,7 +207,7 @@ theorem varint.deserialize_loop_spec (remainder : Slice Std.U8) (len : Std.Usize
         y.2.1.val < 2 ^ (8 * len.val - 2))
   · rintro ⟨b, v, j⟩ ⟨hj1, hjl, hjv, hjr⟩
     dsimp only at hj1 hjl hjv hjr
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (varint.deserialize_loop.body_spec len b v j hj1 hjl hl hjv)
     dsimp only
     rw [hr, Aeneas.Std.WP.spec_ok]
@@ -251,7 +251,7 @@ theorem varint.deserialize_loop_content (remainder : Slice Std.U8) (len : Std.Us
         y.2.1.val = (remainder.val.take (len.val - i.val)).foldl (fun a b => a * 256 + b.val) value.val)
   · rintro ⟨b, v, j⟩ ⟨hj1, hij, hjl, hjv, hjlen, hjb, hjv'⟩
     dsimp only at hj1 hij hjl hjv hjlen hjb hjv'
-    obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (varint.deserialize_loop.body_content len b v j hj1 hjl hl hjv)
     dsimp only
     rw [hr, Aeneas.Std.WP.spec_ok]
@@ -619,7 +619,7 @@ theorem quic_vec.VLBytes.deserialize_char (bytes : Slice Std.U8) :
     have hl := (hP p.1 p.2 h3).2
     have hy := htf.1 val h5
     have hv : val.val = 0 := by rw [hv0]; rfl
-    have hrl : rv.val.length = 0 := by rw [hrv]; simp [Slice.new]
+    have hrl : rv.val.length = 0 := by rw [hrv]; simp [Slice.new_val]
     have hlen : varint.lenOf p.1.val = 1 := by
       have : p.1.val = 0 := by omega
       rw [this]; simp [varint.lenOf]
@@ -692,7 +692,7 @@ theorem quic_vec.VLByteVec.deserialize_char (bytes : Slice Std.U8) :
     have hl := (hP p.1 p.2 h3).2
     have hy := htf.1 val h5
     have hv : val.val = 0 := by rw [hv0]; rfl
-    have hrl : rv.val.length = 0 := by rw [hrv]; simp [Slice.new]
+    have hrl : rv.val.length = 0 := by rw [hrv]; simp [Slice.new_val]
     have hlen : varint.lenOf p.1.val = 1 := by
       have : p.1.val = 0 := by omega
       rw [this]; simp [varint.lenOf]

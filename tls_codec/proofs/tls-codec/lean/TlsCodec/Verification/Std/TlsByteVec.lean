@@ -21,7 +21,7 @@ namespace tls_codec
 namespace TlsVecStd
 
 /-- `TlsByteVecU*::serialize_bytes` (pieces as `ser`; the payload is written with `write_all`). -/
-noncomputable def serB {W P E : Type} (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
+noncomputable def serB {W : Type} {P E : Type _} (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
     (tryP : Std.Usize → RustM (core.result.Result P E)) (dbg : core.fmt.Debug E)
     (PSI : Serialize P) (slc : RustM (Slice Std.U8))
     (aw : Std.Usize → Std.Usize → RustM (core.result.Result Unit Error))
@@ -76,7 +76,7 @@ theorem u8_size_lawful : Size.Lawful Std.U8 U8.Insts.Tls_codecSize :=
   ⟨fun _ _ => by mvcgen [U8.Insts.Tls_codecSize, U8.Insts.Tls_codecSize.tls_serialized_len,
     Size.tls_serialized_len.post]⟩
 
-theorem serB_runs {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (k : Std.Usize)
+theorem serB_runs {P E X : Type _} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (k : Std.Usize)
     (M : Nat) (_hkM : M + k.val ≤ Usize.max)
     (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
     (hgcl : ⦃ ⌜ True ⌝ ⦄ gcl
@@ -100,10 +100,10 @@ theorem serB_runs {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) 
           (∃ n : Std.Usize, p.1 = .Ok n ∧ n.val = b.length) ∧
           core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ b) ∧
         ((if s.val.length ≤ M then some (pre ++ s.val) else none) = none → ∃ e, p.1 = .Err e) ⌝ ⦄ by
-    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp H
+    obtain ⟨⟨r, w'⟩, h1, h2⟩ := Aeneas.Std.triple_iff_exists_ok.mp H
     exact ⟨r, w', h1, h2⟩
   rw [hser]
-  obtain ⟨g, hg, hgP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hgcl
+  obtain ⟨g, hg, hgP⟩ := Aeneas.Std.triple_iff_exists_ok.mp hgcl
   by_cases hNM : s.val.length ≤ M
   · obtain ⟨a, b, rfl, ha, hb⟩ := hgP.1 hNM
     obtain ⟨hencP, n0, p, hn0, ht, hrun⟩ := hpre0 hNM
@@ -193,7 +193,7 @@ theorem serB_runs {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) 
     exact ⟨fun b h => (by simp at h), _, rfl⟩
 
 /-- The trait-level contract of `TlsByteVecU*::tls_serialize` (as `serSpec`). -/
-theorem serSpecB {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (k : Std.Usize)
+theorem serSpecB {P E X : Type _} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (k : Std.Usize)
     (M : Nat) (hkM : M + k.val ≤ Usize.max)
     (mx : RustM Std.Usize) (hmx : ⦃ ⌜ True ⌝ ⦄ mx ⦃ ⇓ r => ⌜ r.val = M ⌝ ⦄)
     (gcl : RustM (core.result.Result (Std.Usize × Std.Usize) Error))
@@ -219,7 +219,7 @@ theorem serSpecB {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (
   obtain ⟨pre, hpre0⟩ : ∃ pre, s.val.length ≤ M → pre.length = k.val ∧
       ∃ n0 p, n0.val = s.val.length ∧ tryP n0 = ok (.Ok p) ∧ SerRuns PSI p k (some pre) := by
     by_cases h : s.val.length ≤ M
-    · obtain ⟨g, -, hgP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hg
+    · obtain ⟨g, -, hgP⟩ := Aeneas.Std.triple_iff_exists_ok.mp hg
       obtain ⟨a, b, -, -, hb⟩ := hgP.1 h
       obtain ⟨p, pre, ht, hr, hl⟩ := hP b (by omega)
       exact ⟨pre, fun _ => ⟨hl, b, p, hb, ht, hr⟩⟩
@@ -234,7 +234,7 @@ theorem serSpecB {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) (
   · cases hb
 
 /-- `TlsByteVecU*::deserialize_bytes` (`mk`: the wrapper, `PDI` / `conv` / `dbg`: the prefix). -/
-noncomputable def deB {R P E V : Type} (mk : alloc.vec.Vec Std.U8 → V) (PDI : Deserialize P)
+noncomputable def deB {R : Type} {P E V : Type _} (mk : alloc.vec.Vec Std.U8 → V) (PDI : Deserialize P)
     (conv : P → RustM (core.result.Result Std.Usize E)) (dbg : core.fmt.Debug E)
     (RI : alloc.io.read.Read R) (bytes : R) : RustM ((core.result.Result V Error) × R) := do
   let (r, bytes1) ← PDI.tls_deserialize RI bytes
@@ -260,7 +260,7 @@ noncomputable def deB {R P E V : Type} (mk : alloc.vec.Vec Std.U8 → V) (PDI : 
     ok (r1, bytes1)
 
 /-- `TlsByteVecU*::tls_deserialize` on lawful readers: an `Ok` consumes exactly its size. -/
-theorem deB_runs {P E V : Type} (vec : V → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → V)
+theorem deB_runs {P E V : Type _} (vec : V → alloc.vec.Vec Std.U8) (mk : alloc.vec.Vec Std.U8 → V)
     (hmk : ∀ v, vec (mk v) = v) (PDI : Deserialize P) {Q : List Std.U8 → P → Nat → Prop}
     (hP : DeRuns PDI Q) (kz : Std.Usize) (hk : ∀ x, PDI.SizeInst.tls_serialized_len x = ok kz)
     (M : Nat) (hM : 2 * M < UScalar.max UScalarTy.Usize)
@@ -277,7 +277,9 @@ theorem deB_runs {P E V : Type} (vec : V → alloc.vec.Vec Std.U8) (mk : alloc.v
   have hrbb := fun (r' : R) (len : Std.Usize) => read_bytes_bounded_law law r' len
   mvcgen [deB, hr, hconv, hrbb, core.result.Result.unwrap_ok_spec]
   · rename_i h; obtain ⟨y, hy, -⟩ := h; exact ⟨y, hy⟩
-  · rename_i q hq _ val _ hcf rc hrc u hu rb hrb _ w _ hcf1
+  · rename_i q hq _ hcf' val hcu rc hrc u hu rb hrb _ hcf1' w hcu1
+    have hcf := hcu.symm.trans hcf'
+    have hcf1 := hcu1.symm.trans hcf1'
     intro x hx; cases hx
     obtain ⟨n, sz, hn, hq2, hsz', hszn, -⟩ := hq val (continue_eq_tryCF.mp hcf)
     obtain rfl : kz = sz := ok.inj ((hk val).symm.trans hsz')
@@ -299,26 +301,65 @@ theorem deB_runs {P E V : Type} (vec : V → alloc.vec.Vec Std.U8) (mk : alloc.v
     · rw [hrb2, hq2, law.adv_adv r _ _ (by omega)]
     · rw [hsz, hmk, len_add_ok]
     · rw [lenAddVal_val _ _ (by omega), hlw]; omega
-  · rename_i rb _ _ res _ hbr
-    refine try_break_vc (x := rb.1) (fun e _ => ?_) hbr
+  · rename_i rb _ _ hcf res hres
+    refine try_break_vc (x := rb.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
     exact fun x hx => by cases hx
-  · rename_i q _ _ res _ hbr
-    refine try_break_vc (x := q.1) (fun e _ => ?_) hbr
+  · rename_i q _ _ hcf res hres
+    refine try_break_vc (x := q.1) (fun e _ => ?_) (hres.symm.trans hcf)
     mvcgen
     intro _
     mvcgen
     exact fun x hx => by cases hx
 
 /-- The default `tls_serialize_detached`, from the contract and a `len_add` size. -/
-theorem detachedB {X : Type} {SI : Serialize X} {x : X} {a k : Std.Usize} (h : SerSpec SI x)
+theorem detachedB {X : Type _} {SI : Serialize X} {x : X} {a k : Std.Usize} (h : SerSpec SI x)
     (hsz : SI.SizeInst.tls_serialized_len x = len_add a k) :
     ⦃ ⌜ True ⌝ ⦄ Serialize.tls_serialize_detached.default SI x
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize_detached.post SI.SizeInst SI x r).holds ⌝ ⦄ :=
   h.detached ⟨_, hsz.trans (len_add_ok _ _)⟩
 
 end TlsVecStd
+
+/-! ### Per-width sizes: `tls_serialized_byte_length` is `len_add` of the slice length -/
+
+/-- `tls_serialized_byte_length` is `len_add` of the slice length (binds on `ok` no longer reduce by `rfl`). -/
+macro "bytevec_len_eq" b:ident a:ident : tactic => `(tactic| (
+  simp only [$b:ident, $a:ident, deref_vec_ok, core.slice.Slice.len, rust_primitives.slice.slice_length,
+    Aeneas.Std.bind_ok]))
+
+theorem tls_vec.TlsByteVecU8.byte_len_eq (x : tls_vec.TlsByteVecU8) :
+    tls_vec.TlsByteVecU8.tls_serialized_byte_length x = len_add (Slice.len x.vec) 1#usize := by
+  bytevec_len_eq tls_vec.TlsByteVecU8.tls_serialized_byte_length tls_vec.TlsByteVecU8.as_slice
+
+theorem tls_vec.TlsByteSliceU8.byte_len_eq (x : tls_vec.TlsByteSliceU8) :
+    tls_vec.TlsByteSliceU8.tls_serialized_byte_length x = len_add (Slice.len x) 1#usize := by
+  bytevec_len_eq tls_vec.TlsByteSliceU8.tls_serialized_byte_length tls_vec.TlsByteSliceU8.as_slice
+
+theorem tls_vec.TlsByteVecU16.byte_len_eq (x : tls_vec.TlsByteVecU16) :
+    tls_vec.TlsByteVecU16.tls_serialized_byte_length x = len_add (Slice.len x.vec) 2#usize := by
+  bytevec_len_eq tls_vec.TlsByteVecU16.tls_serialized_byte_length tls_vec.TlsByteVecU16.as_slice
+
+theorem tls_vec.TlsByteSliceU16.byte_len_eq (x : tls_vec.TlsByteSliceU16) :
+    tls_vec.TlsByteSliceU16.tls_serialized_byte_length x = len_add (Slice.len x) 2#usize := by
+  bytevec_len_eq tls_vec.TlsByteSliceU16.tls_serialized_byte_length tls_vec.TlsByteSliceU16.as_slice
+
+theorem tls_vec.TlsByteVecU24.byte_len_eq (x : tls_vec.TlsByteVecU24) :
+    tls_vec.TlsByteVecU24.tls_serialized_byte_length x = len_add (Slice.len x.vec) 3#usize := by
+  bytevec_len_eq tls_vec.TlsByteVecU24.tls_serialized_byte_length tls_vec.TlsByteVecU24.as_slice
+
+theorem tls_vec.TlsByteSliceU24.byte_len_eq (x : tls_vec.TlsByteSliceU24) :
+    tls_vec.TlsByteSliceU24.tls_serialized_byte_length x = len_add (Slice.len x) 3#usize := by
+  bytevec_len_eq tls_vec.TlsByteSliceU24.tls_serialized_byte_length tls_vec.TlsByteSliceU24.as_slice
+
+theorem tls_vec.TlsByteVecU32.byte_len_eq (x : tls_vec.TlsByteVecU32) :
+    tls_vec.TlsByteVecU32.tls_serialized_byte_length x = len_add (Slice.len x.vec) 4#usize := by
+  bytevec_len_eq tls_vec.TlsByteVecU32.tls_serialized_byte_length tls_vec.TlsByteVecU32.as_slice
+
+theorem tls_vec.TlsByteSliceU32.byte_len_eq (x : tls_vec.TlsByteSliceU32) :
+    tls_vec.TlsByteSliceU32.tls_serialized_byte_length x = len_add (Slice.len x) 4#usize := by
+  bytevec_len_eq tls_vec.TlsByteSliceU32.tls_serialized_byte_length tls_vec.TlsByteSliceU32.as_slice
 
 end tls_codec

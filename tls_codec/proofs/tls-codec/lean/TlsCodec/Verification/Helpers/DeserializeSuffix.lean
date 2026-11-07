@@ -5,10 +5,8 @@ returned by `tls_deserialize_bytes` is a suffix of the input, derived from the c
 Obligations: none directly; the trait-level FC halves use them through `DeserializeBytes.fc_of_len`.
 Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED
 `alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt.ok_spec`, `size_of`, `size_of_U16`,
-`size_of_U24`, `size_of_U32`, `size_of_U8`, `size_of_Usize`, `numBits_eq_64`; 3 signature-only stubs
-(`alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt`,
-`core.convert.Infallible.Insts.CoreFmtDebug.fmt`,
-`core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt`). -/
+`size_of_U24`, `size_of_U32`, `size_of_U8`, `size_of_Usize`, `numBits_eq_64`; 1 signature-only stub
+(`alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt`). -/
 import TlsCodec.Verification.Helpers
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -20,7 +18,7 @@ set_option mvcgen.warning false
 namespace tls_codec
 
 /-- The post of the suffix facts below. -/
-abbrev SuffixPost {T : Type} (bytes : Slice Std.U8) (r : core.result.Result (T × Slice Std.U8) Error) :
+abbrev SuffixPost {T : Type _} (bytes : Slice Std.U8) (r : core.result.Result (T × Slice Std.U8) Error) :
     Prop :=
   ∀ v rem, r = .Ok (v, rem) → rem.val <:+ bytes.val
 

@@ -24,20 +24,20 @@ elements read so far to the bytes consumed. Termination: an element that consume
 rejected by the code itself (`consumed = 0` => error), so `remainder.len` strictly decreases. -/
 
 /-- Relational model of the size fold of a vector: fold of `lenAddVal` of the element sizes. -/
-inductive SizeFoldRel {T : Type} (S : Size T) : Std.Usize → List T → Std.Usize → Prop
+inductive SizeFoldRel {T : Type _} (S : Size T) : Std.Usize → List T → Std.Usize → Prop
   | nil (a : Std.Usize) : SizeFoldRel S a [] a
   | cons (a : Std.Usize) (x : T) (l : List T) (n : Std.Usize) (r : Std.Usize) :
       S.tls_serialized_len x = ok n → SizeFoldRel S (lenAddVal a n) l r →
       SizeFoldRel S a (x :: l) r
 
-theorem SizeFoldRel.snoc {T : Type} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
+theorem SizeFoldRel.snoc {T : Type _} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
     (h : SizeFoldRel S a l r) (e : T) (n : Std.Usize) (hn : S.tls_serialized_len e = ok n) :
     SizeFoldRel S a (l ++ [e]) (lenAddVal r n) := by
   induction h with
   | nil a => exact .cons a e [] n _ hn (.nil _)
   | cons a x l n' r hx _ ih => exact .cons a x _ n' _ hx ih
 
-theorem SizeFoldRel.functional {T : Type} {S : Size T} {a : Std.Usize} {l : List T} {r r' : Std.Usize}
+theorem SizeFoldRel.functional {T : Type _} {S : Size T} {a : Std.Usize} {l : List T} {r r' : Std.Usize}
     (h : SizeFoldRel S a l r) (h' : SizeFoldRel S a l r') : r = r' := by
   induction h generalizing r' with
   | nil a => cases h'; rfl
@@ -45,10 +45,10 @@ theorem SizeFoldRel.functional {T : Type} {S : Size T} {a : Std.Usize} {l : List
     cases h' with
     | cons _ _ _ n2 _ hx2 h2 =>
       rw [hx] at hx2
-      cases hx2
+      obtain rfl := RustM.ok_injective hx2
       exact ih h2
 
-theorem size_fold_rel {T C : Type} (S : Size T) (hS : ∀ e, ∃ n, S.tls_serialized_len e = ok n)
+theorem size_fold_rel {T C : Type _} (S : Size T) (hS : ∀ e, ∃ n, S.tls_serialized_len e = ok n)
     (inst : core.ops.function.FnMut C (Std.Usize × T) Std.Usize)
     (hcall : ∀ c a e n, S.tls_serialized_len e = ok n → inst.call_mut c (a, e) = ok (lenAddVal a n, c))
     (it : core.slice.iter.Iter T) (acc : Std.Usize) (c : C) :
@@ -86,14 +86,14 @@ theorem size_fold_rel {T C : Type} (S : Size T) (hS : ∀ e, ∃ n, S.tls_serial
   · intro r h; exact h
 
 /-- A lawful `Size` instance never fails. -/
-theorem Size.lawful_ok {T : Type} (S : Size T) (hl : Size.Lawful T S) (e : T) :
+theorem Size.lawful_ok {T : Type _} (S : Size T) (hl : Size.Lawful T S) (e : T) :
     ∃ n, S.tls_serialized_len e = ok n := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hl.tls_serialized_len_spec e (pre_holds_of_ok_true rfl))
   exact ⟨v, hv⟩
 
 /-- A lawful `Size` instance never fails (as a spec for `mvcgen`, naming the result). -/
-theorem Size.len_char {T : Type} (S : Size T) (hl : Size.Lawful T S) (e : T) :
+theorem Size.len_char {T : Type _} (S : Size T) (hl : Size.Lawful T S) (e : T) :
     ⦃ ⌜ True ⌝ ⦄ S.tls_serialized_len e ⦃ ⇓ r => ⌜ S.tls_serialized_len e = ok r ⌝ ⦄ := by
   obtain ⟨n, hn⟩ := Size.lawful_ok S hl e
   rw [hn]
@@ -102,13 +102,13 @@ theorem Size.len_char {T : Type} (S : Size T) (hl : Size.Lawful T S) (e : T) :
 
 /-- Invariant of the `deserialize_bytes` loops: `l` are the elements read so far, `a0` the prefix
 width, `N` the length of the whole input, `B` the whole input (the remainder is a suffix of it). -/
-def DesLoopInv {T : Type} (S : Size T) (a0 : Std.Usize) (N : Nat) (B : List Std.U8) (l : List T)
+def DesLoopInv {T : Type _} (S : Size T) (a0 : Std.Usize) (N : Nat) (B : List Std.U8) (l : List T)
     (remainder : Slice Std.U8) (read : Std.Usize) : Prop :=
   l.length ≤ read.val ∧ (∃ s, SizeFoldRel S a0 l s ∧ s.val + remainder.val.length = N) ∧
   read.val + remainder.val.length + a0.val = N ∧ remainder.val <:+ B
 
 /-- The remainder after a successful length-prefix read. -/
-theorem prefix_rem {U : Type} (W : Nat) {bytes : Slice Std.U8}
+theorem prefix_rem {U : Type _} (W : Nat) {bytes : Slice Std.U8}
     {r : core.result.Result (U × Slice Std.U8) Error} {p : U × Slice Std.U8}
     (hP : (W ≤ bytes.val.length → ∃ t : Slice Std.U8, t.val = bytes.val.drop W ∧ ∃ x, r = .Ok (x, t)) ∧
       (bytes.val.length < W → r = .Err Error.EndOfStream))
@@ -135,7 +135,7 @@ re-elaborated here), and its per-width lemmas are one-line corollaries. -/
 
 namespace TlsVecGen
 
-variable {T W : Type}
+variable {T W : Type _}
 
 /-- The loop body of `TlsVecU*::deserialize_bytes` / `SecretTlsVecU*::deserialize_bytes`, over
 an abstract wrapper `W` with its `push` (`msg`: the error message literal). -/
@@ -194,11 +194,12 @@ theorem body_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
   have hd := fun b => hlaw.tls_deserialize_bytes_spec b (pre_holds_of_ok_true rfl)
   obtain ⟨hres, ⟨s, hs, hsN⟩, hr, hB⟩ := hinv
   mvcgen [body, hd, push_spec, core.fmt.Arguments.from_str]
-  case vc1.a =>
-    rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb
-    scalar_tac
-  case vc3.hQ =>
-    rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb res hnz hpush rd hrd
+  -- `done` VCs with an error flag: `Some _ = None → _`.
+  all_goals (try (rintro ⟨⟩; done))
+  case vc1.a => scalar_tac
+  case vc1.hQ =>
+    rename_i hlt r hpost p hx r2 h2 r1 h1 r0 ha hb res hnz hpush rd hrd
+    subst hx
     obtain ⟨e, nxt⟩ := p
     obtain ⟨n, hn, hl⟩ := DeserializeBytes.post_ok_elim _ _ _ _ _ hpost
     subst h2 h1
@@ -215,9 +216,12 @@ theorem body_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
     · dsimp only at *; omega
     · dsimp only at *; omega
     · dsimp only at *; omega
-  case vc4.h_fail =>
+  case vc2.hQ => exact ⟨s, hs, hsN, hB⟩
+  -- the two arithmetic failures (`read + consumed` overflow, then `i - i1` underflow)
+  case vc2.h_fail =>
     exfalso
-    rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb res hnz hpush hbig
+    rename_i hlt r hpost p hx r2 h2 r1 h1 r0 ha hb res hnz hpush hbig
+    subst hx
     obtain ⟨e, nxt⟩ := p
     obtain ⟨n, hn, hl⟩ := DeserializeBytes.post_ok_elim _ _ _ _ _ hpost
     subst h2 h1
@@ -226,9 +230,10 @@ theorem body_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
     simp only [Slice.length] at l1 l2
     dsimp only at *
     scalar_tac
-  case vc5.h_fail =>
+  case vc2.h_fail =>
     exfalso
-    rename_i hlt r p hx hpost r2 h2 r1 h1 hlt2
+    rename_i hlt r hpost p hx r2 h2 r1 h1 hlt2
+    subst hx
     obtain ⟨e, nxt⟩ := p
     obtain ⟨n, hn, hl⟩ := DeserializeBytes.post_ok_elim _ _ _ _ _ hpost
     subst h2 h1
@@ -237,8 +242,6 @@ theorem body_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
     simp only [Slice.length] at l1 l2
     dsimp only at *
     scalar_tac
-  all_goals (try (intros; simp_all; done))
-  exact ⟨s, hs, hsN, hB⟩
 
 
 /-- The loop of `deserialize_bytes`, over its body `bodyF` (fixed `length`). -/
@@ -271,7 +274,7 @@ theorem loop_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
     (fun p : W × Slice Std.U8 × Std.Usize => p.2.1.val.length)
     (fun p => DesLoopInv inst.SizeInst a0 N B (vec p.1).val p.2.1 p.2.2)
   · rintro ⟨res, rem, rd⟩ h
-    obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (body_char vec push push_spec msg inst hlaw a0 length N hN res rem rd h)
     dsimp only
     rw [hv]
@@ -284,7 +287,7 @@ theorem loop_char (vec : W → alloc.vec.Vec T) (push : W → T → RustM W)
 
 /-- `tls_serialized_length` of a `TlsVecU*` / `SecretTlsVecU*` / `TlsSliceU*`: fold of the closure `F`
 over the elements (`asSlice`) from the prefix width `w`. -/
-def serLen {X C : Type} (asSlice : X → RustM (Slice T))
+def serLen {X C : Type _} (asSlice : X → RustM (Slice T))
     (F : core.ops.function.FnMut C (Std.Usize × T) Std.Usize) (c : C) (w : Std.Usize) (x : X) :
     RustM Std.Usize := do
   let s ← asSlice x
@@ -294,7 +297,7 @@ def serLen {X C : Type} (asSlice : X → RustM (Slice T))
 theorem ok_view (x : Slice T) : ⦃ ⌜ True ⌝ ⦄ (ok x : RustM (Slice T)) ⦃ ⇓ s => ⌜ s = x ⌝ ⦄ := by
   mvcgen
 
-theorem serLen_rel {X C : Type} (S : Size T) (hl : Size.Lawful T S)
+theorem serLen_rel {X C : Type _} (S : Size T) (hl : Size.Lawful T S)
     (asSlice : X → RustM (Slice T)) {view : X → Slice T}
     (has : ∀ x, ⦃ ⌜ True ⌝ ⦄ asSlice x ⦃ ⇓ s => ⌜ s = view x ⌝ ⦄)
     (F : core.ops.function.FnMut C (Std.Usize × T) Std.Usize)
@@ -314,7 +317,7 @@ theorem serLen_rel {X C : Type} (S : Size T) (hl : Size.Lawful T S)
 
 /-- `deserialize_bytes` of a vector wrapper: length prefix `readLen`, conversion `conv` (unwrapped
 with `dbg`), then the element loop `dloop` (`pieces`: the mismatch message literal). -/
-noncomputable def deser {P E : Type} {M : Std.Usize} (mk : alloc.vec.Vec T → W)
+noncomputable def deser {P E : Type _} {M : Std.Usize} (mk : alloc.vec.Vec T → W)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
     (conv : P → RustM (core.result.Result Std.Usize E)) (dbg : core.fmt.Debug E)
     (dloop : W → Slice Std.U8 → Std.Usize → Std.Usize →
@@ -353,7 +356,7 @@ abbrev LoopPost (S : Size T) (vec : W → alloc.vec.Vec T) (w : Std.Usize) (N : 
   r.2.2.2 = core.option.Option.None → ∃ s, SizeFoldRel S w (vec r.1).val s ∧
     s.val + r.2.1.val.length = N ∧ r.2.1.val <:+ B
 
-theorem deser_char {P E : Type} {M : Std.Usize} (S : Size T) (vec : W → alloc.vec.Vec T)
+theorem deser_char {P E : Type _} {M : Std.Usize} (S : Size T) (vec : W → alloc.vec.Vec T)
     (mk : alloc.vec.Vec T → W) (hmk : ∀ v, vec (mk v) = v) (size : W → RustM Std.Usize)
     (w : Std.Usize) (hsz : ∀ v, ⦃ ⌜ True ⌝ ⦄ size v ⦃ ⇓ r => ⌜ SizeFoldRel S w (vec v).val r ⌝ ⦄)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
@@ -381,14 +384,16 @@ theorem deser_char {P E : Type} {M : Std.Usize} (S : Size T) (vec : W → alloc.
   all_goals (try (exfalso; simp_all; done))
   case vc1.a =>
     subst_vars
+    simp only [tryCF_eq_continue] at *
+    subst_vars
     simp only [core.result.Result.Ok.injEq, forall_eq'] at *
-    refine ⟨by simp [hmk, Slice.new], ⟨w, by rw [hmk]; exact .nil _, ?_⟩, ?_, ?_⟩ <;> try scalar_tac
+    refine ⟨by simp [hmk, Slice.new_val], ⟨w, by rw [hmk]; exact .nil _, ?_⟩, ?_, ?_⟩ <;> try scalar_tac
   case vc3 =>
     intro v rem h
     simp only [core.result.Result.Ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, rfl⟩ := h
     obtain ⟨s, hs, hsN, hsB⟩ := ‹LoopPost _ _ _ _ _ _› ‹_ = core.option.Option.None›
-    obtain ⟨n, hn, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hsz _)
+    obtain ⟨n, hn, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hsz _)
     exact ⟨n, hn, (hs.functional hP) ▸ (Nat.add_comm _ _).trans hsN, hsB⟩
 
 
@@ -451,13 +456,13 @@ theorem fc_of_char (size : W → RustM Std.Usize) (bytes : Slice Std.U8)
     (h : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ ∀ v rem, r = .Ok (v, rem) → ∃ n, size v = ok n ∧
       rem.val.length + n.val = bytes.val.length ∧ rem.val <:+ bytes.val ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? res => ⌜ (post size bytes res).holds ⌝ ⦄ := by
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp h
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp h
   rw [hv]
   apply RustM.ok_spec
   exact post_of_char size bytes v hP
 
 /-- The remainder after a successful length-prefix read of width `w = n` (from `U*_deserialize_char`). -/
-theorem prefix_len {U X : Type} (w : Std.Usize) (n : Nat) (hn : w.val = n) {f : X → U} {A : Slice Std.U8 → X → Prop}
+theorem prefix_len {U X : Type _} (w : Std.Usize) (n : Nat) (hn : w.val = n) {f : X → U} {A : Slice Std.U8 → X → Prop}
     {readLen : Slice Std.U8 → RustM (core.result.Result (U × Slice Std.U8) Error)}
     (h : ∀ bytes, ⦃ ⌜ True ⌝ ⦄ readLen bytes
       ⦃ ⇓ r => ⌜ (n ≤ bytes.val.length → ∃ (a : X) (t : Slice Std.U8),
@@ -467,16 +472,16 @@ theorem prefix_len {U X : Type} (w : Std.Usize) (n : Nat) (hn : w.val = n) {f : 
     ⦃ ⌜ True ⌝ ⦄ readLen bytes
     ⦃ ⇓ r => ⌜ ∀ p, r = .Ok p → p.2.val.length + w.val = bytes.val.length ∧
       p.2.val <:+ bytes.val ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h bytes)
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h bytes)
   rw [hr, hn]
   apply RustM.ok_spec
   exact fun p hp => prefix_rem n ⟨fun h => let ⟨_, t, _, ht, hr⟩ := hP.1 h; ⟨t, ht, _, hr⟩, hP.2⟩ hp
 
 /-- A conversion that always returns `Ok`. -/
-theorem conv_ok {P E : Type} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
+theorem conv_ok {P E : Type _} {conv : P → RustM (core.result.Result Std.Usize E)} {g : P → Std.Usize}
     (h : ∀ p, ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓ r => ⌜ r = .Ok (g p) ⌝ ⦄) (p : P) :
     ⦃ ⌜ True ⌝ ⦄ conv p ⦃ ⇓ r => ⌜ ∃ y, r = .Ok y ⌝ ⦄ := by
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h p)
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h p)
   rw [hr]
   apply RustM.ok_spec
   exact ⟨_, hP⟩
@@ -486,28 +491,28 @@ end TlsVecGen
 /-! #### `TlsSliceU*::tls_serialized_length` -/
 
 /-- `TlsSliceU8::tls_serialized_length` does not fail when the element size does not. -/
-theorem tls_vec.TlsSliceU8.tls_serialized_length_pf {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU8.tls_serialized_length_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : tls_vec.TlsSliceU8 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsSliceU8.tls_serialized_length SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ :=
   pf_of_total (TlsVecGen.serLen_rel SizeInst SizeInstLawful tls_vec.TlsSliceU8.as_slice TlsVecGen.ok_view _ (fun _ _ _ => rfl) () 1#usize self_)
 
 /-- `TlsSliceU16::tls_serialized_length` does not fail when the element size does not. -/
-theorem tls_vec.TlsSliceU16.tls_serialized_length_pf {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU16.tls_serialized_length_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : tls_vec.TlsSliceU16 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsSliceU16.tls_serialized_length SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ :=
   pf_of_total (TlsVecGen.serLen_rel SizeInst SizeInstLawful tls_vec.TlsSliceU16.as_slice TlsVecGen.ok_view _ (fun _ _ _ => rfl) () 2#usize self_)
 
 /-- `TlsSliceU24::tls_serialized_length` does not fail when the element size does not. -/
-theorem tls_vec.TlsSliceU24.tls_serialized_length_pf {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU24.tls_serialized_length_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : tls_vec.TlsSliceU24 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsSliceU24.tls_serialized_length SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ :=
   pf_of_total (TlsVecGen.serLen_rel SizeInst SizeInstLawful tls_vec.TlsSliceU24.as_slice TlsVecGen.ok_view _ (fun _ _ _ => rfl) () 3#usize self_)
 
 /-- `TlsSliceU32::tls_serialized_length` does not fail when the element size does not. -/
-theorem tls_vec.TlsSliceU32.tls_serialized_length_pf {T : Type} (SizeInst : Size T)
+theorem tls_vec.TlsSliceU32.tls_serialized_length_pf {T : Type _} (SizeInst : Size T)
     (SizeInstLawful : Size.Lawful T SizeInst) (self_ : tls_vec.TlsSliceU32 T) :
     ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsSliceU32.tls_serialized_length SizeInst self_
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ :=

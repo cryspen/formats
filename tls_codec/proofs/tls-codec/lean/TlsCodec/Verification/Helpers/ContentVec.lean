@@ -4,8 +4,7 @@ Obligations: none directly; the bytes-path halves of `PanicFreedom.lean` /
 `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED
 `alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt.ok_spec`, `size_of`, `size_of_U16`,
-`size_of_U8`; 1 signature-only stub (`alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt`);
-`native_decide` (1). -/
+`size_of_U8`; 1 signature-only stub (`alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt`). -/
 import TlsCodec.Verification.Helpers.ContentVL
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -20,7 +19,7 @@ namespace tls_codec
 
 /-- Partial spec of the serialisation loop of the slice serializer, on contents: if it finishes
 without error, the output grew by the concatenation of the element encodings `enc`. -/
-theorem loop_ser_content_spec {T : Type} (enc : T → List Std.U8) (P : T → Prop) (it : core.slice.iter.Iter T)
+theorem loop_ser_content_spec {T : Type _} (enc : T → List Std.U8) (P : T → Prop) (it : core.slice.iter.Iter T)
     (out : alloc.vec.Vec Std.U8)
     (body : core.slice.iter.Iter T × alloc.vec.Vec Std.U8 →
       RustM (ControlFlow (core.slice.iter.Iter T × alloc.vec.Vec Std.U8)
@@ -72,7 +71,7 @@ macro_rules
 /-- The `<&[T]>::tls_serialize_bytes` on contents, given the contents `enc` of the element
 serializer: an `Ok` output is the length prefix of the total size and the concatenation of the
 elements; and every element satisfies `P` (as given by the element serializer's post `hs`). -/
-theorem Shared0Slice.serialize_content_all {T : Type} (inst : SerializeBytes T)
+theorem Shared0Slice.serialize_content_all {T : Type _} (inst : SerializeBytes T)
     (enc : T → List Std.U8) (P : T → Prop)
     (hs : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
       ⦃ ⇓? r => ⌜ ∀ b, r = .Ok b → (b : Slice Std.U8).val = enc x ∧ P x ⌝ ⦄) (s : Slice T) :
@@ -97,22 +96,27 @@ theorem Shared0Slice.serialize_content_all {T : Type} (inst : SerializeBytes T)
     try subst_vars
     dsimp only at *
     omega
-  case vc3.hQ => rw [← List.length_eq_zero_iff]; scalar_tac
-  case vc4.hQ =>
-    rename_i it' o hne hlt r bytes hbr hb comb hc
-    refine ⟨(it' : Slice T).val.get ⟨0, by simpa using hlt⟩, ?_, ?_, (hb bytes rfl).2⟩
-    · simp only [show (0#usize).val = 0 from rfl, List.take_zero, List.nil_append, zero_add]
+  -- the element loop body: `done` (empty iterator) first, then `cont`
+  case vc1.hQ => exact ⟨by rw [← List.length_eq_zero_iff]; scalar_tac, trivial⟩
+  case vc1.hQ =>
+    rename_i it' o hne hlt r hb bytes hx hc
+    refine ⟨(it' : Slice T).val.get ⟨0, by simpa using hlt⟩, ?_, ?_, (hb bytes hx).2⟩
+    · simp only [show (0#usize).val = 0 from rfl, List.take_zero, List.nil_append, zero_add,
+        Slice.from_val]
       exact list_cons_get_drop _ ‹_›
-    · simp [comb, (hb bytes rfl).1]
-  case vc6 => intro h; cases h
-  case vc8 => intro out h; cases h
-  case vc9.hQ => intro out h; cases h
-  case vc10.hQ =>
+    · simp [(hb bytes hx).1]
+  case vc2.hQ => intro h; cases h
+  case vc2 => intro out h; cases h
+  case vc3.hQ => intro out h; cases h
+  case vc4.hQ =>
     intro out h
     obtain rfl := core.result.Result.Ok.inj h
-    simp only [continue_eq_tryCF] at *
-    subst_vars
-    rename_i acc2 val ll hll acc1 v1 hrep back w hw acc0 r1 hnone hr1 i hne hwr hv hcap hi1 hi2
+    rename_i rres cf0 acc2 x0 e0 rfrom hv cf1 val x1 e1 ll hll rchk hcap cf2 acc1 x2 e2 v0 hv0 v1
+      hrep w hw cf3 acc0 x3 e3 r1 hnone hr1 i1 hi1 i hi2 hge hne
+    subst x1
+    simp only [continue_eq_tryCF] at e1
+    subst e1
+    simp only at hv
     have hc := varint.lenOf_char _ _ hll
     have hpre := varint.write_prefix_content val.val w.2.val (fun k => by
       have := hw.2.2 k
@@ -126,8 +130,8 @@ theorem Shared0Slice.serialize_content_all {T : Type} (inst : SerializeBytes T)
       rw [hwl]
     have hne' : i = acc2 := by simpa only [bne_iff_ne, ne_eq, not_not] using hne
     have hflat : (s.val.flatMap enc).length = acc2.val := by
-      subst hne'
-      rw [Slice.len_val] at hi1
+      subst hne' hi1
+      have := Slice.len_val r1.1
       have : Slice.length (r1.1 : Slice Std.U8) = (r1.1 : Slice Std.U8).val.length := rfl
       omega
     have hvv : val.val = (s.val.flatMap enc).length := by rw [hflat]; exact hv.1
@@ -136,7 +140,7 @@ theorem Shared0Slice.serialize_content_all {T : Type} (inst : SerializeBytes T)
     exact congrArg (· ++ _) hpre
 
 /-- The `<&[T]>::tls_serialize_bytes` on contents (see `Shared0Slice.serialize_content_all`). -/
-theorem Shared0Slice.serialize_content {T : Type} (inst : SerializeBytes T)
+theorem Shared0Slice.serialize_content {T : Type _} (inst : SerializeBytes T)
     (enc : T → List Std.U8)
     (hs : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
       ⦃ ⇓? r => ⌜ ∀ b, r = .Ok b → (b : Slice Std.U8).val = enc x ⌝ ⦄) (s : Slice T) :
@@ -151,7 +155,7 @@ theorem Shared0Slice.serialize_content {T : Type} (inst : SerializeBytes T)
 
 /-- The `Vec<T>` serializer on contents with the element property `P`
 (see `Shared0Slice.serialize_content_all`). -/
-theorem alloc.vec.Vec.serialize_content_all {T : Type} (inst : SerializeBytes T)
+theorem alloc.vec.Vec.serialize_content_all {T : Type _} (inst : SerializeBytes T)
     (enc : T → List Std.U8) (P : T → Prop)
     (hs : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
       ⦃ ⇓? r => ⌜ ∀ b, r = .Ok b → (b : Slice Std.U8).val = enc x ∧ P x ⌝ ⦄) (v : alloc.vec.Vec T) :
@@ -163,7 +167,7 @@ theorem alloc.vec.Vec.serialize_content_all {T : Type} (inst : SerializeBytes T)
   exact Shared0Slice.serialize_content_all inst enc P hs _
 
 /-- The `Vec<T>` serializer on contents (see `Shared0Slice.serialize_content`). -/
-theorem alloc.vec.Vec.serialize_content {T : Type} (inst : SerializeBytes T) (enc : T → List Std.U8)
+theorem alloc.vec.Vec.serialize_content {T : Type _} (inst : SerializeBytes T) (enc : T → List Std.U8)
     (hs : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
       ⦃ ⇓? r => ⌜ ∀ b, r = .Ok b → (b : Slice Std.U8).val = enc x ⌝ ⦄) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v
@@ -173,7 +177,7 @@ theorem alloc.vec.Vec.serialize_content {T : Type} (inst : SerializeBytes T) (en
   rw [alloc.vec.Vec.ser_eq_slice]
   exact Shared0Slice.serialize_content inst enc hs _
 
-theorem alloc.vec.Vec.deserialize_bytes_loop_body_content {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_loop_body_content {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8)
     (hd : ∀ b, ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes b
       ⦃ ⇓? r => ⌜ ∀ x t, r = .Ok (x, t) → (b : Slice Std.U8).val = enc x ++ t.val ⌝ ⦄)
@@ -190,10 +194,10 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_content {T : Type} (inst : Des
           rd.val = read.val + (enc x).length ∧ (res : Slice T).val.length ≤ rd.val ⌝ ⦄ := by
   mvcgen [alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop.body, hd,
     core.convert.Into.Blanket.into]
-  case vc1.h => rename_i hlt _ _ _ _ _ _ _ _ _ _; scalar_tac
-  case vc2.h => exact toStr_utf8 _ _
-  case vc3 => intro h; cases h
-  case vc4.hQ =>
+  -- `done` VCs with an error flag: `Some _ = None → _`.
+  all_goals (try (rintro ⟨⟩; done))
+  case vc1.h => rename_i hlt _ _ _ _ _ _ _ _ _ _; scalar_tac -- the precondition of `push`
+  case vc1.hQ =>
     rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb res hnz hpush rd hrd
     obtain ⟨e, nxt⟩ := p
     have hr := hpost e nxt rfl
@@ -206,9 +210,10 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_content {T : Type} (inst : Des
       have := congrArg List.length hr; simp only [List.length_append] at this; dsimp only at *; omega
     refine ⟨e, hr, hpush, by dsimp only at *; omega, ?_⟩
     rw [hpush]; simp; dsimp only at *; omega
-  case vc7 => intro h; cases h
+  -- the error message literal is UTF-8
+  exact toStr_utf8 _ _
 
-theorem alloc.vec.Vec.deserialize_bytes_loop_content {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_loop_content {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8)
     (hd : ∀ b, ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes b
       ⦃ ⇓? r => ⌜ ∀ x t, r = .Ok (x, t) → (b : Slice Std.U8).val = enc x ++ t.val ⌝ ⦄)
@@ -251,7 +256,7 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_content {T : Type} (inst : Deserial
 /-- The `Vec<T>` deserializer on contents, given the contents `enc` of the element deserializer:
 on success the input is the length prefix of the total size, the concatenated elements and the
 remainder. -/
-theorem alloc.vec.Vec.deserialize_bytes_content {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_content {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8)
     (hd : ∀ b, ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes b
       ⦃ ⇓? r => ⌜ ∀ x t, r = .Ok (x, t) → (b : Slice Std.U8).val = enc x ++ t.val ⌝ ⦄)
@@ -269,19 +274,23 @@ theorem alloc.vec.Vec.deserialize_bytes_content {T : Type} (inst : DeserializeBy
   all_goals (try (intro _ _ h; cases h; done))
   all_goals (try (intros; simp [PostCond.ok]; done))
   case vc1 =>
-    rename_i r0 hP r1 p x1 r2 htf r3 val x2 hv0 rv hrv h3 h5
+    rename_i r0 hP r1 h3 p x1 r2 htf r3 h5 val x2 hv0 rv hrv
+    subst x1 x2
+    simp only [continue_eq_tryCF] at h3 h5
     intro v t h
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj (core.result.Result.Ok.inj h)
     have hp := hP p.1 p.2 h3
     have hy := htf.1 val h5
     have hv : val.val = 0 := by rw [hv0]; rfl
-    have hrl : rv.val = [] := by rw [hrv]; simp [Slice.new]
+    have hrl : rv.val = [] := by rw [hrv]; simp [Slice.new_val]
     refine ⟨by simp [hrl], ?_⟩
     rw [hp.2]
     simp [hrl, show p.1.val = 0 by omega]
   case vc2.hres => subst_vars; rfl
   case vc5 =>
-    rename_i r0 hP r1 p x1 r2 htf r3 val x2 hnz rv hrv res hnone hne hpost hr0 hr2
+    rename_i r0 hP r1 hr0 p x1 r2 htf r3 hr2 val x2 hnz rv hrv res hnone hne hpost
+    subst x1 x2
+    simp only [continue_eq_tryCF] at hr0 hr2
     intro v t h
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj (core.result.Result.Ok.inj h)
     have hp := hP p.1 p.2 hr0
@@ -308,7 +317,7 @@ theorem u16Enc_length (x : Std.U16) : (u16Enc x).length = 2 := by
 
 theorem u16Enc_inj {x y : Std.U16} (h : u16Enc x = u16Enc y) : x = y := by
   rw [← U16_from_be_bytes_to_be_bytes x, ← U16_from_be_bytes_to_be_bytes y]
-  exact congrArg _ (Subtype.ext h)
+  exact congrArg _ (Std.Array.ext _ _ h)
 
 /-- The concatenated big-endian encodings determine the list of `u16`. -/
 theorem u16Enc_flatMap_inj : ∀ (l l' : List Std.U16), l.flatMap u16Enc = l'.flatMap u16Enc → l = l'
@@ -405,10 +414,10 @@ theorem alloc.string.String.deserialize_content (bytes : Slice Std.U8) :
   apply triple_post_mono (alloc.string.String.deserialize_char bytes)
   intro r h t rem hr
   obtain ⟨raw, hraw, hu⟩ := h t rem hr
-  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLByteVec.deserialize_content bytes)
   rw [hraw] at hr0
-  cases hr0
+  obtain rfl := RustM.ok_injective hr0
   rw [hu]
   exact hP raw rem rfl
 

@@ -4,7 +4,7 @@ with the varint length prefix.
 Obligations: none directly; the `std`-path halves (`Serialize` / `Deserialize` `Lawful` fields,
 lemma traits) of `PanicFreedom.lean` / `FunctionalCorrectness.lean` use them.
 Axioms reached (`scripts/axiom_whitelist.txt`): nothing ASSUMED; 1 signature-only stub
-(`core.io.error.Error.Insts.CoreFmtDebug.fmt`); `native_decide` (1). -/
+(`core.io.error.Error.Insts.CoreFmtDebug.fmt`). -/
 import TlsCodec.Verification.Std.VLBytes
 import TlsCodec.Verification.Std.VecSer
 open CoreModels Aeneas
@@ -40,7 +40,7 @@ theorem read_length_runs : ReadLengthRuns := by
   subst hnl
   exact ⟨hlen, hn, hp2⟩
 
-theorem Vec.de_spec {T : Type} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
+theorem Vec.de_spec {T : Type _} {DI : Deserialize T} (hL : Deserialize.Lawful T DI) {R : Type}
     (RI : alloc.io.read.Read R) (hRI : alloc.io.read.Read.Lawful R RI) (r : R) :
     ⦃ ⌜ True ⌝ ⦄ (alloc.vec.Vec.Insts.Tls_codecDeserialize DI).tls_deserialize RI r
     ⦃ ⇓ p => ⌜ (Deserialize.tls_deserialize.post RI

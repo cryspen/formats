@@ -4,9 +4,7 @@
 
 Obligations: none directly; the bytes-path halves of `PanicFreedom.lean` /
 `FunctionalCorrectness.lean` use them.
-Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_Usize`, `numBits_eq_64`;
-2 signature-only stubs (`core.convert.Infallible.Insts.CoreFmtDebug.fmt`,
-`core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt`). -/
+Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_Usize`, `numBits_eq_64`. -/
 import TlsCodec.Verification.Helpers.PrefixSer
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -64,15 +62,16 @@ theorem Copied.varint.TlsVarInt.write_bytes_spec (self : varint.TlsVarInt) (buf 
 /-! ### Specs of the hand-translated `get_content_lengths` -/
 
 /-- `Vec` deref and `slice::iter` are the identity (re-packed, so the result is type-correct at
-instance transparency and `bind_tc_ok` can fire after `erw`). -/
-theorem deref_vec_ok {T : Type} (v : alloc.vec.Vec T) :
-    alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref v = RustM.ok (⟨v.val, v.property⟩ : Slice T) := rfl
-theorem slice_iter_ok {T : Type} (s : Slice T) :
-    core.slice.Slice.iter s = RustM.ok (⟨s.val, s.property⟩ : core.slice.iter.Iter T) := rfl
+instance transparency and `Aeneas.Std.bind_ok` can fire after `erw`). -/
+theorem deref_vec_ok {T : Type _} (v : alloc.vec.Vec T) :
+    alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref v = RustM.ok (v : Slice T) := rfl
+theorem slice_iter_ok {T : Type _} (s : Slice T) :
+    core.slice.Slice.iter s = RustM.ok (s : core.slice.iter.Iter T) := by
+  simp [core.slice.Slice.iter, rust_primitives.sequence.seq_from_slice]
 
 /-- A `loop` that walks a slice iterator and adds `c` to an accumulator per element (the
 `try_fold` of the length sums in the hand-translated bodies). `hbody`: one step. -/
-theorem loop_len_sum_spec {T : Type} (c : Std.Usize) (it : core.slice.iter.Iter T) (acc : Std.Usize)
+theorem loop_len_sum_spec {T : Type _} (c : Std.Usize) (it : core.slice.iter.Iter T) (acc : Std.Usize)
     (body : core.slice.iter.Iter T × Std.Usize →
       RustM (ControlFlow (core.slice.iter.Iter T × Std.Usize) (core.result.Result Std.Usize Error)))
     (h : acc.val + c.val * (it : Slice T).val.length ≤ Usize.max)
@@ -89,8 +88,8 @@ theorem loop_len_sum_spec {T : Type} (c : Std.Usize) (it : core.slice.iter.Iter 
     (fun p : core.slice.iter.Iter T × Std.Usize => (p.1 : Slice T).val.length)
     (fun p => p.2.val + c.val * (p.1 : Slice T).val.length = acc.val + c.val * (it : Slice T).val.length)
   · rintro ⟨it', a⟩ hinv
-    have hb := Aeneas.Std.WP.exists_imp_spec
-      (Aeneas.Std.WP.triple_iff_exists_ok.mp (hbody it' a (by simp only at hinv; omega)))
+    have hb := exists_imp_spec
+      (Aeneas.Std.triple_iff_exists_ok.mp (hbody it' a (by simp only at hinv; omega)))
     apply Aeneas.Std.WP.spec_mono hb
     intro r hr
     simp only at hinv
@@ -107,11 +106,11 @@ theorem loop_len_sum_spec {T : Type} (c : Std.Usize) (it : core.slice.iter.Iter 
 
 /-- Sequencing through a total step: if `x` returns with `P`, any post of `x >>= f` follows from
 the posts of `f` on the `P` values (for `⇓` and `⇓?` alike). -/
-theorem triple_bind_of_total {α β : Type} {x : RustM α} {f : α → RustM β} {P : α → Prop}
-    {Q : Std.Do.PostCond β (Std.Do.PostShape.except (ULift Std.Error) (Std.Do.PostShape.except PUnit.{1} Std.Do.PostShape.pure))}
+theorem triple_bind_of_total {α β : Type _} {x : RustM α} {f : α → RustM β} {P : α → Prop}
+    {Q : Std.Do.PostCond β RustM.postShape}
     (hx : ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓ r => ⌜ P r ⌝ ⦄) (hf : ∀ r, P r → ⦃ ⌜ True ⌝ ⦄ f r ⦃ Q ⦄) :
-    ⦃ ⌜ True ⌝ ⦄ (x >>= f) ⦃ Q ⦄ := by
-  obtain ⟨a, rfl, ha⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hx
+    ⦃ ⌜ True ⌝ ⦄ (Aeneas.Std.bind x f) ⦃ Q ⦄ := by
+  obtain ⟨a, rfl, ha⟩ := Aeneas.Std.triple_iff_exists_ok.mp hx
   simpa using hf a ha
 
 /-- `hbody` obligation of `loop_len_sum_spec` for the `try_fold` loop of `get_content_lengths`.
@@ -140,7 +139,7 @@ theorem tls_vec.TlsByteVecU8.get_content_lengths_char (self : tls_vec.TlsByteVec
         p.1.val = self.vec.val.length + 1 ∧ self.vec.val.length ≤ 255 ⌝ ⦄ := by
   unfold tls_vec.TlsByteVecU8.get_content_lengths
   simp only [deref_vec_ok, slice_iter_ok]
-  erw [bind_tc_ok, bind_tc_ok]
+  erw [Aeneas.Std.bind_ok, Aeneas.Std.bind_ok]
   refine triple_bind_of_total (loop_len_sum_spec 1#usize _ 0#usize _ ?hlen ?hbody) ?hk
   case hlen => scalar_tac
   case hk => glen_hk core.num.U8.MAX U8.rMax 1#usize
@@ -154,7 +153,7 @@ theorem tls_vec.TlsByteVecU16.get_content_lengths_char (self : tls_vec.TlsByteVe
         p.1.val = self.vec.val.length + 2 ∧ self.vec.val.length ≤ 65535 ⌝ ⦄ := by
   unfold tls_vec.TlsByteVecU16.get_content_lengths
   simp only [deref_vec_ok, slice_iter_ok]
-  erw [bind_tc_ok, bind_tc_ok]
+  erw [Aeneas.Std.bind_ok, Aeneas.Std.bind_ok]
   refine triple_bind_of_total (loop_len_sum_spec 1#usize _ 0#usize _ ?hlen ?hbody) ?hk
   case hlen => scalar_tac
   case hk => glen_hk core.num.U16.MAX U16.rMax 2#usize
@@ -169,17 +168,21 @@ theorem tls_vec.TlsByteVecU32.get_content_lengths_char (self : tls_vec.TlsByteVe
         p.1.val = self.vec.val.length + 4 ∧ self.vec.val.length ≤ 4294967295 ⌝ ⦄ := by
   unfold tls_vec.TlsByteVecU32.get_content_lengths
   simp only [deref_vec_ok, slice_iter_ok]
-  erw [bind_tc_ok, bind_tc_ok]
+  erw [Aeneas.Std.bind_ok, Aeneas.Std.bind_ok]
   refine triple_bind_of_total (loop_len_sum_spec 1#usize _ 0#usize _ ?hlen ?hbody) ?hk
   case hlen => scalar_tac
   case hk => have := numBits_eq_64; glen_hk core.num.U32.MAX U32.rMax 4#usize
   case hbody => glen_hbody
 
 
-/-- The bytes of `U24::MAX`. -/
-theorem U24.MAX_val : U24.MAX.val = [255#u8, 255#u8, 255#u8] := by
+/-- `U24::MAX` (now a monadic constant: `[255u8; 3]` is `core.array.repeat`). -/
+theorem U24.MAX_ok : U24.MAX = ok (Std.Array.repeat 3#usize 255#u8) := by
   unfold U24.MAX
-  simp [Std.Array.repeat]
+  simp [core.array.repeat_U8]
+
+/-- The bytes of `U24::MAX`. -/
+theorem U24.MAX_val : (Std.Array.repeat 3#usize 255#u8 : U24).val = [255#u8, 255#u8, 255#u8] := by
+  simp [Std.Array.repeat_val]
 
 /-- `get_content_lengths` of a `TlsByteVecU24` never fails (an over-long vector gives `Err`); an `Ok` result is `(len + 3, len)` with `len ≤ 2^24 - 1`. -/
 theorem tls_vec.TlsByteVecU24.get_content_lengths_char (self : tls_vec.TlsByteVecU24) :
@@ -188,19 +191,19 @@ theorem tls_vec.TlsByteVecU24.get_content_lengths_char (self : tls_vec.TlsByteVe
         p.1.val = self.vec.val.length + 3 ∧ self.vec.val.length ≤ 16777215 ⌝ ⦄ := by
   unfold tls_vec.TlsByteVecU24.get_content_lengths
   simp only [deref_vec_ok, slice_iter_ok]
-  erw [bind_tc_ok, bind_tc_ok]
+  erw [Aeneas.Std.bind_ok, Aeneas.Std.bind_ok]
   refine triple_bind_of_total (loop_len_sum_spec 1#usize _ 0#usize _ ?hlen ?hbody) ?hk
   case hlen => scalar_tac
   case hk =>
     rintro r ⟨v, rfl, hv⟩
-    have hmax : ∀ y : Std.Usize, (∀ b0 b1 b2 : Std.U8, U24.MAX.val = [b0, b1, b2] →
+    have hmax : ∀ y : Std.Usize, (∀ b0 b1 b2 : Std.U8, (Std.Array.repeat 3#usize 255#u8 : U24).val = [b0, b1, b2] →
         y.val = b0.val * 65536 + b1.val * 256 + b2.val) → y.val = 16777215 := by
       intro y h
       have := h 255#u8 255#u8 255#u8 U24.MAX_val
       simpa using this
     simp only [Copied.Usize.Insts.CoreConvertFromU24_eq, Copied.U24.MAX_eq]
-    mvcgen [checked_len_add_triple, tls_codec.Copied.checked_len_add_triple, core.convert.TryFromTUInfallible.Blanket.try_from_Usize_U24_content,
-      core.result.Result.unwrap_ok_spec]
+    mvcgen [checked_len_add_triple, tls_codec.Copied.checked_len_add_triple, core.convert.TryFromTUNever.Blanket.try_from_Usize_U24_content,
+      core.result.Result.unwrap_ok_spec, U24.MAX_ok]
     try_vcs
     · obtain ⟨y, hy, -⟩ := ‹∃ y, _ = core.result.Result.Ok y ∧ _›
       exact ⟨y, hy⟩

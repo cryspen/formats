@@ -3,8 +3,7 @@ non-failing `clone`.
 
 Obligations: none directly; the bytes-path halves of `PanicFreedom.lean` /
 `FunctionalCorrectness.lean` use them.
-Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U8`; `native_decide`
-(1). -/
+Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U8`. -/
 import TlsCodec.Verification.Helpers.TlsVecDe
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -21,15 +20,15 @@ namespace tls_codec
 
 /-- The size of a slice: the size fold of its elements (from `0`), plus the length prefix
 (none above the `2^30 - 1` bound). -/
-theorem Shared0Slice.size_rel {T : Type} (S : Size T) (hl : Size.Lawful T S) (s : Slice T) :
+theorem Shared0Slice.size_rel {T : Type _} (S : Size T) (hl : Size.Lawful T S) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSize.tls_serialized_len S s
     ⦃ ⇓ r => ⌜ ∃ c ll, SizeFoldRel S 0#usize s.val c ∧ r = lenAddVal c ll ∧
         ll.val = (if c.val ≤ 2 ^ 30 - 1 then varint.lenOf c.val else 0) ⌝ ⦄ := by
   have hcall : ∀ c a e n, S.tls_serialized_len e = ok n →
-      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+      (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize
         S).call_mut c (a, e) = ok (lenAddVal a n, c) := by
     intro c a e n hn
-    simp [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut, hn, len_add_ok]
+    simp [quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.call_mut, hn, len_add_ok]
   have hf := size_fold_rel S (Size.lawful_ok S hl) _ hcall
   mvcgen [Shared0Slice.Insts.Tls_codecSize.tls_serialized_len, hf,
     Shared0Slice.size_closure_map_spec, len_add_triple]
@@ -51,7 +50,7 @@ theorem Shared0Slice.size_rel {T : Type} (S : Size T) (hl : Size.Lawful T S) (s 
     rfl
 
 /-- The size of a `Vec<T>`: as `Shared0Slice.size_rel`. -/
-theorem alloc.vec.Vec.size_rel {T : Type} (S : Size T) (hl : Size.Lawful T S) (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.size_rel {T : Type _} (S : Size T) (hl : Size.Lawful T S) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len S v
     ⦃ ⇓ r => ⌜ ∃ c ll, SizeFoldRel S 0#usize v.val c ∧ r = lenAddVal c ll ∧
         ll.val = (if c.val ≤ 2 ^ 30 - 1 then varint.lenOf c.val else 0) ⌝ ⦄ := by
@@ -93,14 +92,14 @@ of a literal has a spec). -/
 theorem toStr_utf8 (s : String) (h : s.toByteArray.size ≤ U32.max) :
     ∃ t, alloc.string.String.utf8U8 t = (toStr s h).val := by
   refine ⟨s, ?_⟩
-  simp only [alloc.string.String.utf8U8, toStr]
+  simp only [alloc.string.String.utf8U8, toStr, Slice.from_val]
   rw [ByteArray_toList_eq]
   apply List.map_congr_left
   intro b _
   apply UScalar.eq_of_val_eq
   simp
 
-theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (length : Std.Usize) (N : Nat) {B : List Std.U8}
     (hN : N ≤ Usize.max)
     (result : alloc.vec.Vec T) (remainder : Slice Std.U8) (read : Std.Usize)
@@ -118,12 +117,13 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type} (inst : Deseri
   obtain ⟨hres, ⟨s, hs, hsN⟩, hr, hB⟩ := hinv
   mvcgen [alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop.body, hd,
     core.convert.Into.Blanket.into]
+  -- `done` VCs with an error flag: `Some _ = None → _`.
+  all_goals (try (rintro ⟨⟩; done))
   case vc1.h =>
+    -- the precondition of `push`
     rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb
     scalar_tac
-  case vc2.h => exact toStr_utf8 _ _
-  case vc3 => intro h; cases h
-  case vc4.hQ =>
+  case vc1.hQ =>
     rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb res hnz hpush rd hrd
     obtain ⟨e, nxt⟩ := p
     obtain ⟨n, hn, hl⟩ := DeserializeBytes.post_ok_elim _ _ _ _ _ hpost
@@ -141,7 +141,9 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type} (inst : Deseri
     · dsimp only at *; omega
     · dsimp only at *; omega
     · dsimp only at *; omega
-  case vc5.h_fail =>
+  case vc3.hQ => exact ⟨⟨s, hs, hsN⟩, by simpa using hr, hB⟩
+  -- the two arithmetic failures (`read + consumed` overflow, then `i - i1` underflow)
+  case vc2.h_fail =>
     exfalso
     rename_i hlt r p hx hpost r2 h2 r1 h1 r0 ha hb res hnz hpush hbig
     obtain ⟨e, nxt⟩ := p
@@ -152,7 +154,7 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type} (inst : Deseri
     simp only [Slice.length] at l1 l2
     dsimp only at *
     scalar_tac
-  case vc6.h_fail =>
+  case vc2.h_fail =>
     exfalso
     rename_i hlt r p hx hpost r2 h2 r1 h1 hlt2
     obtain ⟨e, nxt⟩ := p
@@ -163,10 +165,10 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_body_char {T : Type} (inst : Deseri
     simp only [Slice.length] at l1 l2
     dsimp only at *
     scalar_tac
-  case vc7 => intro h; cases h
-  case vc8.hQ => exact ⟨⟨s, hs, hsN⟩, by simpa using hr, hB⟩
+  -- the error message literal is UTF-8
+  exact toStr_utf8 _ _
 
-theorem alloc.vec.Vec.deserialize_bytes_loop_char {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_loop_char {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (length : Std.Usize) (N : Nat) {B : List Std.U8}
     (hN : N ≤ Usize.max)
     (result : alloc.vec.Vec T) (remainder : Slice Std.U8) (read : Std.Usize)
@@ -183,7 +185,7 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_char {T : Type} (inst : Deserialize
     (fun p : Slice Std.U8 × alloc.vec.Vec T × Std.Usize => p.1.val.length)
     (fun p => DesLoopInv inst.SizeInst 0#usize N B p.2.1.val p.1 p.2.2)
   · rintro ⟨rem, res, rd⟩ h
-    obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (alloc.vec.Vec.deserialize_bytes_loop_body_char inst hlaw length N hN res rem rd h)
     dsimp only
     rw [hv]
@@ -194,12 +196,12 @@ theorem alloc.vec.Vec.deserialize_bytes_loop_char {T : Type} (inst : Deserialize
   · exact hinv
 
 /-- The size of a `Vec<T>` whose size fold is `c` (when the sum does not overflow). -/
-theorem alloc.vec.Vec.size_ok {T : Type} (S : Size T) (hl : Size.Lawful T S) (v : alloc.vec.Vec T)
+theorem alloc.vec.Vec.size_ok {T : Type _} (S : Size T) (hl : Size.Lawful T S) (v : alloc.vec.Vec T)
     (c : Std.Usize) (hrel : SizeFoldRel S 0#usize v.val c)
     (hc : c.val + (if c.val ≤ 2 ^ 30 - 1 then varint.lenOf c.val else 0) ≤ Usize.max) :
     ∃ n, alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len S v = ok n ∧
       n.val = c.val + (if c.val ≤ 2 ^ 30 - 1 then varint.lenOf c.val else 0) := by
-  obtain ⟨r, hr, c', ll, hrel', hr', hll⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r, hr, c', ll, hrel', hr', hll⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.size_rel S hl v)
   have := hrel.functional hrel'
   subst this
@@ -207,7 +209,7 @@ theorem alloc.vec.Vec.size_ok {T : Type} (S : Size T) (hl : Size.Lawful T S) (v 
   rw [hr', lenAddVal_val _ _ (by rw [hll]; exact hc), hll]
 
 /-- `Vec<T>::tls_deserialize_bytes` from the trait contract of `T`. -/
-theorem alloc.vec.Vec.deserialize_bytes_char {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_bytes_char {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst bytes
     ⦃ ⇓ r => ⌜ ∀ v rem, r = .Ok (v, rem) → ∃ n,
@@ -227,7 +229,9 @@ theorem alloc.vec.Vec.deserialize_bytes_char {T : Type} (inst : DeserializeBytes
   all_goals (try (intros; simp [PostCond.ok]; done))
   all_goals (try (exfalso; simp_all; done))
   case vc1 =>
-    rename_i r0 hP r1 p hx r2 htf r3 val hx2 hv0 rv hrv hr0 hr2
+    rename_i r0 hP r1 hr0 p hx r2 htf r3 hr2 val hx2 hv0 rv hrv
+    subst hx hx2
+    simp only [continue_eq_tryCF] at hr0 hr2
     intro v rem h
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj (core.result.Result.Ok.inj h)
     have hp := hP.1 p.1 p.2 hr0
@@ -235,7 +239,7 @@ theorem alloc.vec.Vec.deserialize_bytes_char {T : Type} (inst : DeserializeBytes
     have hy := htf.1 val hr2
     have hv : val.val = 0 := by rw [hv0]; rfl
     have hrel : SizeFoldRel inst.SizeInst 0#usize rv.val 0#usize := by
-      rw [hrv]; simp [Slice.new]; exact .nil _
+      rw [hrv]; simp [Slice.new_val]; exact .nil _
     obtain ⟨n, hn, hnv⟩ := alloc.vec.Vec.size_ok inst.SizeInst hlaw.SizeInstLawful rv 0#usize hrel
       (by simp [varint.lenOf]; scalar_tac)
     refine ⟨n, hn, ?_, hps⟩
@@ -245,11 +249,13 @@ theorem alloc.vec.Vec.deserialize_bytes_char {T : Type} (inst : DeserializeBytes
     rw [show p.1.val = 0 by omega, h0] at this
     omega
   case vc2.hinv =>
-    rename_i r0 hP r1 p hx r2 htf r3 val hx2 hv0 rv hrv hr0 hr2
-    refine ⟨by simp [hrv, Slice.new], ⟨0#usize, ?_, by simp⟩, by simp, List.suffix_refl _⟩
-    rw [hrv]; simp [Slice.new]; exact .nil _
+    rename_i r0 hP r1 hr0 p hx r2 htf r3 hr2 val hx2 hv0 rv hrv
+    refine ⟨by simp [hrv, Slice.new_val], ⟨0#usize, ?_, by simp⟩, by simp, List.suffix_refl _⟩
+    rw [hrv]; simp [Slice.new_val]; exact .nil _
   case vc4 =>
-    rename_i r0 hP r1 p hx r2 htf r3 val hx2 hnz rv hrv res hnone hne hpost hr0 hr2
+    rename_i r0 hP r1 hr0 p hx r2 htf r3 hr2 val hx2 hnz rv hrv res hnone hne hpost
+    subst hx hx2
+    simp only [continue_eq_tryCF] at hr0 hr2
     intro v rem h
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj (core.result.Result.Ok.inj h)
     have hp := hP.1 p.1 p.2 hr0
@@ -270,19 +276,19 @@ theorem alloc.vec.Vec.deserialize_bytes_char {T : Type} (inst : DeserializeBytes
     omega
 
 /-- The trait method of `Vec<T>` does not fail. -/
-theorem alloc.vec.Vec.trait_pf {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.trait_pf {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄
       (alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst) bytes
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  obtain ⟨v, hv, _⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, _⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.deserialize_bytes_char inst hlaw bytes)
   rw [hv]
   apply RustM.ok_spec
   trivial
 
 /-- Functional correctness of the trait method of `Vec<T>` (trait-level post). -/
-theorem alloc.vec.Vec.trait_fc {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.trait_fc {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄
       (alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst) bytes
@@ -297,7 +303,7 @@ theorem alloc.vec.Vec.trait_fc {T : Type} (inst : DeserializeBytes T)
 /-! ### `Slice::to_vec` with a non-failing `clone` -/
 
 /-- `to_vec` does not fail when `clone` does not, and preserves the length. -/
-theorem alloc.slice.Slice.to_vec_len {T : Type} (inst : core.clone.Clone T)
+theorem alloc.slice.Slice.to_vec_len {T : Type _} (inst : core.clone.Clone T)
     (hc : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.slice.Slice.to_vec inst s
     ⦃ ⇓ r => ⌜ (r : Slice T).val.length = s.val.length ⌝ ⦄ := by
@@ -309,13 +315,14 @@ theorem alloc.slice.Slice.to_vec_len {T : Type} (inst : core.clone.Clone T)
       obtain ⟨y, hy⟩ := triple_true_ok (hc x)
       obtain ⟨l', hl', hlen⟩ := ih
       refine ⟨y :: l', ?_, by simp [hlen]⟩
-      simp [List.mapM_cons, hy, hl']; rfl
+      simp [List.mapM_cons, hy, hl']
   have hlen : s.val.length ≤ Usize.max := s.property
   obtain ⟨l', hl', hlen'⟩ := mapM_ok s.val
+  have hlen'' : l'.length ≤ Usize.max := by omega
   unfold alloc.slice.Slice.to_vec alloc.slice.Dummy.to_vec
   simp [rust_primitives.sequence.seq_empty, rust_primitives.sequence.seq_extend, alloc.vec.from_seq,
-    Slice.new, hl']
-  rw [dif_pos (by omega)]
+    Slice.new_val, hl', hlen'']
   mvcgen
+  simp [hlen']
 
 end tls_codec

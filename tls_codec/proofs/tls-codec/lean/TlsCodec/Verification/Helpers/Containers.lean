@@ -20,7 +20,7 @@ namespace tls_codec
 
 /-- Behaviour of `Option<T>::tls_serialize_bytes` from the trait contracts of `T`: never fails to
 terminate, and an `Ok out` is `[0]` for `None` and `1 :: v` for `Some e`, with `v` of the size of `e`. -/
-theorem Option_serialize_char {T : Type} (inst : SerializeBytes T)
+theorem Option_serialize_char {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (o : core.option.Option T) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst o
     ⦃ ⇓ r => ⌜ (∀ out, r = .Ok out →
@@ -41,9 +41,8 @@ theorem Option_serialize_char {T : Type} (inst : SerializeBytes T)
     refine Or.inl ⟨trivial, ?_⟩
     rename_i hr
     simp [hr, Std.Array.to_slice]
-    rfl
   | some e =>
-    obtain ⟨n, hn, -⟩ := (Aeneas.Std.WP.triple_iff_exists_ok).1
+    obtain ⟨n, hn, -⟩ := (Aeneas.Std.triple_iff_exists_ok).1
       (hsz e (pre_holds_of_ok_true rfl))
     mvcgen [core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, hn, hs,
       checked_alloc_len_ok, alloc.vec.Vec.with_capacity, alloc.vec.Vec.append,
@@ -53,7 +52,7 @@ theorem Option_serialize_char {T : Type} (inst : SerializeBytes T)
     all_goals (try (intros; simp [PostCond.ok]; done))
     · rename_i _ _ _ _ _ _ hr3 _
       subst hr3
-      simp [Slice.new]
+      simp [Slice.new_val]
       scalar_tac
     · rename_i r5 hchk cf0 val x1 r3 hr3 out1 hout1 r1 hpost cf1 val1 x2 comb hlen hcv hr1
       refine ⟨?_, by simp⟩
@@ -65,7 +64,7 @@ theorem Option_serialize_char {T : Type} (inst : SerializeBytes T)
       subst hnn
       subst hr3
       refine Or.inr ⟨e, n, val1.val, rfl, hn, hl, ?_⟩
-      simp [comb, hout1, Slice.new]
+      simp [comb, hout1, Slice.new_val]
     · rename_i r5 hchk cf0 val x1 r3 hr3 out1 hout1 r1 hpost cf1 val1 x2 comb hlen hcv hr1
       exfalso
       subst hr1
@@ -76,13 +75,13 @@ theorem Option_serialize_char {T : Type} (inst : SerializeBytes T)
       subst hr3
       apply hlen
       simp only [comb, hout1, List.length_append, hl]
-      simp [Slice.new]
+      simp [Slice.new_val]
       scalar_tac
 
 /-- Behaviour of `Option<T>::tls_deserialize_bytes` from the trait contracts of `T`: never fails to
 terminate, and an `Ok (v, rem)` consumed a `0` tag (`None`) or a `1` tag followed by an `e` of size
 `n` (`Some e`), the rest of the input being `rem`. -/
-theorem Option_deserialize_char {T : Type} (inst : DeserializeBytes T)
+theorem Option_deserialize_char {T : Type _} (inst : DeserializeBytes T)
     (hlaw : DeserializeBytes.Lawful T inst) (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst bytes
     ⦃ ⇓ r => ⌜ ∀ v rem, r = .Ok (v, rem) → ∃ l,
@@ -96,19 +95,21 @@ theorem Option_deserialize_char {T : Type} (inst : DeserializeBytes T)
   try_vcs
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try (intros; simp [PostCond.ok]; done))
-  · rename_i r1 hP cf p hx hz hr1
+  · rename_i r1 hP cf hcf p hx hz
+    subst hx
     intro v rem hv
-    obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP (continue_eq_tryCF.2 hr1)
+    obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hcf
     rw [hz] at hb
     simp only [core.result.Result.Ok.injEq, Prod.mk.injEq] at hv
     obtain ⟨rfl, rfl⟩ := hv
     exact ⟨l, Or.inl ⟨hb, rfl, hp2⟩⟩
-  · rename_i r1 hP cf p hx hz r2 hpost cf2 p2 hx2 hr1 hr2
+  · rename_i r1 hP cf hcf p hx hz res hpost cf2 p2 hcf2 hres
+    subst hx
     intro v rem hv
-    obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP (continue_eq_tryCF.2 hr1)
+    obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hcf
     rw [hz] at hb
     obtain ⟨e, rem2⟩ := p2
-    subst hr2
+    subst hres
     obtain ⟨n, hn, hl⟩ := DeserializeBytes.post_ok_elim _ _ _ _ _ hpost
     simp only [core.result.Result.Ok.injEq, Prod.mk.injEq] at hv
     obtain ⟨rfl, rfl⟩ := hv
@@ -119,21 +120,21 @@ theorem Option_deserialize_char {T : Type} (inst : DeserializeBytes T)
 
 /-! ### Sizes of `Option` / pairs / triples (the `len_add`s of the extracted `tls_serialized_len`) -/
 
-theorem Option_size_none {T : Type} (S : Size T) :
+theorem Option_size_none {T : Type _} (S : Size T) :
     core.option.Option.Insts.Tls_codecSize.tls_serialized_len S .None = ok (lenAddVal 1#usize 0#usize) := by
   simp [core.option.Option.Insts.Tls_codecSize.tls_serialized_len, len_add_ok]
 
-theorem Option_size_some {T : Type} (S : Size T) (e : T) (n : Std.Usize)
+theorem Option_size_some {T : Type _} (S : Size T) (e : T) (n : Std.Usize)
     (h : S.tls_serialized_len e = ok n) :
     core.option.Option.Insts.Tls_codecSize.tls_serialized_len S (.Some e) = ok (lenAddVal 1#usize n) := by
   simp [core.option.Option.Insts.Tls_codecSize.tls_serialized_len, len_add_ok, h]
 
-theorem Pair_size {T U : Type} (S : Size T) (S1 : Size U) (a : T) (b : U) (n1 n2 : Std.Usize)
+theorem Pair_size {T U : Type _} (S : Size T) (S1 : Size U) (a : T) (b : U) (n1 n2 : Std.Usize)
     (h1 : S.tls_serialized_len a = ok n1) (h2 : S1.tls_serialized_len b = ok n2) :
     Pair.Insts.Tls_codecSize.tls_serialized_len S S1 (a, b) = ok (lenAddVal n1 n2) := by
   simp [Pair.Insts.Tls_codecSize.tls_serialized_len, len_add_ok, h1, h2]
 
-theorem TupleTUV_size {T U V : Type} (S : Size T) (S1 : Size U) (S2 : Size V) (a : T) (b : U) (c : V)
+theorem TupleTUV_size {T U V : Type _} (S : Size T) (S1 : Size U) (S2 : Size V) (a : T) (b : U) (c : V)
     (n1 n2 n3 : Std.Usize) (h1 : S.tls_serialized_len a = ok n1) (h2 : S1.tls_serialized_len b = ok n2)
     (h3 : S2.tls_serialized_len c = ok n3) :
     TupleTUV.Insts.Tls_codecSize.tls_serialized_len S S1 S2 (a, b, c) =
@@ -141,15 +142,15 @@ theorem TupleTUV_size {T U V : Type} (S : Size T) (S1 : Size U) (S2 : Size V) (a
   simp [TupleTUV.Insts.Tls_codecSize.tls_serialized_len, len_add_ok, h1, h2, h3]
 
 /-- `<[T]>::first`: the head of the contents. -/
-theorem core.slice.Slice.first_spec {T : Type} (s : Slice T) :
+theorem core.slice.Slice.first_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ core.slice.Slice.first s ⦃ ⇓ r => ⌜ r = s.val.head? ⌝ ⦄ := by
   mvcgen [core.slice.Slice.first, rust_primitives.slice.slice_index, Slice.index_usize]
-  · rename_i hb hd
+  · rename_i hd hb
     have h0 : s.val.length = 0 := by
       have := congrArg UScalar.val (of_decide_eq_true (hd ▸ hb))
       simpa [Slice.len_val, Slice.length] using this
     simp [List.length_eq_zero_iff.mp h0]
-  · rename_i hb hd hg
+  · rename_i hd hb hg
     exfalso
     apply hb
     rw [hd]
@@ -179,15 +180,15 @@ theorem Option_U8_eq_spec (a b : core.option.Option Std.U8) :
 
 /-! ### `Box<T>` (erased: `Box<T>` is `T`) -/
 
-theorem Box_size {T : Type} (S : Size T) (x : T) (n : Std.Usize) (h : S.tls_serialized_len x = ok n) :
+theorem Box_size {T : Type _} (S : Size T) (x : T) (n : Std.Usize) (h : S.tls_serialized_len x = ok n) :
     Box.Insts.Tls_codecSize.tls_serialized_len S x = ok n := by
   simp [Box.Insts.Tls_codecSize.tls_serialized_len, alloc.Box.Insts.CoreConvertAsRef.as_ref, h]
 
-theorem Box_serialize_eq {T : Type} (inst : SerializeBytes T) (x : T) :
+theorem Box_serialize_eq {T : Type _} (inst : SerializeBytes T) (x : T) :
     Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst x = inst.tls_serialize_bytes x := by
   simp [Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, alloc.Box.Insts.CoreConvertAsRef.as_ref]
 
-theorem Box_deserialize_eq {T : Type} (inst : DeserializeBytes T) (bytes : Slice Std.U8) :
+theorem Box_deserialize_eq {T : Type _} (inst : DeserializeBytes T) (bytes : Slice Std.U8) :
     Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst bytes = inst.tls_deserialize_bytes bytes := by
   unfold Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   cases h : inst.tls_deserialize_bytes bytes with
@@ -200,7 +201,7 @@ theorem Box_deserialize_eq {T : Type} (inst : DeserializeBytes T) (bytes : Slice
 /-! ### Pairs and triples -/
 
 /-- `(T, U)::tls_deserialize_bytes`, from the trait contracts of `T` and `U`. -/
-theorem Pair_deserialize_char {T U : Type} (inst : DeserializeBytes T) (inst1 : DeserializeBytes U)
+theorem Pair_deserialize_char {T U : Type _} (inst : DeserializeBytes T) (inst1 : DeserializeBytes U)
     (hlaw : DeserializeBytes.Lawful T inst) (hlaw1 : DeserializeBytes.Lawful U inst1)
     (bytes : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst inst1 bytes
@@ -213,7 +214,9 @@ theorem Pair_deserialize_char {T U : Type} (inst : DeserializeBytes T) (inst1 : 
   try_vcs
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try (intros; simp [PostCond.ok]; done))
-  rename_i r1 h1 cf p x r2 h2 cf2 p2 x2 hr1 hr2
+  rename_i r1 h1 cf hr1 p x r2 h2 cf2 hr2 p2 x2
+  subst x x2
+  simp only [continue_eq_tryCF] at hr1 hr2
   intro a b rem hv
   obtain ⟨p1a, p1r⟩ := p
   obtain ⟨p2a, p2r⟩ := p2
@@ -228,7 +231,7 @@ theorem Pair_deserialize_char {T U : Type} (inst : DeserializeBytes T) (inst1 : 
   exact ⟨n1, n2, hn1, hn2, by omega, hs2.trans hs1⟩
 
 /-- `(T, U, V)::tls_deserialize_bytes`, from the trait contracts of `T`, `U` and `V`. -/
-theorem TupleTUV_deserialize_char {T U V : Type} (inst : DeserializeBytes T)
+theorem TupleTUV_deserialize_char {T U V : Type _} (inst : DeserializeBytes T)
     (inst1 : DeserializeBytes U) (inst2 : DeserializeBytes V)
     (hlaw : DeserializeBytes.Lawful T inst) (hlaw1 : DeserializeBytes.Lawful U inst1)
     (hlaw2 : DeserializeBytes.Lawful V inst2) (bytes : Slice Std.U8) :
@@ -244,7 +247,9 @@ theorem TupleTUV_deserialize_char {T U V : Type} (inst : DeserializeBytes T)
   try_vcs
   all_goals (try simp only [continue_eq_tryCF] at *)
   all_goals (try (intros; simp [PostCond.ok]; done))
-  rename_i r1 h1 cf p x r2 h2 cf2 p2 x2 r3 h3 cf3 p3 x3 hr1 hr2 hr3
+  rename_i r1 h1 cf hr1 p x r2 h2 cf2 hr2 p2 x2 r3 h3 cf3 hr3 p3 x3
+  subst x x2 x3
+  simp only [continue_eq_tryCF] at hr1 hr2 hr3
   intro a b c rem hv
   obtain ⟨p1a, p1r⟩ := p
   obtain ⟨p2a, p2r⟩ := p2

@@ -23,27 +23,43 @@ statement; panic freedom is `Shared0Slice.serialize_pf`). -/
 
 /-- Partial-correctness spec of `loop`: an invariant `inv` preserved by every step, and its `done`
 values satisfy `Q`. -/
-theorem loop_partial_spec {α β : Type} (body : α → RustM (ControlFlow α β)) (init : α)
+theorem loop_partial_spec {α β : Type _} (body : α → RustM (ControlFlow α β)) (init : α)
     (inv : α → Prop) (Q : β → Prop) (hinit : inv init)
     (hbody : ∀ x, inv x → ⦃ ⌜ True ⌝ ⦄ body x
       ⦃ ⇓? cf => ⌜ match cf with | .cont r => inv r | .done y => Q y ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ loop body init ⦃ ⇓? y => ⌜ Q y ⌝ ⦄ := by
-  refine Aeneas.Std.loop_spec (γ := Unit) inv (fun _ _ => False) (fun _ => ()) ⟨fun _ => ⟨_, by simp⟩⟩
-    hinit ?_
-  intro x hx
-  have := hbody x hx
-  cases hb : body x <;> rw [hb] at this <;>
-    simp_all [Triple, PostCond.mayThrow, PostCond.okAssertion, PostCond.failAssertion,
-      PostCond.divAssertion, PostCond.div, WP.wp, PredTrans.apply] <;> (try split) <;> simp_all
+  -- `loop_spec` needs `α β` in one universe: fixpoint induction (divergence allowed by `⇓?`).
+  let P : PostCond β RustM.postShape := ⇓? y => ⌜ Q y ⌝
+  have hdiv : PostCond.div P := by simp [P, PostCond.div, PostCond.mayThrow]
+  suffices h : ∀ x, inv x → (wp⟦loop body x⟧ P).down from fun _ => h init hinit
+  have hadm : Lean.Order.admissible (fun g : α → RustM β => ∀ x, inv x → (wp⟦g x⟧ P).down) := by
+    apply Lean.Order.admissible_pi; intro x
+    apply Lean.Order.admissible_pi; intro _
+    exact Lean.Order.admissible_apply (β := fun _ => RustM β)
+      (fun _ (r : RustM β) => (wp⟦r⟧ P).down) x (Aeneas.Std.wp_admissible_of_div P hdiv)
+  refine loop.fixpoint_induct body _ hadm (fun g ih x hinv => ?_)
+  have hb := hbody x hinv trivial
+  cases hc : body x with
+  | ok cf =>
+    rw [hc] at hb
+    cases cf with
+    | cont r =>
+      simp only [hc, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
+      exact ih r (by simpa [WP.wp, PredTrans.apply] using hb)
+    | done r =>
+      simp only [hc, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
+      simpa [WP.wp, PredTrans.apply, P] using hb
+  | fail e => simp [hc, WP.wp, PredTrans.apply, P]
+  | div => simp [hc, WP.wp, PredTrans.apply, P]
 
 /-- Weakening the post of a partial triple. -/
-theorem partial_triple_post_mono {α : Type} {x : RustM α} {P Q : α → Prop}
+theorem partial_triple_post_mono {α : Type _} {x : RustM α} {P Q : α → Prop}
     (h : ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓? r => ⌜ P r ⌝ ⦄) (hPQ : ∀ r, P r → Q r) :
     ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓? r => ⌜ Q r ⌝ ⦄ :=
   partial_triple_of_ok fun _ hr => hPQ _ (ok_of_partial_triple h hr)
 
 /-- Exact sums of the element sizes (as naturals). -/
-inductive SizeNat {T : Type} (S : Size T) : List T → Nat → Prop
+inductive SizeNat {T : Type _} (S : Size T) : List T → Nat → Prop
   | nil : SizeNat S [] 0
   | cons (x : T) (l : List T) (n : Std.Usize) (N : Nat) :
       S.tls_serialized_len x = ok n → SizeNat S l N → SizeNat S (x :: l) (n.val + N)
@@ -56,7 +72,7 @@ theorem SizeNat.u8 (l : List Std.U8) : SizeNat U8.Insts.Tls_codecSize l l.length
     have h := SizeNat.cons (S := U8.Insts.Tls_codecSize) x l 1#usize l.length rfl ih
     rwa [show (1#usize).val + l.length = (x :: l).length by simp [add_comm]] at h
 
-theorem SizeNat.snoc {T : Type} {S : Size T} {l : List T} {N : Nat} (h : SizeNat S l N)
+theorem SizeNat.snoc {T : Type _} {S : Size T} {l : List T} {N : Nat} (h : SizeNat S l N)
     (e : T) (n : Std.Usize) (hn : S.tls_serialized_len e = ok n) :
     SizeNat S (l ++ [e]) (N + n.val) := by
   induction h with
@@ -65,7 +81,7 @@ theorem SizeNat.snoc {T : Type} {S : Size T} {l : List T} {N : Nat} (h : SizeNat
     have := SizeNat.cons x _ n' _ hx ih
     rwa [show n'.val + (N' + n.val) = n'.val + N' + n.val by omega] at this
 
-theorem SizeNat.head {T : Type} {S : Size T} {l : List T} {N : Nat} (h : SizeNat S l N)
+theorem SizeNat.head {T : Type _} {S : Size T} {l : List T} {N : Nat} (h : SizeNat S l N)
     (hl : 0 < l.length) :
     ∃ (n : Std.Usize) (N' : Nat), S.tls_serialized_len (l.get ⟨0, hl⟩) = ok n ∧ N = n.val + N' := by
   cases h with
@@ -73,7 +89,7 @@ theorem SizeNat.head {T : Type} {S : Size T} {l : List T} {N : Nat} (h : SizeNat
   | cons x l' n N' hx _ => exact ⟨n, N', hx, rfl⟩
 
 /-- The folds are the exact sum when it fits. -/
-theorem SizeFoldRel.val_eq {T : Type} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
+theorem SizeFoldRel.val_eq {T : Type _} {S : Size T} {a : Std.Usize} {l : List T} {r : Std.Usize}
     (h : SizeFoldRel S a l r) {N : Nat} (hN : SizeNat S l N) (hle : a.val + N ≤ Usize.max) :
     r.val = a.val + N := by
   induction h generalizing N with
@@ -88,13 +104,13 @@ theorem SizeFoldRel.val_eq {T : Type} {S : Size T} {a : Std.Usize} {l : List T} 
       omega
 
 /-- A loop whose result is not tracked. -/
-theorem loop_trivial_partial {α β : Type} (body : α → RustM (ControlFlow α β)) (x : α) :
+theorem loop_trivial_partial {α β : Type _} (body : α → RustM (ControlFlow α β)) (x : α) :
     ⦃ ⌜ True ⌝ ⦄ loop body x ⦃ ⇓? _ => ⌜ True ⌝ ⦄ :=
   partial_triple_of_ok fun _ _ => trivial
 
 /-- Partial spec of the serialisation loop of the slice serializer: if it finishes without error,
 the output grew by the sum of the element sizes. -/
-theorem loop_ser_partial_spec {T : Type} (S : Size T) (it : core.slice.iter.Iter T)
+theorem loop_ser_partial_spec {T : Type _} (S : Size T) (it : core.slice.iter.Iter T)
     (out : alloc.vec.Vec Std.U8)
     (body : core.slice.iter.Iter T × alloc.vec.Vec Std.U8 →
       RustM (ControlFlow (core.slice.iter.Iter T × alloc.vec.Vec Std.U8)
@@ -132,20 +148,20 @@ theorem loop_ser_partial_spec {T : Type} (S : Size T) (it : core.slice.iter.Iter
 
 /-- Total spec of `loop`: an invariant `inv` preserved by every step with a decreasing measure `μ`,
 and its `done` values satisfy `Q`. -/
-theorem loop_total_spec {α β : Type} (body : α → RustM (ControlFlow α β)) (init : α)
+theorem loop_total_spec {α β : Type _} (body : α → RustM (ControlFlow α β)) (init : α)
     (inv : α → Prop) (μ : α → Nat) (Q : β → Prop) (hinit : inv init)
     (hbody : ∀ x, inv x → ⦃ ⌜ True ⌝ ⦄ body x
       ⦃ ⇓ cf => ⌜ match cf with | .cont r => inv r ∧ μ r < μ x | .done y => Q y ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ loop body init ⦃ ⇓ y => ⌜ Q y ⌝ ⦄ := by
   apply Aeneas.Std.WP.spec_to_mvcgen
   refine Aeneas.Std.loop.spec_decr_nat μ inv Q body init (fun x hx => ?_) hinit
-  obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hbody x hx)
+  obtain ⟨r, hr, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hbody x hx)
   rw [hr, Aeneas.Std.WP.spec_ok]
   cases r <;> exact hP
 
 /-- Total spec of the sizing loop of the slice serializer: it does not fail, and an `Ok` result is the
 exact sum of the element sizes. -/
-theorem loop_sum_total {T : Type} (S : Size T) (it : core.slice.iter.Iter T) (acc : Std.Usize)
+theorem loop_sum_total {T : Type _} (S : Size T) (it : core.slice.iter.Iter T) (acc : Std.Usize)
     (body : core.slice.iter.Iter T × Std.Usize →
       RustM (ControlFlow (core.slice.iter.Iter T × Std.Usize) (core.result.Result Std.Usize Error)))
     (hbody : ∀ (it' : core.slice.iter.Iter T) (a : Std.Usize),
@@ -178,7 +194,7 @@ theorem loop_sum_total {T : Type} (S : Size T) (it : core.slice.iter.Iter T) (ac
 
 /-- Total spec of the serialisation loop of the slice serializer: it does not fail, as long as the
 total size of the remaining elements still fits in the vector; the output does not shrink. -/
-theorem loop_append_total {T : Type} (S : Size T) (it : core.slice.iter.Iter T)
+theorem loop_append_total {T : Type _} (S : Size T) (it : core.slice.iter.Iter T)
     (out : alloc.vec.Vec Std.U8)
     (body : core.slice.iter.Iter T × alloc.vec.Vec Std.U8 →
       RustM (ControlFlow (core.slice.iter.Iter T × alloc.vec.Vec Std.U8)
@@ -214,7 +230,7 @@ theorem loop_append_total {T : Type} (S : Size T) (it : core.slice.iter.Iter T)
     subst this
     exact ⟨⟨⟨N2, hN2, by omega⟩, by omega⟩, by simp [hl]⟩
 
-theorem list_cons_get_drop {α : Type} (l : List α) (h : 0 < l.length) :
+theorem list_cons_get_drop {α : Type _} (l : List α) (h : 0 < l.length) :
     l = l.get ⟨0, h⟩ :: l.drop 1 := by
   cases l with
   | nil => exact absurd h (Nat.lt_irrefl _)
@@ -222,12 +238,12 @@ theorem list_cons_get_drop {α : Type} (l : List α) (h : 0 < l.length) :
 
 /-- The element serializer of a lawful `SerializeBytes` instance does not panic and meets its size
 contract (as a spec for `mvcgen`). -/
-theorem SerializeBytes.elem_char {T : Type} (inst : SerializeBytes T)
+theorem SerializeBytes.elem_char {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
     ⦃ ⇓ r => ⌜ ∀ b, r = .Ok b → ∃ n, inst.SizeInst.tls_serialized_len x = ok n ∧
       (b : Slice Std.U8).val.length = n.val ⌝ ⦄ := by
-  obtain ⟨a, ha, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨a, ha, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hlaw.tls_serialize_bytes_spec x (pre_holds_of_ok_true rfl))
   rw [ha]
   apply RustM.ok_spec
@@ -237,7 +253,7 @@ theorem SerializeBytes.elem_char {T : Type} (inst : SerializeBytes T)
 
 /-- The element serializer of a lawful `SerializeBytes` instance meets its size contract
 (partial form, as a spec for `mvcgen`). -/
-theorem SerializeBytes.elem_partial {T : Type} (inst : SerializeBytes T)
+theorem SerializeBytes.elem_partial {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (x : T) :
     ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
     ⦃ ⇓? r => ⌜ ∀ b, r = .Ok b → ∃ n, inst.SizeInst.tls_serialized_len x = ok n ∧
@@ -259,7 +275,7 @@ folded back to the originals (so that their specs apply). -/
 macro "ser_slice_setup" : tactic => `(tactic| (
   unfold Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   nth_rewrite 1 [slice_iter_ok]
-  erw [bind_tc_ok]
+  erw [Aeneas.Std.bind_ok]
   simp only [Copied.varint.TlsVarInt.bytes_len_eq,
     Copied.checked_alloc_len_eq, Copied.quic_vec.ContentLength.from_usize_eq]))
 
@@ -278,14 +294,14 @@ macro_rules
 
 /-- The `<&[T]>::tls_serialize_bytes` of the trait contracts of `T`: an `Ok out` has the length given
 by `tls_serialized_len` (partial form, see `Shared0Slice.serialize_pf`). -/
-theorem Shared0Slice.serialize_partial {T : Type} (inst : SerializeBytes T)
+theorem Shared0Slice.serialize_partial {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst s
     ⦃ ⇓? r => ⌜ ∀ out, r = .Ok out → ∃ n,
         Shared0Slice.Insts.Tls_codecSize.tls_serialized_len inst.SizeInst s = ok n ∧
         (out : Slice Std.U8).val.length = n.val ⌝ ⦄ := by
   have hs := SerializeBytes.elem_partial inst hlaw
-  obtain ⟨n, hn, c', ll', hrel', hnv, hll'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨n, hn, c', ll', hrel', hnv, hll'⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (Shared0Slice.size_rel inst.SizeInst hlaw.SizeInstLawful s)
   ser_slice_setup
   have hsum := loop_trivial_partial
@@ -296,22 +312,24 @@ theorem Shared0Slice.serialize_partial {T : Type} (inst : SerializeBytes T)
   try_vcs
   close_hv
   all_goals (try (intros; simp [PostCond.ok]; done))
-  · rw [← List.length_eq_zero_iff]
+  · refine ⟨?_, trivial⟩
+    rw [← List.length_eq_zero_iff]
     scalar_tac
-  · rename_i _ _ _ bytes _ hb comb hc
-    obtain ⟨n, hn, hl⟩ := hb bytes rfl
+  · rename_i r hb bytes hx hc
+    obtain ⟨n, hn, hl⟩ := hb bytes hx
     refine ⟨_, n, ?_, hn, ?_⟩
-    · simp only [show (0#usize).val = 0 from rfl, List.take_zero, List.nil_append, zero_add]
+    · simp only [show (0#usize).val = 0 from rfl, List.take_zero, List.nil_append, zero_add,
+        Slice.from_val]
       exact list_cons_get_drop _ ‹_›
-    · simp [comb, hl]
+    · simp [hl]
   · intro h
     cases h
   · intro out h
     cases h
   · intro out h
     cases h
-  · rename_i _ _ c _ _ _ hfrom _ val _ hcf1 ll hbl _ hchk _ _ _ _ _ _ _ hout1 back r3 hw _ _ _ _ r4 hnone hrel
-      i3 hi3 i4 hi4 hge hne
+  · rename_i rres cf0 c x0 e0 rfrom hfrom cf1 val x1 hcf1 ll hbl rchk hchk cf2 acc x2 e2 v0 hv0
+      v1 hv1 r3 hw cf3 acc3 x3 e3 r4 hnone hrel i3 hi3 i4 hi4 hge hne
     intro out hout
     obtain rfl := core.result.Result.Ok.inj hout
     simp only [continue_eq_tryCF] at hcf1
@@ -320,7 +338,6 @@ theorem Shared0Slice.serialize_partial {T : Type} (inst : SerializeBytes T)
     obtain ⟨N, hN, hlen⟩ := hrel hnone
     have hc := varint.lenOf_char _ _ hbl
     have hw2 := (hw.2 (by omega)).2
-    have hback : (back r3.2 : Slice Std.U8).val.length = (r3.2 : Slice Std.U8).val.length := rfl
     have h0 : (0#usize).val = 0 := rfl
     have hi3v : i3.val = (r4.1 : Slice Std.U8).val.length := by rw [hi3]; simp
     have hi4v : i4.val = i3.val - ll.val := hi4
@@ -339,7 +356,7 @@ theorem Shared0Slice.serialize_partial {T : Type} (inst : SerializeBytes T)
 
 
 /-- The `<&[T]>::tls_serialize_bytes` of the trait contracts of `T` does not fail. -/
-theorem Shared0Slice.serialize_pf {T : Type} (inst : SerializeBytes T)
+theorem Shared0Slice.serialize_pf {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst s
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -356,25 +373,29 @@ theorem Shared0Slice.serialize_pf {T : Type} (inst : SerializeBytes T)
   all_goals (try (intros; simp [PostCond.ok]; done))
   · rintro c ⟨⟩
     exact ⟨by rw [← List.length_eq_zero_iff]; scalar_tac, rfl⟩
-  · simp only [continue_eq_tryCF] at *
+  · subst_vars
+    simp only [continue_eq_tryCF, tryCF_eq_continue] at *
     subst_vars
     exact ⟨_, _, by simpa using list_cons_get_drop _ ‹_›, ‹_›, (checkedLenAddRes_ok _ _ _ ‹_›).1⟩
-  · intro h; subst h; simp [PostCond.ok]; mvcgen; simp
+  · intro h; subst h; simp [PostCond.ok, RustM.wpDown, WP.wp, PredTrans.apply]
   · exfalso; scalar_tac
-  · simp only [continue_eq_tryCF] at *
+  · subst_vars
+    simp only [continue_eq_tryCF, tryCF_eq_continue] at *
     subst_vars
     have hc := varint.lenOf_char _ _ ‹1 ≤ _ ∧ _›
     simp only [core.result.Result.Ok.injEq, forall_eq, forall_eq'] at *
     obtain ⟨N, hN, hv⟩ := ‹∃ N, _›
     obtain ⟨-, hl⟩ := ‹(_ < _ → _) ∧ (_ ≤ _ → _)›
     have hl := (hl (by omega)).2
-    exact ⟨N, hN, by dsimp +zetaDelta only; scalar_tac⟩
-  · simp only [core.result.Result.Ok.injEq, forall_eq'] at *
+    exact ⟨N, hN, by scalar_tac⟩
+  · subst_vars
+    simp only [core.result.Result.Ok.injEq, forall_eq'] at *
     obtain ⟨n, hn, hl⟩ := ‹∃ n, _›
     exact ⟨_, n, by simpa using list_cons_get_drop _ ‹_›, hn, by simp +zetaDelta [hl]⟩
   · exfalso
     obtain ⟨N, hN, hle⟩ := ‹∃ N, _›
     obtain ⟨n, N', hx, rfl⟩ := hN.head (by scalar_tac)
+    subst_vars
     simp only [core.result.Result.Ok.injEq, forall_eq'] at *
     obtain ⟨n2, hn2, hlen⟩ := ‹∃ n, _›
     obtain rfl := ok.inj (hx.symm.trans hn2)
@@ -385,47 +406,45 @@ theorem Shared0Slice.serialize_pf {T : Type} (inst : SerializeBytes T)
     have hc := varint.lenOf_char _ _ ‹1 ≤ _ ∧ _›
     obtain ⟨-, hl⟩ := ‹(_ < _ → _) ∧ (_ ≤ _ → _)›
     have hl := (hl (by omega)).2
-    dsimp +zetaDelta only at *
     scalar_tac
 
-theorem alloc.vec.Vec.as_slice_ok {T : Type} (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.as_slice_ok {T : Type _} (v : alloc.vec.Vec T) :
     alloc.vec.Vec.as_slice v = ok (v : Slice T) := by
-  obtain ⟨a, ha, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.as_slice_spec v)
+  obtain ⟨a, ha, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.as_slice_spec v)
   rw [ha, hP]
-  rfl
 
 /-- The `Vec<T>` size is the size of its slice. -/
-theorem alloc.vec.Vec.size_eq_slice {T : Type} (S : Size T) (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.size_eq_slice {T : Type _} (S : Size T) (v : alloc.vec.Vec T) :
     alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len S v =
       Shared0Slice.Insts.Tls_codecSize.tls_serialized_len S (v : Slice T) := by
   unfold alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len
   rw [alloc.vec.Vec.as_slice_ok]
-  rfl
+  erw [Aeneas.Std.bind_ok]
 
-theorem Shared0Vec.size_eq_slice {T : Type} (S : Size T) (v : alloc.vec.Vec T) :
+theorem Shared0Vec.size_eq_slice {T : Type _} (S : Size T) (v : alloc.vec.Vec T) :
     Shared0Vec.Insts.Tls_codecSize.tls_serialized_len S v =
       Shared0Slice.Insts.Tls_codecSize.tls_serialized_len S (v : Slice T) := by
   unfold Shared0Vec.Insts.Tls_codecSize.tls_serialized_len
   rw [alloc.vec.Vec.size_eq_slice]
 
 /-- The `&Vec<T>` serializer is the slice serializer of its slice. -/
-theorem Shared0Vec.ser_eq_slice {T : Type} (inst : SerializeBytes T) (v : alloc.vec.Vec T) :
+theorem Shared0Vec.ser_eq_slice {T : Type _} (inst : SerializeBytes T) (v : alloc.vec.Vec T) :
     Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v =
       Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst (v : Slice T) := by
   unfold Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   rw [alloc.vec.Vec.as_slice_ok]
-  erw [bind_tc_ok]
+  erw [Aeneas.Std.bind_ok]
 
 /-- The `Vec<T>` serializer is the slice serializer of its slice. -/
-theorem alloc.vec.Vec.ser_eq_slice {T : Type} (inst : SerializeBytes T) (v : alloc.vec.Vec T) :
+theorem alloc.vec.Vec.ser_eq_slice {T : Type _} (inst : SerializeBytes T) (v : alloc.vec.Vec T) :
     alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v =
       Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst (v : Slice T) := by
   unfold alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   rw [alloc.vec.Vec.as_slice_ok]
-  erw [bind_tc_ok]
+  erw [Aeneas.Std.bind_ok]
 
 /-- The `&Vec<T>` serializer does not fail. -/
-theorem Shared0Vec.serialize_pf {T : Type} (inst : SerializeBytes T)
+theorem Shared0Vec.serialize_pf {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -433,7 +452,7 @@ theorem Shared0Vec.serialize_pf {T : Type} (inst : SerializeBytes T)
   exact Shared0Slice.serialize_pf inst hlaw _
 
 /-- The `Vec<T>` serializer does not fail. -/
-theorem alloc.vec.Vec.serialize_pf {T : Type} (inst : SerializeBytes T)
+theorem alloc.vec.Vec.serialize_pf {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v
     ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -441,7 +460,7 @@ theorem alloc.vec.Vec.serialize_pf {T : Type} (inst : SerializeBytes T)
   exact Shared0Slice.serialize_pf inst hlaw _
 
 /-- The slice serializer meets the trait-level post (partial). -/
-theorem Shared0Slice.trait_fc {T : Type} (inst : SerializeBytes T)
+theorem Shared0Slice.trait_fc {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst s
     ⦃ ⇓? res => ⌜ (SerializeBytes.tls_serialize_bytes.post
@@ -456,7 +475,7 @@ theorem Shared0Slice.trait_fc {T : Type} (inst : SerializeBytes T)
   | Err e => exact SerializeBytes.post_err _ _ _ e
 
 /-- The `&Vec<T>` serializer meets the trait-level post (partial). -/
-theorem Shared0Vec.trait_fc {T : Type} (inst : SerializeBytes T)
+theorem Shared0Vec.trait_fc {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v
     ⦃ ⇓? res => ⌜ (SerializeBytes.tls_serialize_bytes.post
@@ -475,7 +494,7 @@ theorem Shared0Vec.trait_fc {T : Type} (inst : SerializeBytes T)
   | Err e => exact SerializeBytes.post_err _ _ _ e
 
 /-- The `Vec<T>` serializer meets the trait-level post (partial). -/
-theorem alloc.vec.Vec.ser_trait_fc {T : Type} (inst : SerializeBytes T)
+theorem alloc.vec.Vec.ser_trait_fc {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (v : alloc.vec.Vec T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst v
     ⦃ ⇓? res => ⌜ (SerializeBytes.tls_serialize_bytes.post

@@ -99,7 +99,7 @@ theorem de_content {W : Type} (newW : alloc.vec.Vec Std.U8 → RustM W)
     subst hx
     obtain ⟨n, hn, hadv, hd, hle⟩ := hde' val hk
     have hv0 : val.val = 0 := by rw [hz]; rfl
-    have hvv : vec.val = [] := by rw [hvec]; simp [Slice.new]
+    have hvv : vec.val = [] := by rw [hvec]; simp [Slice.new_val]
     obtain ⟨htk, -⟩ := VarintDe.take_enc hd
     have hLv : n = varint.lenOf val.val := by obtain ⟨_, _, _, _, h, -⟩ := hd; exact h
     refine ⟨vec, n, rfl, hn, hadv, hn, by simp [hvv], ?_, ?_⟩
@@ -216,7 +216,7 @@ theorem VLBytes.std_de_ok {R : Type} {RI : alloc.io.read.Read R} {v : R → List
     rw [hk, core.result.Result.Ok.injEq] at hval'
     subst hval'
     have hv0 : val.val = 0 := by rw [hz]; rfl
-    have hvv : vec.val = [] := by rw [hvec]; simp [Slice.new]
+    have hvv : vec.val = [] := by rw [hvec]; simp [Slice.new_val]
     have hxl : x.vec.val = [] := List.eq_nil_of_length_eq_zero (by omega)
     exact ⟨_, rfl, by rw [hvv, hxl]⟩
   · rename_i r1 hde' _ val1 _ hnz rtry htry _ u _ rbb hrbb' _ w _ hk hrc hrbk
@@ -268,7 +268,7 @@ theorem VLBytes.de_runs : DeRuns quic_vec.VLBytes.Insts.Tls_codecDeserialize VLD
   obtain ⟨sz, hsz, hszv⟩ : ∃ sz : Std.Usize,
       quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len x = ok sz ∧
         sz.val = x.vec.val.length + varint.lenOf x.vec.val.length := by
-    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (quic_vec.VLBytes.serialized_len_char x hde.2.1)
     exact ⟨sz, hsz, hP⟩
   exact ⟨n, sz, hn, hadv, hsz, by rw [hszv, hde.2.2.2]; omega, hde⟩
@@ -282,10 +282,10 @@ theorem VLBytes.decodes (x : quic_vec.VLBytes) (hx : x.vec.val.length ≤ 2 ^ 30
   rintro p ⟨hc, y, hp1, hy⟩
   obtain ⟨n, hn, hadv, hl, -, -, hnv⟩ := hc y hp1
   have hyx : y = x := by
-    obtain ⟨⟨yv, yp⟩⟩ := y
-    obtain ⟨⟨xv, xp⟩⟩ := x
+    obtain ⟨yv⟩ := y
+    obtain ⟨xv⟩ := x
     simp only at hy
-    subst hy
+    obtain rfl := (Slice.eq_iff yv xv).mpr hy
     rfl
   subst hyx
   refine ⟨hp1, ?_⟩
@@ -302,10 +302,10 @@ theorem VLBytes.partialEq_lawful : core.cmp.PartialEq.Lawful quic_vec.VLBytes qu
     simp only [decide_eq_true_eq]
     constructor
     · intro h
-      obtain ⟨⟨a, ha⟩⟩ := x
-      obtain ⟨⟨b, hb⟩⟩ := y
+      obtain ⟨a⟩ := x
+      obtain ⟨b⟩ := y
       simp only at h
-      subst h
+      obtain rfl := (Slice.eq_iff a b).mpr h
       rfl
     · intro h
       rw [eq_of_heq h]
@@ -320,16 +320,16 @@ theorem VLBytes.ser_spec {W : Type} (WI : core.io.write.Write W)
     ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.Tls_codecSerialize.tls_serialize WI x w
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize.post WI quic_vec.VLBytes.Insts.Tls_codecSerialize.SizeInst
       quic_vec.VLBytes.Insts.Tls_codecSerialize x w r).holds ⌝ ⦄ := by
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
   refine Serialize.tls_serialize_spec_of_runs' quic_vec.VLBytes.Insts.Tls_codecSerialize x sz hsz
     (VLBytes.out x) (fun _ b hb => ?_) (VLBytes.ser_runs x sz hsz) WI hWI w hpre
   unfold VLBytes.out at hb
   split at hb
   · rename_i hn
     cases hb
-    obtain ⟨r, hr, hrv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLBytes.serialized_len_char x hn)
+    obtain ⟨r, hr, hrv⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLBytes.serialized_len_char x hn)
     rw [hsz] at hr
-    cases hr
+    obtain rfl := RustM.ok_injective hr
     simp [varint.enc_length]
     omega
   · cases hb
@@ -348,7 +348,7 @@ theorem VLBytes.detached_spec (x : quic_vec.VLBytes) :
     ⦃ ⇓ r => ⌜ (Serialize.tls_serialize_detached.post
       quic_vec.VLBytes.Insts.Tls_codecSerialize.SizeInst quic_vec.VLBytes.Insts.Tls_codecSerialize
       x r).holds ⌝ ⦄ := by
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLBytes.size_pos x)
   exact Serialize.tls_serialize_detached.default_spec quic_vec.VLBytes.Insts.Tls_codecSerialize x sz
     hsz (fun w hpre => VLBytes.ser_spec _ StdIo.vec_lawful x w hpre)
 
@@ -365,7 +365,7 @@ theorem VLBytes.exact_spec {T1 : Type} (AI : core.convert.AsRef T1 (Slice Std.U8
 theorem VLBytes.encode_ok (x : quic_vec.VLBytes) (hx : x.vec.val.length ≤ 2 ^ 30 - 1) :
     ∃ bv : alloc.vec.Vec Std.U8, spec.io.encode quic_vec.VLBytes.Insts.Tls_codecSerialize x =
       ok (.Ok bv) ∧ (bv : Slice Std.U8).val = varint.enc x.vec.val.length ++ x.vec.val := by
-  obtain ⟨sz, hsz, hszv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz, hsz, hszv⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLBytes.serialized_len_char x hx)
   have := imax_ge
   have := varint.lenOf_le x.vec.val.length
@@ -377,34 +377,38 @@ theorem VLBytes.encode_ok (x : quic_vec.VLBytes) (hx : x.vec.val.length ≤ 2 ^ 
 
 theorem VLBytes.encode_big (x : quic_vec.VLBytes) (hx : 2 ^ 30 - 1 < x.vec.val.length) :
     ∃ err, spec.io.encode quic_vec.VLBytes.Insts.Tls_codecSerialize x = ok (.Err err) := by
-  obtain ⟨⟨r, w'⟩, hr, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (VLBytes.ser_triple StdIo.vec_law (⟨[], by simp⟩ : alloc.vec.Vec Std.U8) x (fun h => by omega))
+  obtain ⟨⟨r, w'⟩, hr, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (VLBytes.ser_triple StdIo.vec_law (Slice.new Std.U8 : alloc.vec.Vec Std.U8) x (fun h => by omega))
   obtain ⟨e, hre⟩ := (hpost.2 hx).1
-  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok ⟨[], by simp⟩ := rfl
+  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok (Slice.new _) := by
+    simp [CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty, Aeneas.Std.bind_ok,
+      Aeneas.Std.bind_tc_ok]
   unfold spec.io.encode
   rw [hnew]
-  simp only [bind_tc_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   rw [hr]
-  simp only [bind_tc_ok]
+  simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   simp only at hre
   subst hre
-  exact ⟨_, rfl⟩
+  exact ⟨e, by simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+    core.convert.From.Blanket, core.convert.From.Blanket.from, Aeneas.Std.bind_ok]⟩
 
 /-! #### Lemma traits when `encode` fails -/
 
-theorem spec.io.RoundTripStd.round_trip_std.pre_err {T R : Type} (RT : spec.io.RoundTripStd T)
+theorem spec.io.RoundTripStd.round_trip_std.pre_err {T : Type _} {R : Type} (RT : spec.io.RoundTripStd T)
     (RI : alloc.io.read.Read R) (x : T) (reader : R) (rest : Slice Std.U8) (e : Error)
     (henc : spec.io.encode RT.SerializeInst x = ok (.Err e))
     (h : (spec.io.RoundTripStd.round_trip_std.pre RI RT.SerializeInst RT.DeserializeInst
       RT.corecmpPartialEqInst RT x reader rest).holds) : False := by
   apply holds_imp' h
   have he' : ⦃ ⌜ True ⌝ ⦄ spec.io.encode RT.SerializeInst x ⦃ ⇓? r => ⌜ r = .Err e ⌝ ⦄ :=
-    partial_triple_of_ok fun r hr => by rw [henc] at hr; cases hr; rfl
+    partial_triple_of_ok fun r hr => by rw [henc] at hr; obtain rfl := RustM.ok_injective hr; rfl
   unfold spec.io.RoundTripStd.round_trip_std.pre
   mvcgen [he', core.result.Result.is_ok_and]
   intro hh; cases hh
 
-theorem spec.io.RoundTripStd.round_trip_exact_err {T : Type} (RT : spec.io.RoundTripStd T) (x : T)
+theorem spec.io.RoundTripStd.round_trip_exact_err {T : Type _} (RT : spec.io.RoundTripStd T) (x : T)
     (e : Error) (henc : spec.io.encode RT.SerializeInst x = ok (.Err e)) :
     ⦃ ⌜ True ⌝ ⦄ spec.io.RoundTripStd.round_trip_exact.default x
     ⦃ ⇓ r => ⌜ (spec.io.RoundTripStd.round_trip_exact.post RT.SerializeInst RT.DeserializeInst
@@ -415,7 +419,7 @@ theorem spec.io.RoundTripStd.round_trip_exact_err {T : Type} (RT : spec.io.Round
     RustM.holds]
   mvcgen
 
-theorem spec.io.NonEmptyStd.nonempty_std_err {T : Type} (NE : spec.io.NonEmptyStd T) (x : T)
+theorem spec.io.NonEmptyStd.nonempty_std_err {T : Type _} (NE : spec.io.NonEmptyStd T) (x : T)
     (e : Error) (henc : spec.io.encode NE.RoundTripStdInst.SerializeInst x = ok (.Err e)) :
     ⦃ ⌜ True ⌝ ⦄ spec.io.NonEmptyStd.nonempty_std.default x
     ⦃ ⇓ r => ⌜ (spec.io.NonEmptyStd.nonempty_std.post NE.RoundTripStdInst NE x r).holds ⌝ ⦄ := by
@@ -424,7 +428,7 @@ theorem spec.io.NonEmptyStd.nonempty_std_err {T : Type} (NE : spec.io.NonEmptySt
   simp only [spec.io.NonEmptyStd.nonempty_std.post, henc, core.result.Result.is_err, RustM.holds]
   mvcgen
 
-theorem spec.io.SameBytes.same_bytes_err {T : Type} (SB : spec.io.SameBytes T) (x : T)
+theorem spec.io.SameBytes.same_bytes_err {T : Type _} (SB : spec.io.SameBytes T) (x : T)
     (e e' : Error) (henc : spec.io.encode SB.SerializeInst x = ok (.Err e))
     (hbytes : SB.SerializeBytesInst.tls_serialize_bytes x = ok (.Err e')) :
     ⦃ ⌜ True ⌝ ⦄ spec.io.SameBytes.same_bytes.default x
@@ -494,14 +498,14 @@ theorem VLBytes.same_bytes (x : quic_vec.VLBytes) :
       quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.SerializeInst
       quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.SerializeBytesInst
       quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes x r).holds ⌝ ⦄ := by
-  obtain ⟨_, hb, hch⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (quic_vec.VLBytes.serialize_char x)
+  obtain ⟨_, hb, hch⟩ := Aeneas.Std.triple_iff_exists_ok.mp (quic_vec.VLBytes.serialize_char x)
   by_cases hx : x.vec.val.length ≤ 2 ^ 30 - 1
   · obtain ⟨bv, he, hbv⟩ := VLBytes.encode_ok x hx
     obtain ⟨bv', rfl, -⟩ := hch.1 hx
-    obtain ⟨_, hb2, hcont⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨_, hb2, hcont⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (quic_vec.VLBytes.serialize_content x)
     rw [hb] at hb2
-    cases hb2
+    obtain rfl := RustM.ok_injective hb2
     obtain ⟨-, hm⟩ := hcont bv' rfl
     refine spec.io.SameBytes.same_bytes_of _ x bv bv' he hb ?_
     rw [hbv]

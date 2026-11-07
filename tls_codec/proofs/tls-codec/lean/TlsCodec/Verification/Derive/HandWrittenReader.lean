@@ -20,7 +20,7 @@ open tls_codec
 
 /-- The bytes post of a run of a `std` deserializer on a slice reader: on `Ok val`, the reader left
 is `bytes` without the `sz` bytes consumed, `sz` the size of `val`. -/
-theorem debytes_reader_post_ok {T : Type} (SizeInst : Size T) (DB : DeserializeBytes T)
+theorem debytes_reader_post_ok {T : Type _} (SizeInst : Size T) (DB : DeserializeBytes T)
     (bytes : Slice Std.U8) (val : T) (n : Nat) (sz : Std.Usize) (hn : n ≤ bytes.val.length)
     (hsz : SizeInst.tls_serialized_len val = ok sz) (hszn : sz.val = n) :
     (DeserializeBytes.tls_deserialize_bytes.post SizeInst DB bytes

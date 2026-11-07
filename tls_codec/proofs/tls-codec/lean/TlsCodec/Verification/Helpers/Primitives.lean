@@ -19,7 +19,7 @@ namespace tls_codec
 /-! ### `Option<u16>` -/
 
 /-- `Box<[T]>::into_vec`: the identity on the contents. -/
-theorem alloc.slice.Slice.into_vec_spec {T : Type} (s : Slice T) :
+theorem alloc.slice.Slice.into_vec_spec {T : Type _} (s : Slice T) :
     ⦃ ⌜ True ⌝ ⦄ alloc.slice.Slice.into_vec s ⦃ ⇓ r => ⌜ (r : Slice T) = s ⌝ ⦄ := by
   unfold alloc.slice.Slice.into_vec alloc.slice.Dummy.into_vec
     rust_primitives.sequence.seq_from_boxed_slice alloc.vec.from_seq
@@ -40,7 +40,6 @@ theorem Option_U16_serialize_char (o : core.option.Option Std.U16) :
       alloc.slice.Slice.into_vec_spec]
     refine ⟨_, rfl, ?_⟩
     simp_all [Std.Array.to_slice]
-    rfl
   | some x =>
     mvcgen [core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes,
       U16.Insts.Tls_codecSize.tls_serialized_len, core.mem.size_of_U16, checked_alloc_len,
@@ -63,8 +62,8 @@ theorem Option_U16_serialize_char (o : core.option.Option Std.U16) :
       rw [continue_eq_tryCF, core.result.Result.Ok.injEq] at hcf1
       subst hcf1
       subst hv0
-      refine ⟨⟨comb, hlen⟩, rfl, ?_⟩
-      show comb = _
+      refine ⟨Slice.from comb hlen, rfl, ?_⟩
+      rw [Slice.from_val]
       simp only [comb, hv1, hv]
       rfl
     · rename_i sat hsat hle cf val hx hcf v0 hv0 v1 hv1 res hres cf1 val1 hx1 hcf1 comb hlen
@@ -76,7 +75,7 @@ theorem Option_U16_serialize_char (o : core.option.Option Std.U16) :
         rw [hv]; simpa using (Aeneas.Std.core.num.U16.to_be_bytes x).property
       exfalso; apply hlen
       simp only [comb, hv1, List.length_append, h2]
-      simp [Slice.new]
+      simp [Slice.new_val]
       scalar_tac
     · rename_i sat hsat hle cf val hx hcf v0 hv0 v1 hv1 res hres cf1 resid hx1
       obtain ⟨v, rfl, hv⟩ := hres
@@ -97,7 +96,7 @@ theorem U8_to_be_bytes_val (x : Std.U8) : (Aeneas.Std.core.num.U8.to_be_bytes x)
 theorem U8_from_be_bytes_of_val (a : Aeneas.Std.Array Std.U8 1#usize) (b : Std.U8)
     (h : a.val = [b]) : Aeneas.Std.core.num.U8.from_be_bytes a = b := by
   have h1 := U8_to_be_bytes_from_be_bytes a
-  have h2 := congrArg Subtype.val h1
+  have h2 := congrArg (·.val) h1
   rw [U8_to_be_bytes_val, h] at h2
   exact List.singleton_inj.mp h2
 
@@ -247,7 +246,7 @@ theorem mapM_clone_U8 (l : List Std.U8) :
   | nil => rfl
   | cons x xs ih =>
     rw [List.mapM_cons, ih]
-    rfl
+    simp [core.U8.Insts.CoreCloneClone.clone]
 
 /-- `dest.copy_from_slice(src)` on `u8`: if it returns, the lengths agree and the result is `src`.
 Partial: it panics when the lengths differ. -/
@@ -261,17 +260,17 @@ theorem core.slice.Slice.copy_from_slice_U8_spec (s src : Slice Std.U8) :
   · rename_i hlen
     split at hr
     · rename_i cloned hcl
-      rw [mapM_clone_U8] at hcl
+      rw [mapM_clone_U8, RustM.match.ok] at hcl
       have : src.val = cloned := by injection hcl
-      cases hr
-      exact ⟨hlen, this.symm⟩
+      obtain rfl := RustM.ok_injective hr
+      exact ⟨hlen, by simp [this]⟩
     · rename_i e hcl
-      rw [mapM_clone_U8] at hcl
+      rw [mapM_clone_U8, RustM.match.ok] at hcl
       cases hcl
     · rename_i hcl
-      rw [mapM_clone_U8] at hcl
+      rw [mapM_clone_U8, RustM.match.ok] at hcl
       cases hcl
-  · cases hr
+  · simp at hr
 
 /-- Total version of `copy_from_slice_U8_spec`: with equal lengths, the call does not panic.
 Not tagged `@[spec]` (extra hypothesis). -/
@@ -283,15 +282,16 @@ theorem core.slice.Slice.copy_from_slice_U8_total (s src : Slice Std.U8)
   rw [if_pos h]
   split
   · rename_i cloned hcl
-    rw [mapM_clone_U8] at hcl
+    rw [mapM_clone_U8, RustM.match.ok] at hcl
     have : src.val = cloned := by injection hcl
     apply RustM.ok_spec
-    exact this.symm
+    subst this
+    simp [Aeneas.Std.PostCond.ok]
   · rename_i e hcl
-    rw [mapM_clone_U8] at hcl
+    rw [mapM_clone_U8, RustM.match.ok] at hcl
     cases hcl
   · rename_i hcl
-    rw [mapM_clone_U8] at hcl
+    rw [mapM_clone_U8, RustM.match.ok] at hcl
     cases hcl
 
 /-- `size_of::<usize>()` returns `numBits / 8`. -/

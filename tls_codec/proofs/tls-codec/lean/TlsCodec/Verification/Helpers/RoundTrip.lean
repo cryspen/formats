@@ -3,8 +3,7 @@ concatenated encodings of known elements.
 
 Obligations: none directly; the `RoundTrip` FC
 halves of `FunctionalCorrectness.lean` use them.
-Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U8`; `native_decide`
-(1). -/
+Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U8`. -/
 import Aeneas
 import CoreModels
 import Hax
@@ -23,7 +22,7 @@ namespace tls_codec
 
 /-- `NonEmpty::nonempty`, FC: the post reads the serializer's output, so it follows from every `Ok`
 output of the (total) serializer being non-empty. -/
-theorem spec.NonEmpty.nonempty.default_fc {Self : Type} (RT : spec.RoundTrip Self)
+theorem spec.NonEmpty.nonempty.default_fc {Self : Type _} (RT : spec.RoundTrip Self)
     (NE : spec.NonEmpty Self) (x : Self)
     (hpf : ⦃ ⌜ True ⌝ ⦄ RT.SerializeBytesInst.tls_serialize_bytes x ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (h : ⦃ ⌜ True ⌝ ⦄ RT.SerializeBytesInst.tls_serialize_bytes x
@@ -41,7 +40,7 @@ theorem spec.NonEmpty.nonempty.default_fc {Self : Type} (RT : spec.RoundTrip Sel
 
 /-- `NonEmpty::nonempty`, FC, when the size is positive: an `Ok` output has the (positive) size
 as length (`hpf`, `hfc`: the serializer's PF and trait-level post). -/
-theorem spec.NonEmpty.nonempty.default_fc_size {Self : Type} (RT : spec.RoundTrip Self)
+theorem spec.NonEmpty.nonempty.default_fc_size {Self : Type _} (RT : spec.RoundTrip Self)
     (NE : spec.NonEmpty Self) (x : Self)
     (hpf : ⦃ ⌜ True ⌝ ⦄ RT.SerializeBytesInst.tls_serialize_bytes x ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (hfc : ⦃ ⌜ True ⌝ ⦄ RT.SerializeBytesInst.tls_serialize_bytes x
@@ -55,19 +54,19 @@ theorem spec.NonEmpty.nonempty.default_fc_size {Self : Type} (RT : spec.RoundTri
     (partial_triple_post_mono hfc fun r hp v hv => ?_)
   subst hv
   obtain ⟨n, hn, hl⟩ := SerializeBytes.post_ok_elim _ _ _ _ hp
-  obtain ⟨m, hm, hpos⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp hsize
+  obtain ⟨m, hm, hpos⟩ := Aeneas.Std.triple_iff_exists_ok.mp hsize
   obtain rfl := ok.inj (hn.symm.trans hm)
   exact hl ▸ hpos
 
 /-- The serializer's `Ok` output of an element of a `NonEmpty.Lawful` type is non-empty. -/
-theorem spec.NonEmpty.Lawful.ser_pos {T : Type} {NE : spec.NonEmpty T}
+theorem spec.NonEmpty.Lawful.ser_pos {T : Type _} {NE : spec.NonEmpty T}
     (hl : spec.NonEmpty.Lawful T NE) (x : T) (b : alloc.vec.Vec Std.U8)
     (hb : NE.RoundTripInst.SerializeBytesInst.tls_serialize_bytes x = ok (.Ok b)) :
     0 < b.val.length := by
-  obtain ⟨u, hu, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨u, hu, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hl.nonempty_spec x (pre_holds_of_ok_true rfl))
   have hlen : alloc.vec.Vec.len b = ok (Slice.len (b : Slice Std.U8)) := by
-    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec b)
+    obtain ⟨l, hl, hl'⟩ := Aeneas.Std.triple_iff_exists_ok.mp (alloc.vec.Vec.len_spec b)
     rw [hl, hl']
   unfold spec.NonEmpty.nonempty.post at hP
   rw [hb] at hP
@@ -80,7 +79,7 @@ theorem spec.NonEmpty.Lawful.ser_pos {T : Type} {NE : spec.NonEmpty T}
 /-- The serializer of a `NonEmpty.Lawful` type, as a content function `enc` with a property `P`
 ("serializes to `Ok`"): `enc x` is the `Ok` output (`hs`, the form `Vec.serialize_content_all`
 takes), and `P x` gives a non-empty `Ok` output `enc x`. -/
-theorem spec.NonEmpty.Lawful.ser_enc {T : Type} {NE : spec.NonEmpty T}
+theorem spec.NonEmpty.Lawful.ser_enc {T : Type _} {NE : spec.NonEmpty T}
     (hl : spec.NonEmpty.Lawful T NE) :
     ∃ (enc : T → List Std.U8) (P : T → Prop),
       (∀ x, ⦃ ⌜ True ⌝ ⦄ NE.RoundTripInst.SerializeBytesInst.tls_serialize_bytes x
@@ -112,7 +111,7 @@ theorem spec.NonEmpty.Lawful.ser_enc {T : Type} {NE : spec.NonEmpty T}
 
 /-- One step of the `Vec<T>` deserialize loop on the encodings of `xs` followed by `w`: stop when
 `xs` is empty, else read the head (`hd`: `T`'s deserializer on its encoding followed by anything). -/
-theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8) (xs : List T)
     (hd : ∀ x ∈ xs, ∀ (t : Slice Std.U8) (w : List Std.U8), t.val = enc x ++ w →
       ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes t
@@ -142,9 +141,10 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
     have hdx := hd x (by simp) remainder (ys.flatMap enc ++ w) (by simpa using hr)
     mvcgen [alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop.body, hdx,
       core.convert.Into.Blanket.into]
+    -- tags repeat (nested runs): each `case` takes the first remaining match, in program order
     case vc1.h => rename_i hlt _ _ _ _ _ _ _ _ _ _; scalar_tac
-    case vc2.h => exact toStr_utf8 _ _
-    case vc3 =>
+    case vc1.h => exact toStr_utf8 _ _
+    case vc1.hQ =>
       rename_i hlt r p hx' hex i hi i1 hi1 c hc hle res hz hpush str hstr
       obtain ⟨q, hq, hqx, hqw⟩ := hex
       obtain rfl := core.result.Result.Ok.inj hq
@@ -157,7 +157,7 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
       exfalso
       simp only [hr, hqw, List.flatMap_cons, List.length_append] at l1 l2
       omega
-    case vc4.hQ =>
+    case vc1.hQ =>
       rename_i hlt r p hx' hex i hi i1 hi1 c hc hle res hnz hpush rd hrd
       obtain ⟨q, hq, hqx, hqw⟩ := hex
       obtain rfl := core.result.Result.Ok.inj hq
@@ -172,7 +172,7 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
       · omega
       · rw [hpush]; simp; omega
       · simp only [hr, hqw, List.flatMap_cons, List.length_append]; omega
-    case vc5.h_fail =>
+    case vc2.h_fail =>
       exfalso
       rename_i hlt r p hx' hex i hi i1 hi1 c hc hle res hnz hpush hbig
       obtain ⟨q, hq, hqx, hqw⟩ := hex
@@ -183,7 +183,7 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
       subst hi hi1
       simp only [hr, hqw, List.flatMap_cons, List.length_append] at l1 l2 hlen hc
       scalar_tac
-    case vc6.h_fail =>
+    case vc2.h_fail =>
       exfalso
       rename_i hlt r p hx' hex i hi i1 hi1 hlt2
       obtain ⟨q, hq, hqx, hqw⟩ := hex
@@ -194,11 +194,11 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
       subst hi hi1
       simp only [hr, hqw, List.flatMap_cons, List.length_append] at l1 l2 hlt2
       omega
-    case vc7 =>
+    case vc2 =>
       rename_i hlt r e hx' hex
       obtain ⟨q, hq, _⟩ := hex
       cases hq
-    case vc8.hQ =>
+    case vc3.hQ =>
       rename_i hnlt
       exfalso
       simp only [List.flatMap_cons, List.length_append] at hlen
@@ -207,7 +207,7 @@ theorem alloc.vec.Vec.deserialize_loop_body_rt {T : Type} (inst : DeserializeByt
 
 /-- The `Vec<T>` deserialize loop on the encodings of `xs` followed by `w` (all non-empty): reads
 exactly `xs`, leaves `w`, stops with no failure once `read` reaches `length`. -/
-theorem alloc.vec.Vec.deserialize_loop_rt {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_loop_rt {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8) (xs : List T)
     (hd : ∀ x ∈ xs, ∀ (t : Slice Std.U8) (w : List Std.U8), t.val = enc x ++ w →
       ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes t
@@ -229,7 +229,7 @@ theorem alloc.vec.Vec.deserialize_loop_rt {T : Type} (inst : DeserializeBytes T)
       p.2.1.val = result.val ++ zs ∧ p.2.2.val + (ys.flatMap enc).length = length.val ∧
       p.2.1.val.length ≤ p.2.2.val)
   · rintro ⟨rem, res, rd⟩ ⟨zs, ys, hxs, hys, h1, h2, h3, h4⟩
-    obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (alloc.vec.Vec.deserialize_loop_body_rt inst enc ys (fun x hx => hd x (hxs ▸ List.mem_append_right _ hx)) hys w length rem res rd h1 h4 h3)
     dsimp only
     rw [hv]
@@ -249,7 +249,7 @@ theorem alloc.vec.Vec.deserialize_loop_rt {T : Type} (inst : DeserializeBytes T)
 
 /-- `Vec<T>::tls_deserialize_bytes` on the length prefix, the (non-empty) encodings of `xs` and `w`:
 returns `xs` and `w`. -/
-theorem alloc.vec.Vec.deserialize_rt {T : Type} (inst : DeserializeBytes T)
+theorem alloc.vec.Vec.deserialize_rt {T : Type _} (inst : DeserializeBytes T)
     (enc : T → List Std.U8) (xs : List T)
     (hd : ∀ x ∈ xs, ∀ (t : Slice Std.U8) (w : List Std.U8), t.val = enc x ++ w →
       ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes t
@@ -264,7 +264,7 @@ theorem alloc.vec.Vec.deserialize_rt {T : Type} (inst : DeserializeBytes T)
       (ht : t.val = xs.flatMap enc ++ w) (hres : result.val.length ≤ read.val)
       (hlen : read.val + (xs.flatMap enc).length = length.val) =>
     alloc.vec.Vec.deserialize_loop_rt inst enc xs hd hne w length t result read ht hres hlen
-  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨r0, hr0, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.ContentLength.deserialize_content_ok bytes)
   obtain ⟨p, rfl⟩ := hP.2 ⟨_, _, hn, by rw [hb, List.append_assoc]⟩
   obtain ⟨hpn, hpb⟩ := hP.1 p.1 p.2 rfl
@@ -279,7 +279,9 @@ theorem alloc.vec.Vec.deserialize_rt {T : Type} (inst : DeserializeBytes T)
   try_vcs
   all_goals (try simp only [continue_eq_tryCF] at *)
   case vc1 =>
-    rename_i _ q _ tf htf _ val _ hval0 v hv hqp htfv
+    rename_i cf hqp q hx tf htf cf2 htfv val hx2 hval0 v hv
+    subst hx hx2
+    simp only [continue_eq_tryCF] at hqp htfv
     obtain rfl := core.result.Result.Ok.inj hqp
     have hv0 := htf.1 val htfv
     have hnil : xs.flatMap enc = [] := by
@@ -291,35 +293,41 @@ theorem alloc.vec.Vec.deserialize_rt {T : Type} (inst : DeserializeBytes T)
     subst hxs
     exact ⟨_, rfl, by rw [hv]; rfl, by simpa using hp2⟩
   case vc2.ht =>
-    rename_i _ q _ tf htf _ val _ hval0 v hv hqp htfv
+    rename_i cf hqp q hx tf htf cf2 htfv val hx2 hval0 v hv
+    subst hx hx2
+    simp only [continue_eq_tryCF] at hqp htfv
     obtain rfl := core.result.Result.Ok.inj hqp
     exact hp2
   case vc3.hres =>
-    rename_i _ q _ tf htf _ val _ hval0 v hv hqp htfv
-    rw [hv]; simp [Slice.new]
+    rename_i _ _ _ _ _ _ _ _ _ _ hval0 v hv
+    rw [hv]; simp [Slice.new_val]
   case vc4.hlen =>
-    rename_i _ q _ tf htf _ val _ hval0 v hv hqp htfv
+    rename_i cf hqp q hx tf htf cf2 htfv val hx2 hval0 v hv
+    subst hx hx2
+    simp only [continue_eq_tryCF] at hqp htfv
     obtain rfl := core.result.Result.Ok.inj hqp
     have hv0 := htf.1 val htfv
     simp [hpl, hv0]
-  case vc5 =>
+  case vc1.hQ =>
     exfalso
-    rename_i hne' hpost _ _ _ _ _ _ hqp htfv
+    rename_i hne' hpost _ _ _ _ _ _
     have := UScalar.eq_of_val_eq hpost.2.2.2
     simp [this] at hne'
   case vc6 =>
-    rename_i v hv lr hnone hne' hpost hqp htfv
+    rename_i v hv lr hnone hne' hpost
     refine ⟨_, rfl, ?_, hpost.2.1⟩
-    simpa [hv, Slice.new] using hpost.2.2.1
+    simpa [hv, Slice.new_val] using hpost.2.2.1
   case vc7 =>
     exfalso
-    rename_i v hv lr e hsome hpost hqp htfv
+    rename_i v hv lr e hsome hpost
     have := hpost.1
     rw [hsome] at this
     cases this
-  case vc1.vc8 =>
+  case vc1.vc8.h =>
     exfalso
-    rename_i htf _ _ _ _ htfe hqp
+    rename_i cf hqp q hx tf htf cf2 hcf2 resid hx2 e htfe
+    subst hx
+    simp only [continue_eq_tryCF] at hqp
     obtain rfl := core.result.Result.Ok.inj hqp
     obtain ⟨y, hy⟩ := htf.2 (by omega)
     rw [htfe] at hy

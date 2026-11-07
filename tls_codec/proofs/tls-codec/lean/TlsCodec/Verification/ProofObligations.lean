@@ -36,7 +36,7 @@ set_option mvcgen.warning false
 /-- Total correctness = termination without exception (`⇓ _ => True`) plus partial
 correctness (`⇓?`). Holds in any `WPMonad`, by conjunctivity of `wp`. -/
 theorem triple_of_panic_freedom_of_functional_correctness
-    {m : Type → Type} {ps : PostShape} [Monad m] [WPMonad m ps] {α : Type}
+    {m : Type _ → Type _} {ps : PostShape} [Monad m] [WPMonad m ps] {α : Type _}
     {x : m α} {P : Assertion ps} {Q : α → Assertion ps}
     (hpf : ⦃ P ⦄ x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (hfc : ⦃ P ⦄ x ⦃ ⇓? r => Q r ⦄) :
     ⦃ P ⦄ x ⦃ ⇓ r => Q r ⦄ :=
@@ -46,7 +46,7 @@ theorem triple_of_panic_freedom_of_functional_correctness
 
 /-- A post that always holds: panic freedom alone gives the total triple. -/
 theorem triple_of_panic_freedom_of_post_holds
-    {α : Type} {x : RustM α} {Q : α → Prop}
+    {α : Type _} {x : RustM α} {Q : α → Prop}
     (hpf : ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓ _ => ⌜ True ⌝ ⦄) (hQ : ∀ r, Q r) :
     ⦃ ⌜ True ⌝ ⦄ x ⦃ ⇓ r => ⌜ Q r ⌝ ⦄ :=
   Triple.of_entails_right _ hpf
@@ -616,63 +616,65 @@ theorem U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.proof
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.new.spec.proof {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU8.new.spec.proof {T : Type _} (vec : alloc.vec.Vec T) :
   tls_vec.TlsVecU8.new.spec vec
   := by
   unfold tls_vec.TlsVecU8.new.spec
   pf_fc_combine tls_vec.TlsVecU8.new.spec.panic_freedom tls_vec.TlsVecU8.new.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.len.spec.proof {T : Type} (self : tls_vec.TlsVecU8 T)
-  : tls_vec.TlsVecU8.len.spec self
+theorem tls_vec.TlsVecU8.len.spec.proof {T : Type _}
+  (self : tls_vec.TlsVecU8 T) : tls_vec.TlsVecU8.len.spec self
   := by
   unfold tls_vec.TlsVecU8.len.spec
   pf_fc_combine tls_vec.TlsVecU8.len.spec.panic_freedom tls_vec.TlsVecU8.len.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.is_empty.spec.proof {T : Type}
+theorem tls_vec.TlsVecU8.is_empty.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU8 T) : tls_vec.TlsVecU8.is_empty.spec self
   := by
   unfold tls_vec.TlsVecU8.is_empty.spec
   pf_fc_combine tls_vec.TlsVecU8.is_empty.spec.panic_freedom tls_vec.TlsVecU8.is_empty.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.into_vec.spec.proof {T : Type}
+theorem tls_vec.TlsVecU8.into_vec.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU8 T) : tls_vec.TlsVecU8.into_vec.spec self
   := by
   unfold tls_vec.TlsVecU8.into_vec.spec
   pf_fc_combine tls_vec.TlsVecU8.into_vec.spec.panic_freedom tls_vec.TlsVecU8.into_vec.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.push.spec.proof {T : Type} (self : tls_vec.TlsVecU8 T)
-  (value : T) : tls_vec.TlsVecU8.push.spec self value
+theorem tls_vec.TlsVecU8.push.spec.proof {T : Type _}
+  (self : tls_vec.TlsVecU8 T) (value : T) :
+  tls_vec.TlsVecU8.push.spec self value
   := by
   unfold tls_vec.TlsVecU8.push.spec
   pf_fc_combine tls_vec.TlsVecU8.push.spec.panic_freedom tls_vec.TlsVecU8.push.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.pop.spec.proof {T : Type} (self : tls_vec.TlsVecU8 T)
-  : tls_vec.TlsVecU8.pop.spec self
+theorem tls_vec.TlsVecU8.pop.spec.proof {T : Type _}
+  (self : tls_vec.TlsVecU8 T) : tls_vec.TlsVecU8.pop.spec self
   := by
   unfold tls_vec.TlsVecU8.pop.spec
   pf_fc_combine tls_vec.TlsVecU8.pop.spec.panic_freedom tls_vec.TlsVecU8.pop.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.remove.spec.proof {T : Type}
+theorem tls_vec.TlsVecU8.remove.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU8 T) (index : Std.Usize) :
   tls_vec.TlsVecU8.remove.spec self index
   := by
   unfold tls_vec.TlsVecU8.remove.spec
   pf_fc_combine tls_vec.TlsVecU8.remove.spec.panic_freedom tls_vec.TlsVecU8.remove.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.get.spec.proof {T : Type} (self : tls_vec.TlsVecU8 T)
-  (index : Std.Usize) : tls_vec.TlsVecU8.get.spec self index
+theorem tls_vec.TlsVecU8.get.spec.proof {T : Type _}
+  (self : tls_vec.TlsVecU8 T) (index : Std.Usize) :
+  tls_vec.TlsVecU8.get.spec self index
   := by
   unfold tls_vec.TlsVecU8.get.spec
   pf_fc_combine tls_vec.TlsVecU8.get.spec.panic_freedom tls_vec.TlsVecU8.get.spec.functional_correctness
 
-theorem tls_vec.TlsVecU8.len_len.spec.proof (T : Type) :
+theorem tls_vec.TlsVecU8.len_len.spec.proof (T : Type _) :
   tls_vec.TlsVecU8.len_len.spec T
   := by
   unfold tls_vec.TlsVecU8.len_len.spec
   pf_fc_combine tls_vec.TlsVecU8.len_len.spec.panic_freedom tls_vec.TlsVecU8.len_len.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type}
+  tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec self i
   := by
@@ -681,71 +683,71 @@ theorem
 
 theorem
   tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
+   {T : Type _} (self : tls_vec.TlsVecU8 T) (i : Std.Usize) :
   tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec self i
   := by
   unfold tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
   pf_fc_combine tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.new.spec.proof {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU16.new.spec.proof {T : Type _} (vec : alloc.vec.Vec T) :
   tls_vec.TlsVecU16.new.spec vec
   := by
   unfold tls_vec.TlsVecU16.new.spec
   pf_fc_combine tls_vec.TlsVecU16.new.spec.panic_freedom tls_vec.TlsVecU16.new.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.len.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.len.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) : tls_vec.TlsVecU16.len.spec self
   := by
   unfold tls_vec.TlsVecU16.len.spec
   pf_fc_combine tls_vec.TlsVecU16.len.spec.panic_freedom tls_vec.TlsVecU16.len.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.is_empty.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.is_empty.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) : tls_vec.TlsVecU16.is_empty.spec self
   := by
   unfold tls_vec.TlsVecU16.is_empty.spec
   pf_fc_combine tls_vec.TlsVecU16.is_empty.spec.panic_freedom tls_vec.TlsVecU16.is_empty.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.into_vec.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.into_vec.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) : tls_vec.TlsVecU16.into_vec.spec self
   := by
   unfold tls_vec.TlsVecU16.into_vec.spec
   pf_fc_combine tls_vec.TlsVecU16.into_vec.spec.panic_freedom tls_vec.TlsVecU16.into_vec.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.push.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.push.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) (value : T) :
   tls_vec.TlsVecU16.push.spec self value
   := by
   unfold tls_vec.TlsVecU16.push.spec
   pf_fc_combine tls_vec.TlsVecU16.push.spec.panic_freedom tls_vec.TlsVecU16.push.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.pop.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.pop.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) : tls_vec.TlsVecU16.pop.spec self
   := by
   unfold tls_vec.TlsVecU16.pop.spec
   pf_fc_combine tls_vec.TlsVecU16.pop.spec.panic_freedom tls_vec.TlsVecU16.pop.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.remove.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.remove.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) (index : Std.Usize) :
   tls_vec.TlsVecU16.remove.spec self index
   := by
   unfold tls_vec.TlsVecU16.remove.spec
   pf_fc_combine tls_vec.TlsVecU16.remove.spec.panic_freedom tls_vec.TlsVecU16.remove.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.get.spec.proof {T : Type}
+theorem tls_vec.TlsVecU16.get.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) (index : Std.Usize) :
   tls_vec.TlsVecU16.get.spec self index
   := by
   unfold tls_vec.TlsVecU16.get.spec
   pf_fc_combine tls_vec.TlsVecU16.get.spec.panic_freedom tls_vec.TlsVecU16.get.spec.functional_correctness
 
-theorem tls_vec.TlsVecU16.len_len.spec.proof (T : Type) :
+theorem tls_vec.TlsVecU16.len_len.spec.proof (T : Type _) :
   tls_vec.TlsVecU16.len_len.spec T
   := by
   unfold tls_vec.TlsVecU16.len_len.spec
   pf_fc_combine tls_vec.TlsVecU16.len_len.spec.panic_freedom tls_vec.TlsVecU16.len_len.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type}
+  tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec self i
   := by
@@ -754,71 +756,71 @@ theorem
 
 theorem
   tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
+   {T : Type _} (self : tls_vec.TlsVecU16 T) (i : Std.Usize) :
   tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec self i
   := by
   unfold tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
   pf_fc_combine tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.new.spec.proof {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU24.new.spec.proof {T : Type _} (vec : alloc.vec.Vec T) :
   tls_vec.TlsVecU24.new.spec vec
   := by
   unfold tls_vec.TlsVecU24.new.spec
   pf_fc_combine tls_vec.TlsVecU24.new.spec.panic_freedom tls_vec.TlsVecU24.new.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.len.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.len.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) : tls_vec.TlsVecU24.len.spec self
   := by
   unfold tls_vec.TlsVecU24.len.spec
   pf_fc_combine tls_vec.TlsVecU24.len.spec.panic_freedom tls_vec.TlsVecU24.len.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.is_empty.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.is_empty.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) : tls_vec.TlsVecU24.is_empty.spec self
   := by
   unfold tls_vec.TlsVecU24.is_empty.spec
   pf_fc_combine tls_vec.TlsVecU24.is_empty.spec.panic_freedom tls_vec.TlsVecU24.is_empty.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.into_vec.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.into_vec.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) : tls_vec.TlsVecU24.into_vec.spec self
   := by
   unfold tls_vec.TlsVecU24.into_vec.spec
   pf_fc_combine tls_vec.TlsVecU24.into_vec.spec.panic_freedom tls_vec.TlsVecU24.into_vec.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.push.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.push.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) (value : T) :
   tls_vec.TlsVecU24.push.spec self value
   := by
   unfold tls_vec.TlsVecU24.push.spec
   pf_fc_combine tls_vec.TlsVecU24.push.spec.panic_freedom tls_vec.TlsVecU24.push.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.pop.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.pop.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) : tls_vec.TlsVecU24.pop.spec self
   := by
   unfold tls_vec.TlsVecU24.pop.spec
   pf_fc_combine tls_vec.TlsVecU24.pop.spec.panic_freedom tls_vec.TlsVecU24.pop.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.remove.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.remove.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) (index : Std.Usize) :
   tls_vec.TlsVecU24.remove.spec self index
   := by
   unfold tls_vec.TlsVecU24.remove.spec
   pf_fc_combine tls_vec.TlsVecU24.remove.spec.panic_freedom tls_vec.TlsVecU24.remove.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.get.spec.proof {T : Type}
+theorem tls_vec.TlsVecU24.get.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) (index : Std.Usize) :
   tls_vec.TlsVecU24.get.spec self index
   := by
   unfold tls_vec.TlsVecU24.get.spec
   pf_fc_combine tls_vec.TlsVecU24.get.spec.panic_freedom tls_vec.TlsVecU24.get.spec.functional_correctness
 
-theorem tls_vec.TlsVecU24.len_len.spec.proof (T : Type) :
+theorem tls_vec.TlsVecU24.len_len.spec.proof (T : Type _) :
   tls_vec.TlsVecU24.len_len.spec T
   := by
   unfold tls_vec.TlsVecU24.len_len.spec
   pf_fc_combine tls_vec.TlsVecU24.len_len.spec.panic_freedom tls_vec.TlsVecU24.len_len.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type}
+  tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec self i
   := by
@@ -827,71 +829,71 @@ theorem
 
 theorem
   tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
+   {T : Type _} (self : tls_vec.TlsVecU24 T) (i : Std.Usize) :
   tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec self i
   := by
   unfold tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
   pf_fc_combine tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.new.spec.proof {T : Type} (vec : alloc.vec.Vec T) :
+theorem tls_vec.TlsVecU32.new.spec.proof {T : Type _} (vec : alloc.vec.Vec T) :
   tls_vec.TlsVecU32.new.spec vec
   := by
   unfold tls_vec.TlsVecU32.new.spec
   pf_fc_combine tls_vec.TlsVecU32.new.spec.panic_freedom tls_vec.TlsVecU32.new.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.len.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.len.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) : tls_vec.TlsVecU32.len.spec self
   := by
   unfold tls_vec.TlsVecU32.len.spec
   pf_fc_combine tls_vec.TlsVecU32.len.spec.panic_freedom tls_vec.TlsVecU32.len.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.is_empty.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.is_empty.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) : tls_vec.TlsVecU32.is_empty.spec self
   := by
   unfold tls_vec.TlsVecU32.is_empty.spec
   pf_fc_combine tls_vec.TlsVecU32.is_empty.spec.panic_freedom tls_vec.TlsVecU32.is_empty.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.into_vec.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.into_vec.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) : tls_vec.TlsVecU32.into_vec.spec self
   := by
   unfold tls_vec.TlsVecU32.into_vec.spec
   pf_fc_combine tls_vec.TlsVecU32.into_vec.spec.panic_freedom tls_vec.TlsVecU32.into_vec.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.push.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.push.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) (value : T) :
   tls_vec.TlsVecU32.push.spec self value
   := by
   unfold tls_vec.TlsVecU32.push.spec
   pf_fc_combine tls_vec.TlsVecU32.push.spec.panic_freedom tls_vec.TlsVecU32.push.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.pop.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.pop.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) : tls_vec.TlsVecU32.pop.spec self
   := by
   unfold tls_vec.TlsVecU32.pop.spec
   pf_fc_combine tls_vec.TlsVecU32.pop.spec.panic_freedom tls_vec.TlsVecU32.pop.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.remove.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.remove.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) (index : Std.Usize) :
   tls_vec.TlsVecU32.remove.spec self index
   := by
   unfold tls_vec.TlsVecU32.remove.spec
   pf_fc_combine tls_vec.TlsVecU32.remove.spec.panic_freedom tls_vec.TlsVecU32.remove.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.get.spec.proof {T : Type}
+theorem tls_vec.TlsVecU32.get.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) (index : Std.Usize) :
   tls_vec.TlsVecU32.get.spec self index
   := by
   unfold tls_vec.TlsVecU32.get.spec
   pf_fc_combine tls_vec.TlsVecU32.get.spec.panic_freedom tls_vec.TlsVecU32.get.spec.functional_correctness
 
-theorem tls_vec.TlsVecU32.len_len.spec.proof (T : Type) :
+theorem tls_vec.TlsVecU32.len_len.spec.proof (T : Type _) :
   tls_vec.TlsVecU32.len_len.spec T
   := by
   unfold tls_vec.TlsVecU32.len_len.spec
   pf_fc_combine tls_vec.TlsVecU32.len_len.spec.panic_freedom tls_vec.TlsVecU32.len_len.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type}
+  tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof {T : Type _}
   (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec self i
   := by
@@ -900,7 +902,7 @@ theorem
 
 theorem
   tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
+   {T : Type _} (self : tls_vec.TlsVecU32 T) (i : Std.Usize) :
   tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec self i
   := by
   unfold tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
@@ -1396,25 +1398,25 @@ theorem tls_vec.TlsByteSliceU32.tls_serialized_byte_length.spec.proof
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem tls_vec.TlsSliceU8.as_slice.spec.proof {T : Type}
+theorem tls_vec.TlsSliceU8.as_slice.spec.proof {T : Type _}
   (self : tls_vec.TlsSliceU8 T) : tls_vec.TlsSliceU8.as_slice.spec self
   := by
   unfold tls_vec.TlsSliceU8.as_slice.spec
   pf_fc_combine tls_vec.TlsSliceU8.as_slice.spec.panic_freedom tls_vec.TlsSliceU8.as_slice.spec.functional_correctness
 
-theorem tls_vec.TlsSliceU16.as_slice.spec.proof {T : Type}
+theorem tls_vec.TlsSliceU16.as_slice.spec.proof {T : Type _}
   (self : tls_vec.TlsSliceU16 T) : tls_vec.TlsSliceU16.as_slice.spec self
   := by
   unfold tls_vec.TlsSliceU16.as_slice.spec
   pf_fc_combine tls_vec.TlsSliceU16.as_slice.spec.panic_freedom tls_vec.TlsSliceU16.as_slice.spec.functional_correctness
 
-theorem tls_vec.TlsSliceU24.as_slice.spec.proof {T : Type}
+theorem tls_vec.TlsSliceU24.as_slice.spec.proof {T : Type _}
   (self : tls_vec.TlsSliceU24 T) : tls_vec.TlsSliceU24.as_slice.spec self
   := by
   unfold tls_vec.TlsSliceU24.as_slice.spec
   pf_fc_combine tls_vec.TlsSliceU24.as_slice.spec.panic_freedom tls_vec.TlsSliceU24.as_slice.spec.functional_correctness
 
-theorem tls_vec.TlsSliceU32.as_slice.spec.proof {T : Type}
+theorem tls_vec.TlsSliceU32.as_slice.spec.proof {T : Type _}
   (self : tls_vec.TlsSliceU32 T) : tls_vec.TlsSliceU32.as_slice.spec self
   := by
   unfold tls_vec.TlsSliceU32.as_slice.spec
@@ -1429,7 +1431,7 @@ Function specs over trait instances. Since the trait-level specs, the instance a
 
 theorem
   core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec.proof
-   {T : Type} (SerializeBytesInst : SerializeBytes T)
+   {T : Type _} (SerializeBytesInst : SerializeBytes T)
   (self : core.option.Option T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec
@@ -1440,7 +1442,7 @@ theorem
 
 theorem
   core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec.proof
-   {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+   {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (bytes : Slice Std.U8)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -1453,7 +1455,7 @@ theorem
 /-! ### tls_vec: TlsVecU* -/
 
 theorem
-  tls_vec.TlsVecU8.from_slice.spec.proof {T : Type} (corecloneCloneInst :
+  tls_vec.TlsVecU8.from_slice.spec.proof {T : Type _} (corecloneCloneInst :
                                         core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   tls_vec.TlsVecU8.from_slice.spec corecloneCloneInst slice
@@ -1463,8 +1465,8 @@ theorem
   pf_fc_combine tls_vec.TlsVecU8.from_slice.spec.panic_freedom tls_vec.TlsVecU8.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU8.assert_written_bytes.spec.proof {T : Type} (SerializeInst :
-                                                  Serialize T)
+  tls_vec.TlsVecU8.assert_written_bytes.spec.proof {T : Type _} (SerializeInst
+                                                  : Serialize T)
   (self : tls_vec.TlsVecU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -1475,8 +1477,8 @@ theorem
   pf_fc_combine tls_vec.TlsVecU8.assert_written_bytes.spec.panic_freedom tls_vec.TlsVecU8.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU8.tls_serialized_length.spec.proof {T : Type} (SizeInst : Size
-                                                   T)
+  tls_vec.TlsVecU8.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
+                                                   Size T)
   (self : tls_vec.TlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsVecU8.tls_serialized_length.spec SizeInst self SizeInstLawful
   := by
@@ -1484,7 +1486,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU8.tls_serialized_length.spec.panic_freedom tls_vec.TlsVecU8.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU8.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.TlsVecU8.deserialize_bytes.spec.proof {T : Type _}
                                                (DeserializeBytesInst :
                                                DeserializeBytes T)
   (bytes : Slice Std.U8)
@@ -1497,7 +1499,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU8.deserialize_bytes.spec.panic_freedom tls_vec.TlsVecU8.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU16.from_slice.spec.proof {T : Type} (corecloneCloneInst :
+  tls_vec.TlsVecU16.from_slice.spec.proof {T : Type _} (corecloneCloneInst :
                                          core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   tls_vec.TlsVecU16.from_slice.spec corecloneCloneInst slice
@@ -1507,8 +1509,8 @@ theorem
   pf_fc_combine tls_vec.TlsVecU16.from_slice.spec.panic_freedom tls_vec.TlsVecU16.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU16.assert_written_bytes.spec.proof {T : Type} (SerializeInst :
-                                                   Serialize T)
+  tls_vec.TlsVecU16.assert_written_bytes.spec.proof {T : Type _} (SerializeInst
+                                                   : Serialize T)
   (self : tls_vec.TlsVecU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -1519,7 +1521,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU16.assert_written_bytes.spec.panic_freedom tls_vec.TlsVecU16.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU16.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsVecU16.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                     Size T)
   (self : tls_vec.TlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsVecU16.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -1528,7 +1530,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU16.tls_serialized_length.spec.panic_freedom tls_vec.TlsVecU16.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU16.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.TlsVecU16.deserialize_bytes.spec.proof {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
   (bytes : Slice Std.U8)
@@ -1541,7 +1543,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU16.deserialize_bytes.spec.panic_freedom tls_vec.TlsVecU16.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU24.from_slice.spec.proof {T : Type} (corecloneCloneInst :
+  tls_vec.TlsVecU24.from_slice.spec.proof {T : Type _} (corecloneCloneInst :
                                          core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   tls_vec.TlsVecU24.from_slice.spec corecloneCloneInst slice
@@ -1551,8 +1553,8 @@ theorem
   pf_fc_combine tls_vec.TlsVecU24.from_slice.spec.panic_freedom tls_vec.TlsVecU24.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU24.assert_written_bytes.spec.proof {T : Type} (SerializeInst :
-                                                   Serialize T)
+  tls_vec.TlsVecU24.assert_written_bytes.spec.proof {T : Type _} (SerializeInst
+                                                   : Serialize T)
   (self : tls_vec.TlsVecU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -1563,7 +1565,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU24.assert_written_bytes.spec.panic_freedom tls_vec.TlsVecU24.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU24.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsVecU24.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                     Size T)
   (self : tls_vec.TlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsVecU24.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -1572,7 +1574,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU24.tls_serialized_length.spec.panic_freedom tls_vec.TlsVecU24.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU24.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.TlsVecU24.deserialize_bytes.spec.proof {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
   (bytes : Slice Std.U8)
@@ -1585,7 +1587,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU24.deserialize_bytes.spec.panic_freedom tls_vec.TlsVecU24.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU32.from_slice.spec.proof {T : Type} (corecloneCloneInst :
+  tls_vec.TlsVecU32.from_slice.spec.proof {T : Type _} (corecloneCloneInst :
                                          core.clone.Clone T) (slice : Slice T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   tls_vec.TlsVecU32.from_slice.spec corecloneCloneInst slice
@@ -1595,8 +1597,8 @@ theorem
   pf_fc_combine tls_vec.TlsVecU32.from_slice.spec.panic_freedom tls_vec.TlsVecU32.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU32.assert_written_bytes.spec.proof {T : Type} (SerializeInst :
-                                                   Serialize T)
+  tls_vec.TlsVecU32.assert_written_bytes.spec.proof {T : Type _} (SerializeInst
+                                                   : Serialize T)
   (self : tls_vec.TlsVecU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -1607,7 +1609,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU32.assert_written_bytes.spec.panic_freedom tls_vec.TlsVecU32.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU32.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsVecU32.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                     Size T)
   (self : tls_vec.TlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsVecU32.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -1616,7 +1618,7 @@ theorem
   pf_fc_combine tls_vec.TlsVecU32.tls_serialized_length.spec.panic_freedom tls_vec.TlsVecU32.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsVecU32.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.TlsVecU32.deserialize_bytes.spec.proof {T : Type _}
                                                 (DeserializeBytesInst :
                                                 DeserializeBytes T)
   (bytes : Slice Std.U8)
@@ -1681,7 +1683,7 @@ theorem
 /-! ### tls_vec: SecretTlsVecU* -/
 
 theorem
-  tls_vec.SecretTlsVecU8.new.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.new.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1692,8 +1694,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.new.spec.panic_freedom tls_vec.SecretTlsVecU8.new.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.from_slice.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                              zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU8.from_slice.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                              : zeroize.Zeroize T)
                                               (corecloneCloneInst :
                                               core.clone.Clone T)
   (slice : Slice T)
@@ -1706,7 +1708,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.from_slice.spec.panic_freedom tls_vec.SecretTlsVecU8.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1717,7 +1719,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.len.spec.panic_freedom tls_vec.SecretTlsVecU8.len.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.is_empty.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.is_empty.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                             zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1728,7 +1730,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.is_empty.spec.panic_freedom tls_vec.SecretTlsVecU8.is_empty.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.into_vec.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.into_vec.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                             zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1739,7 +1741,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.into_vec.spec.panic_freedom tls_vec.SecretTlsVecU8.into_vec.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.push.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.push.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1750,7 +1752,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.push.spec.panic_freedom tls_vec.SecretTlsVecU8.push.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.pop.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.pop.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1761,7 +1763,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.pop.spec.panic_freedom tls_vec.SecretTlsVecU8.pop.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.remove.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.remove.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                           zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1772,7 +1774,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.remove.spec.panic_freedom tls_vec.SecretTlsVecU8.remove.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.get.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.get.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                        zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1783,7 +1785,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.get.spec.panic_freedom tls_vec.SecretTlsVecU8.get.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.len_len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU8.len_len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                            zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU8.len_len.spec zeroizeZeroizeInst
@@ -1794,7 +1796,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.index.spec
@@ -1805,7 +1807,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
@@ -1815,7 +1817,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.assert_written_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU8.assert_written_bytes.spec.proof {T : Type _}
                                                         (SerializeInst :
                                                         Serialize T)
                                                         (zeroizeZeroizeInst :
@@ -1832,8 +1834,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.assert_written_bytes.spec.panic_freedom tls_vec.SecretTlsVecU8.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.tls_serialized_length.spec.proof {T : Type} (SizeInst
-                                                         : Size T)
+  tls_vec.SecretTlsVecU8.tls_serialized_length.spec.proof {T : Type _}
+                                                         (SizeInst : Size T)
                                                          (zeroizeZeroizeInst :
                                                          zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU8 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -1845,7 +1847,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.tls_serialized_length.spec.panic_freedom tls_vec.SecretTlsVecU8.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU8.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU8.deserialize_bytes.spec.proof {T : Type _}
                                                      (DeserializeBytesInst :
                                                      DeserializeBytes T)
                                                      (zeroizeZeroizeInst :
@@ -1860,7 +1862,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU8.deserialize_bytes.spec.panic_freedom tls_vec.SecretTlsVecU8.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.new.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.new.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1871,8 +1873,9 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.new.spec.panic_freedom tls_vec.SecretTlsVecU16.new.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.from_slice.spec.proof {T : Type} (zeroizeZeroizeInst
-                                               : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU16.from_slice.spec.proof {T : Type _}
+                                               (zeroizeZeroizeInst :
+                                               zeroize.Zeroize T)
                                                (corecloneCloneInst :
                                                core.clone.Clone T)
   (slice : Slice T)
@@ -1885,7 +1888,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.from_slice.spec.panic_freedom tls_vec.SecretTlsVecU16.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1896,8 +1899,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.len.spec.panic_freedom tls_vec.SecretTlsVecU16.len.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.is_empty.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU16.is_empty.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU16.is_empty.spec zeroizeZeroizeInst self
@@ -1907,8 +1910,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.is_empty.spec.panic_freedom tls_vec.SecretTlsVecU16.is_empty.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.into_vec.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU16.into_vec.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU16.into_vec.spec zeroizeZeroizeInst self
@@ -1918,7 +1921,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.into_vec.spec.panic_freedom tls_vec.SecretTlsVecU16.into_vec.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.push.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.push.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1929,7 +1932,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.push.spec.panic_freedom tls_vec.SecretTlsVecU16.push.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.pop.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.pop.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1940,7 +1943,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.pop.spec.panic_freedom tls_vec.SecretTlsVecU16.pop.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.remove.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.remove.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                            zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1951,7 +1954,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.remove.spec.panic_freedom tls_vec.SecretTlsVecU16.remove.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.get.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.get.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -1962,7 +1965,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.get.spec.panic_freedom tls_vec.SecretTlsVecU16.get.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.len_len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU16.len_len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                             zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU16.len_len.spec zeroizeZeroizeInst
@@ -1973,7 +1976,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.index.spec
@@ -1984,7 +1987,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
@@ -1994,7 +1997,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.assert_written_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU16.assert_written_bytes.spec.proof {T : Type _}
                                                          (SerializeInst :
                                                          Serialize T)
                                                          (zeroizeZeroizeInst :
@@ -2011,8 +2014,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.assert_written_bytes.spec.panic_freedom tls_vec.SecretTlsVecU16.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.tls_serialized_length.spec.proof {T : Type} (SizeInst
-                                                          : Size T)
+  tls_vec.SecretTlsVecU16.tls_serialized_length.spec.proof {T : Type _}
+                                                          (SizeInst : Size T)
                                                           (zeroizeZeroizeInst :
                                                           zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU16 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2024,7 +2027,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.tls_serialized_length.spec.panic_freedom tls_vec.SecretTlsVecU16.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU16.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU16.deserialize_bytes.spec.proof {T : Type _}
                                                       (DeserializeBytesInst :
                                                       DeserializeBytes T)
                                                       (zeroizeZeroizeInst :
@@ -2039,7 +2042,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU16.deserialize_bytes.spec.panic_freedom tls_vec.SecretTlsVecU16.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.new.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.new.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2050,8 +2053,9 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.new.spec.panic_freedom tls_vec.SecretTlsVecU24.new.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.from_slice.spec.proof {T : Type} (zeroizeZeroizeInst
-                                               : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU24.from_slice.spec.proof {T : Type _}
+                                               (zeroizeZeroizeInst :
+                                               zeroize.Zeroize T)
                                                (corecloneCloneInst :
                                                core.clone.Clone T)
   (slice : Slice T)
@@ -2064,7 +2068,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.from_slice.spec.panic_freedom tls_vec.SecretTlsVecU24.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2075,8 +2079,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.len.spec.panic_freedom tls_vec.SecretTlsVecU24.len.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.is_empty.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU24.is_empty.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU24.is_empty.spec zeroizeZeroizeInst self
@@ -2086,8 +2090,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.is_empty.spec.panic_freedom tls_vec.SecretTlsVecU24.is_empty.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.into_vec.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU24.into_vec.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU24.into_vec.spec zeroizeZeroizeInst self
@@ -2097,7 +2101,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.into_vec.spec.panic_freedom tls_vec.SecretTlsVecU24.into_vec.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.push.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.push.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2108,7 +2112,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.push.spec.panic_freedom tls_vec.SecretTlsVecU24.push.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.pop.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.pop.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2119,7 +2123,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.pop.spec.panic_freedom tls_vec.SecretTlsVecU24.pop.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.remove.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.remove.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                            zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2130,7 +2134,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.remove.spec.panic_freedom tls_vec.SecretTlsVecU24.remove.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.get.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.get.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2141,7 +2145,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.get.spec.panic_freedom tls_vec.SecretTlsVecU24.get.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.len_len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU24.len_len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                             zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU24.len_len.spec zeroizeZeroizeInst
@@ -2152,7 +2156,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.index.spec
@@ -2163,7 +2167,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
@@ -2173,7 +2177,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.assert_written_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU24.assert_written_bytes.spec.proof {T : Type _}
                                                          (SerializeInst :
                                                          Serialize T)
                                                          (zeroizeZeroizeInst :
@@ -2190,8 +2194,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.assert_written_bytes.spec.panic_freedom tls_vec.SecretTlsVecU24.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.tls_serialized_length.spec.proof {T : Type} (SizeInst
-                                                          : Size T)
+  tls_vec.SecretTlsVecU24.tls_serialized_length.spec.proof {T : Type _}
+                                                          (SizeInst : Size T)
                                                           (zeroizeZeroizeInst :
                                                           zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU24 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2203,7 +2207,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.tls_serialized_length.spec.panic_freedom tls_vec.SecretTlsVecU24.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU24.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU24.deserialize_bytes.spec.proof {T : Type _}
                                                       (DeserializeBytesInst :
                                                       DeserializeBytes T)
                                                       (zeroizeZeroizeInst :
@@ -2218,7 +2222,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU24.deserialize_bytes.spec.panic_freedom tls_vec.SecretTlsVecU24.deserialize_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.new.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.new.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (vec : alloc.vec.Vec T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2229,8 +2233,9 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.new.spec.panic_freedom tls_vec.SecretTlsVecU32.new.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.from_slice.spec.proof {T : Type} (zeroizeZeroizeInst
-                                               : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU32.from_slice.spec.proof {T : Type _}
+                                               (zeroizeZeroizeInst :
+                                               zeroize.Zeroize T)
                                                (corecloneCloneInst :
                                                core.clone.Clone T)
   (slice : Slice T)
@@ -2243,7 +2248,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.from_slice.spec.panic_freedom tls_vec.SecretTlsVecU32.from_slice.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2254,8 +2259,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.len.spec.panic_freedom tls_vec.SecretTlsVecU32.len.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.is_empty.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU32.is_empty.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU32.is_empty.spec zeroizeZeroizeInst self
@@ -2265,8 +2270,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.is_empty.spec.panic_freedom tls_vec.SecretTlsVecU32.is_empty.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.into_vec.spec.proof {T : Type} (zeroizeZeroizeInst :
-                                             zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU32.into_vec.spec.proof {T : Type _} (zeroizeZeroizeInst
+                                             : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU32.into_vec.spec zeroizeZeroizeInst self
@@ -2276,7 +2281,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.into_vec.spec.panic_freedom tls_vec.SecretTlsVecU32.into_vec.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.push.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.push.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                          zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (value : T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2287,7 +2292,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.push.spec.panic_freedom tls_vec.SecretTlsVecU32.push.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.pop.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.pop.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2298,7 +2303,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.pop.spec.panic_freedom tls_vec.SecretTlsVecU32.pop.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.remove.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.remove.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                            zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2309,7 +2314,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.remove.spec.panic_freedom tls_vec.SecretTlsVecU32.remove.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.get.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.get.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                         zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (index : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
@@ -2320,7 +2325,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.get.spec.panic_freedom tls_vec.SecretTlsVecU32.get.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.len_len.spec.proof {T : Type} (zeroizeZeroizeInst :
+  tls_vec.SecretTlsVecU32.len_len.spec.proof {T : Type _} (zeroizeZeroizeInst :
                                             zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU32.len_len.spec zeroizeZeroizeInst
@@ -2331,7 +2336,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.index.spec
@@ -2342,7 +2347,7 @@ theorem
 
 theorem
   tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.proof
-   {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
+   {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (i : Std.Usize)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec
@@ -2352,7 +2357,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.index_mut.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.assert_written_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU32.assert_written_bytes.spec.proof {T : Type _}
                                                          (SerializeInst :
                                                          Serialize T)
                                                          (zeroizeZeroizeInst :
@@ -2369,8 +2374,8 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.assert_written_bytes.spec.panic_freedom tls_vec.SecretTlsVecU32.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.tls_serialized_length.spec.proof {T : Type} (SizeInst
-                                                          : Size T)
+  tls_vec.SecretTlsVecU32.tls_serialized_length.spec.proof {T : Type _}
+                                                          (SizeInst : Size T)
                                                           (zeroizeZeroizeInst :
                                                           zeroize.Zeroize T)
   (self : tls_vec.SecretTlsVecU32 T) (SizeInstLawful : Size.Lawful T SizeInst)
@@ -2382,7 +2387,7 @@ theorem
   pf_fc_combine tls_vec.SecretTlsVecU32.tls_serialized_length.spec.panic_freedom tls_vec.SecretTlsVecU32.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.SecretTlsVecU32.deserialize_bytes.spec.proof {T : Type}
+  tls_vec.SecretTlsVecU32.deserialize_bytes.spec.proof {T : Type _}
                                                       (DeserializeBytesInst :
                                                       DeserializeBytes T)
                                                       (zeroizeZeroizeInst :
@@ -2399,7 +2404,7 @@ theorem
 /-! ### tls_vec: TlsSliceU* -/
 
 theorem
-  tls_vec.TlsSliceU8.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsSliceU8.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                      Size T)
   (self : tls_vec.TlsSliceU8 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsSliceU8.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -2408,8 +2413,9 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU8.tls_serialized_length.spec.panic_freedom tls_vec.TlsSliceU8.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU8.assert_written_bytes.spec.proof {T : Type} (SerializeInst
-                                                    : Serialize T)
+  tls_vec.TlsSliceU8.assert_written_bytes.spec.proof {T : Type _}
+                                                    (SerializeInst : Serialize
+                                                    T)
   (self : tls_vec.TlsSliceU8 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -2420,7 +2426,7 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU8.assert_written_bytes.spec.panic_freedom tls_vec.TlsSliceU8.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU16.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsSliceU16.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                       Size T)
   (self : tls_vec.TlsSliceU16 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsSliceU16.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -2429,8 +2435,9 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU16.tls_serialized_length.spec.panic_freedom tls_vec.TlsSliceU16.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU16.assert_written_bytes.spec.proof {T : Type} (SerializeInst
-                                                     : Serialize T)
+  tls_vec.TlsSliceU16.assert_written_bytes.spec.proof {T : Type _}
+                                                     (SerializeInst : Serialize
+                                                     T)
   (self : tls_vec.TlsSliceU16 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -2441,7 +2448,7 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU16.assert_written_bytes.spec.panic_freedom tls_vec.TlsSliceU16.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU24.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsSliceU24.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                       Size T)
   (self : tls_vec.TlsSliceU24 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsSliceU24.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -2450,8 +2457,9 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU24.tls_serialized_length.spec.panic_freedom tls_vec.TlsSliceU24.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU24.assert_written_bytes.spec.proof {T : Type} (SerializeInst
-                                                     : Serialize T)
+  tls_vec.TlsSliceU24.assert_written_bytes.spec.proof {T : Type _}
+                                                     (SerializeInst : Serialize
+                                                     T)
   (self : tls_vec.TlsSliceU24 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -2462,7 +2470,7 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU24.assert_written_bytes.spec.panic_freedom tls_vec.TlsSliceU24.assert_written_bytes.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU32.tls_serialized_length.spec.proof {T : Type} (SizeInst :
+  tls_vec.TlsSliceU32.tls_serialized_length.spec.proof {T : Type _} (SizeInst :
                                                       Size T)
   (self : tls_vec.TlsSliceU32 T) (SizeInstLawful : Size.Lawful T SizeInst) :
   tls_vec.TlsSliceU32.tls_serialized_length.spec SizeInst self SizeInstLawful
@@ -2471,8 +2479,9 @@ theorem
   pf_fc_combine tls_vec.TlsSliceU32.tls_serialized_length.spec.panic_freedom tls_vec.TlsSliceU32.tls_serialized_length.spec.functional_correctness
 
 theorem
-  tls_vec.TlsSliceU32.assert_written_bytes.spec.proof {T : Type} (SerializeInst
-                                                     : Serialize T)
+  tls_vec.TlsSliceU32.assert_written_bytes.spec.proof {T : Type _}
+                                                     (SerializeInst : Serialize
+                                                     T)
   (self : tls_vec.TlsSliceU32 T) (tls_serialized_len : Std.Usize)
   (written : Std.Usize)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
@@ -2497,7 +2506,7 @@ theorem ArrayU8LEN.Insts.Tls_codecSize.Lawful (LEN : Std.Usize) :
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem core.option.Option.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (core.option.Option T) (core.option.Option.Insts.Tls_codecSize
   SizeInst)
@@ -2505,24 +2514,24 @@ theorem core.option.Option.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine core.option.Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0Option.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem Shared0Option.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (core.option.Option T) (Shared0Option.Insts.Tls_codecSize
   SizeInst)
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0Option.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Pair.Insts.Tls_codecSize.Lawful {T : Type} {U : Type} (SizeInst : Size
-  T) (SizeInst1 : Size U) (SizeInstLawful : Size.Lawful T SizeInst)
+theorem Pair.Insts.Tls_codecSize.Lawful {T : Type _} {U : Type _} (SizeInst :
+  Size T) (SizeInst1 : Size U) (SizeInstLawful : Size.Lawful T SizeInst)
   (SizeInst1Lawful : Size.Lawful U SizeInst1) :
   Size.Lawful (T × U) (Pair.Insts.Tls_codecSize SizeInst SizeInst1)
   := {
   tls_serialized_len_spec := by pf_post_true_combine Pair.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem TupleTUV.Insts.Tls_codecSize.Lawful {T : Type} {U : Type} {V : Type}
-  (SizeInst : Size T) (SizeInst1 : Size U) (SizeInst2 : Size V)
+theorem TupleTUV.Insts.Tls_codecSize.Lawful {T : Type _} {U : Type _} {V :
+  Type _} (SizeInst : Size T) (SizeInst1 : Size U) (SizeInst2 : Size V)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (SizeInst1Lawful : Size.Lawful U SizeInst1)
   (SizeInst2Lawful : Size.Lawful V SizeInst2) :
@@ -2538,14 +2547,14 @@ theorem Tuple.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine Tuple.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem core.marker.PhantomData.Insts.Tls_codecSize.Lawful (T : Type) :
+theorem core.marker.PhantomData.Insts.Tls_codecSize.Lawful (T : Type _) :
   Size.Lawful (core.marker.PhantomData T)
   (core.marker.PhantomData.Insts.Tls_codecSize T)
   := {
   tls_serialized_len_spec := by pf_post_true_combine core.marker.PhantomData.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Box.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size T)
+theorem Box.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst : Size T)
   (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful T (Box.Insts.Tls_codecSize SizeInst)
   := {
@@ -2560,34 +2569,16 @@ theorem U8.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine U8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem U16.Insts.Tls_codecSize.Lawful :
-  Size.Lawful Std.U16 U16.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem U24.Insts.Tls_codecSize.Lawful :
-  Size.Lawful U24 U24.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem U32.Insts.Tls_codecSize.Lawful :
-  Size.Lawful Std.U32 U32.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem U64.Insts.Tls_codecSize.Lawful :
-  Size.Lawful Std.U64 U64.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine U64.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
 theorem Shared0U8.Insts.Tls_codecSize.Lawful :
   Size.Lawful Std.U8 Shared0U8.Insts.Tls_codecSize
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0U8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem U16.Insts.Tls_codecSize.Lawful :
+  Size.Lawful Std.U16 U16.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
 theorem Shared0U16.Insts.Tls_codecSize.Lawful :
@@ -2596,16 +2587,34 @@ theorem Shared0U16.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine Shared0U16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
+theorem U24.Insts.Tls_codecSize.Lawful :
+  Size.Lawful U24 U24.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
 theorem Shared0U24.Insts.Tls_codecSize.Lawful :
   Size.Lawful U24 Shared0U24.Insts.Tls_codecSize
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0U24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
+theorem U32.Insts.Tls_codecSize.Lawful :
+  Size.Lawful Std.U32 U32.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
 theorem Shared0U32.Insts.Tls_codecSize.Lawful :
   Size.Lawful Std.U32 Shared0U32.Insts.Tls_codecSize
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0U32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem U64.Insts.Tls_codecSize.Lawful :
+  Size.Lawful Std.U64 U64.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine U64.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
 theorem Shared0U64.Insts.Tls_codecSize.Lawful :
@@ -2622,14 +2631,14 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine quic_vec.ContentLength.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem alloc.vec.Vec.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (alloc.vec.Vec T) (alloc.vec.Vec.Insts.Tls_codecSize SizeInst)
   := {
   tls_serialized_len_spec := by pf_post_true_combine alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0Vec.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size T)
+theorem Shared0Vec.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst : Size T)
   (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (alloc.vec.Vec T) (Shared0Vec.Insts.Tls_codecSize SizeInst)
   := {
@@ -2648,8 +2657,8 @@ theorem Shared0VLBytes.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine Shared0VLBytes.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0Slice.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size T)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem Shared0Slice.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst : Size
+  T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (Slice T) (Shared0Slice.Insts.Tls_codecSize SizeInst)
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0Slice.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
@@ -2771,15 +2780,23 @@ theorem Shared0TlsByteVecU32.Insts.Tls_codecSize.Lawful :
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsVecU8 T) (tls_vec.TlsVecU8.Insts.Tls_codecSize
   SizeInst)
   := {
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsVecU8.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsVecU8 T) (Shared0TlsVecU8.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsVecU16 T) (tls_vec.TlsVecU16.Insts.Tls_codecSize
   SizeInst)
@@ -2787,7 +2804,15 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsVecU16.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsVecU16 T) (Shared0TlsVecU16.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsVecU24 T) (tls_vec.TlsVecU24.Insts.Tls_codecSize
   SizeInst)
@@ -2795,7 +2820,15 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsVecU24.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsVecU24 T) (Shared0TlsVecU24.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsVecU32 T) (tls_vec.TlsVecU32.Insts.Tls_codecSize
   SizeInst)
@@ -2803,32 +2836,8 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0TlsVecU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsVecU8 T) (Shared0TlsVecU8.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsVecU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsVecU16 T) (Shared0TlsVecU16.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsVecU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsVecU24 T) (Shared0TlsVecU24.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
-  T) (SizeInstLawful : Size.Lawful T SizeInst) :
+theorem Shared0TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsVecU32 T) (Shared0TlsVecU32.Insts.Tls_codecSize
   SizeInst)
   := {
@@ -2837,7 +2846,7 @@ theorem Shared0TlsVecU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst : Size
 
 /-! ### tls_vec: SecretTlsVecU* -/
 
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) :
@@ -2847,37 +2856,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type}
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type}
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) :
@@ -2887,7 +2866,17 @@ theorem Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful {T : Type}
   tls_serialized_len_spec := by pf_post_true_combine Shared0SecretTlsVecU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) :
@@ -2897,7 +2886,17 @@ theorem Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful {T : Type}
   tls_serialized_len_spec := by pf_post_true_combine Shared0SecretTlsVecU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) :
@@ -2907,7 +2906,17 @@ theorem Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful {T : Type}
   tls_serialized_len_spec := by pf_post_true_combine Shared0SecretTlsVecU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.Tls_codecSize zeroizeZeroizeInst SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T) (SizeInst : Size T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (SizeInstLawful : Size.Lawful T SizeInst) :
@@ -2925,31 +2934,17 @@ theorem Shared0TlsByteSliceU8.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
+theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.Lawful :
+  Size.Lawful tls_vec.TlsByteSliceU8 tls_vec.TlsByteSliceU8.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
 theorem Shared0TlsByteSliceU16.Insts.Tls_codecSize.Lawful :
   Size.Lawful tls_vec.TlsByteSliceU16
   Shared0TlsByteSliceU16.Insts.Tls_codecSize
   := {
   tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful :
-  Size.Lawful tls_vec.TlsByteSliceU24
-  Shared0TlsByteSliceU24.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful :
-  Size.Lawful tls_vec.TlsByteSliceU32
-  Shared0TlsByteSliceU32.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.Lawful :
-  Size.Lawful tls_vec.TlsByteSliceU8 tls_vec.TlsByteSliceU8.Insts.Tls_codecSize
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
 theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.Lawful :
@@ -2959,11 +2954,25 @@ theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.Lawful :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsByteSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful :
+  Size.Lawful tls_vec.TlsByteSliceU24
+  Shared0TlsByteSliceU24.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
 theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.Lawful :
   Size.Lawful tls_vec.TlsByteSliceU24
   tls_vec.TlsByteSliceU24.Insts.Tls_codecSize
   := {
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful :
+  Size.Lawful tls_vec.TlsByteSliceU32
+  Shared0TlsByteSliceU32.Insts.Tls_codecSize
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsByteSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
 theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSize.Lawful :
@@ -2975,7 +2984,7 @@ theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSize.Lawful :
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsSliceU8 T) (Shared0TlsSliceU8.Insts.Tls_codecSize
   SizeInst)
@@ -2983,31 +2992,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsSliceU16 T) (Shared0TlsSliceU16.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsSliceU24 T) (Shared0TlsSliceU24.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
-  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  Size.Lawful (tls_vec.TlsSliceU32 T) (Shared0TlsSliceU32.Insts.Tls_codecSize
-  SizeInst)
-  := {
-  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
-}
-
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsSliceU8 T) (tls_vec.TlsSliceU8.Insts.Tls_codecSize
   SizeInst)
@@ -3015,7 +3000,15 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsSliceU8.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsSliceU16 T) (Shared0TlsSliceU16.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsSliceU16 T) (tls_vec.TlsSliceU16.Insts.Tls_codecSize
   SizeInst)
@@ -3023,7 +3016,15 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsSliceU16.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsSliceU24 T) (Shared0TlsSliceU24.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsSliceU24 T) (tls_vec.TlsSliceU24.Insts.Tls_codecSize
   SizeInst)
@@ -3031,7 +3032,15 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
   tls_serialized_len_spec := by pf_post_true_combine tls_vec.TlsSliceU24.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
 }
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
+theorem Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
+  Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  Size.Lawful (tls_vec.TlsSliceU32 T) (Shared0TlsSliceU32.Insts.Tls_codecSize
+  SizeInst)
+  := {
+  tls_serialized_len_spec := by pf_post_true_combine Shared0TlsSliceU32.Insts.Tls_codecSize.tls_serialized_len_spec.panic_freedom Size.tls_serialized_len.post
+}
+
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSize.Lawful {T : Type _} (SizeInst :
   Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   Size.Lawful (tls_vec.TlsSliceU32 T) (tls_vec.TlsSliceU32.Insts.Tls_codecSize
   SizeInst)
@@ -3065,7 +3074,7 @@ theorem ArrayU8LEN.Insts.Tls_codecSerializeBytes.Lawful (LEN : Std.Usize) :
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful (core.option.Option T)
@@ -3075,7 +3084,7 @@ theorem core.option.Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
   tls_serialize_bytes_spec := by pf_fc_combine core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem Shared0Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
+theorem Shared0Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful (core.option.Option T)
@@ -3085,7 +3094,7 @@ theorem Shared0Option.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
   tls_serialize_bytes_spec := by pf_fc_combine Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem core.option.Option.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3097,7 +3106,7 @@ theorem core.option.Option.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
   tls_deserialize_exact_bytes_spec := by pf_fc_combine core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem Pair.Insts.Tls_codecDeserializeBytes.Lawful {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _} {U : Type _}
   (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1 :
   DeserializeBytes U)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -3111,9 +3120,10 @@ theorem Pair.Insts.Tls_codecDeserializeBytes.Lawful {T : Type} {U : Type}
   tls_deserialize_exact_bytes_spec := by pf_fc_combine Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom Pair.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem TupleTUV.Insts.Tls_codecDeserializeBytes.Lawful {T : Type} {U : Type}
-  {V : Type} (DeserializeBytesInst : DeserializeBytes T) (DeserializeBytesInst1
-  : DeserializeBytes U) (DeserializeBytesInst2 : DeserializeBytes V)
+theorem TupleTUV.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _} {U :
+  Type _} {V : Type _} (DeserializeBytesInst : DeserializeBytes T)
+  (DeserializeBytesInst1 : DeserializeBytes U) (DeserializeBytesInst2 :
+  DeserializeBytes V)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   (DeserializeBytesInst1Lawful : DeserializeBytes.Lawful U
   DeserializeBytesInst1)
@@ -3137,7 +3147,7 @@ theorem Tuple.Insts.Tls_codecDeserializeBytes.Lawful :
 }
 
 theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.Lawful (T :
-  Type) :
+  Type _) :
   DeserializeBytes.Lawful (core.marker.PhantomData T)
   (core.marker.PhantomData.Insts.Tls_codecDeserializeBytes T)
   := {
@@ -3146,8 +3156,8 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.Lawful (T :
   tls_deserialize_exact_bytes_spec := by pf_fc_combine core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom core.marker.PhantomData.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.Lawful (T : Type)
-  :
+theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.Lawful (T :
+  Type _) :
   SerializeBytes.Lawful (core.marker.PhantomData T)
   (core.marker.PhantomData.Insts.Tls_codecSerializeBytes T)
   := {
@@ -3155,8 +3165,8 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerializeBytes.Lawful (T : Type)
   tls_serialize_bytes_spec := by pf_fc_combine core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom core.marker.PhantomData.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem Box.Insts.Tls_codecSerializeBytes.Lawful {T : Type} (SerializeBytesInst
-  : SerializeBytes T)
+theorem Box.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
+  (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful T (Box.Insts.Tls_codecSerializeBytes
   SerializeBytesInst)
@@ -3165,7 +3175,7 @@ theorem Box.Insts.Tls_codecSerializeBytes.Lawful {T : Type} (SerializeBytesInst
   tls_serialize_bytes_spec := by pf_fc_combine Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Box.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem Box.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem Box.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3187,12 +3197,40 @@ theorem U8.Insts.Tls_codecDeserializeBytes.Lawful :
   tls_deserialize_exact_bytes_spec := by pf_fc_combine U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom U8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
+theorem Shared0U8.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U8 Shared0U8.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent Shared0U8.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
+theorem U8.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U8 U8.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent U8.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
 theorem U16.Insts.Tls_codecDeserializeBytes.Lawful :
   DeserializeBytes.Lawful Std.U16 U16.Insts.Tls_codecDeserializeBytes
   := {
   SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
   tls_deserialize_bytes_spec := by pf_fc_combine U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness
   tls_deserialize_exact_bytes_spec := by pf_fc_combine U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom U16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
+}
+
+theorem Shared0U16.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U16 Shared0U16.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent Shared0U16.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
+theorem U16.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U16 U16.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
 theorem U24.Insts.Tls_codecDeserializeBytes.Lawful :
@@ -3203,12 +3241,40 @@ theorem U24.Insts.Tls_codecDeserializeBytes.Lawful :
   tls_deserialize_exact_bytes_spec := by pf_fc_combine U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom U24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
+theorem Shared0U24.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful U24 Shared0U24.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent Shared0U24.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
+theorem U24.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful U24 U24.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
 theorem U32.Insts.Tls_codecDeserializeBytes.Lawful :
   DeserializeBytes.Lawful Std.U32 U32.Insts.Tls_codecDeserializeBytes
   := {
   SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
   tls_deserialize_bytes_spec := by pf_fc_combine U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.panic_freedom U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_spec.functional_correctness
   tls_deserialize_exact_bytes_spec := by pf_fc_combine U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom U32.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
+}
+
+theorem Shared0U32.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U32 Shared0U32.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent Shared0U32.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
+}
+
+theorem U32.Insts.Tls_codecSerializeBytes.Lawful :
+  SerializeBytes.Lawful Std.U32 U32.Insts.Tls_codecSerializeBytes
+  := {
+  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
+  tls_serialize_bytes_spec := by pf_fc_combine U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
 theorem U64.Insts.Tls_codecDeserializeBytes.Lawful :
@@ -3219,67 +3285,11 @@ theorem U64.Insts.Tls_codecDeserializeBytes.Lawful :
   tls_deserialize_exact_bytes_spec := by pf_fc_combine U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem Shared0U8.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U8 Shared0U8.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent Shared0U8.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem Shared0U16.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U16 Shared0U16.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent Shared0U16.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem Shared0U24.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful U24 Shared0U24.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent Shared0U24.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem Shared0U32.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U32 Shared0U32.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent Shared0U32.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
 theorem Shared0U64.Insts.Tls_codecSerializeBytes.Lawful :
   SerializeBytes.Lawful Std.U64 Shared0U64.Insts.Tls_codecSerializeBytes
   := {
   SizeInstLawful := by lawful_parent Shared0U64.Insts.Tls_codecSize.Lawful
   tls_serialize_bytes_spec := by pf_fc_combine Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0U64.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem U8.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U8 U8.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent U8.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U8.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem U16.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U16 U16.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U16.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem U24.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful U24 U24.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
-}
-
-theorem U32.Insts.Tls_codecSerializeBytes.Lawful :
-  SerializeBytes.Lawful Std.U32 U32.Insts.Tls_codecSerializeBytes
-  := {
-  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
-  tls_serialize_bytes_spec := by pf_fc_combine U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom U32.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
 theorem U64.Insts.Tls_codecSerializeBytes.Lawful :
@@ -3300,7 +3310,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.Lawful :
   tls_deserialize_exact_bytes_spec := by pf_fc_combine quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3328,7 +3338,7 @@ theorem Shared0VLBytes.Insts.Tls_codecSerializeBytes.Lawful :
   tls_serialize_bytes_spec := by pf_fc_combine Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem Shared0Slice.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
+theorem Shared0Slice.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful (Slice T) (Shared0Slice.Insts.Tls_codecSerializeBytes
@@ -3338,7 +3348,7 @@ theorem Shared0Slice.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
   tls_serialize_bytes_spec := by pf_fc_combine Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem Shared0Vec.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
+theorem Shared0Vec.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful (alloc.vec.Vec T)
@@ -3348,7 +3358,7 @@ theorem Shared0Vec.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
   tls_serialize_bytes_spec := by pf_fc_combine Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.panic_freedom Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSerializeBytes.Lawful {T : Type _}
   (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   SerializeBytes.Lawful (alloc.vec.Vec T)
@@ -3535,7 +3545,7 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserializeBytes.Lawful :
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3547,7 +3557,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
   tls_deserialize_exact_bytes_spec := by pf_fc_combine tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom tls_vec.TlsVecU8.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3559,7 +3569,7 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
   tls_deserialize_exact_bytes_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3571,7 +3581,7 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
   tls_deserialize_exact_bytes_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecDeserializeBytes.tls_deserialize_exact_bytes_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.Lawful {T : Type _}
   (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
@@ -3586,7 +3596,7 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserializeBytes.Lawful {T : Type}
 /-! ### tls_vec: SecretTlsVecU* -/
 
 theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -3601,7 +3611,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserializeBytes.Lawful {T :
 }
 
 theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -3616,7 +3626,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserializeBytes.Lawful {T :
 }
 
 theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -3631,7 +3641,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserializeBytes.Lawful {T :
 }
 
 theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserializeBytes.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeBytesInst :
   DeserializeBytes T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
@@ -3671,7 +3681,7 @@ theorem ArrayU8LEN.Insts.Tls_codecDeserialize.Lawful (LEN : Std.Usize) :
 
 /-! ### Option / tuples / PhantomData / Box (primitives.rs) -/
 
-theorem core.option.Option.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (core.option.Option T)
@@ -3682,8 +3692,9 @@ theorem core.option.Option.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom core.option.Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Shared0Option.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst
-  : Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+theorem Shared0Option.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (core.option.Option T)
   (Shared0Option.Insts.Tls_codecSerialize SerializeInst)
   := {
@@ -3692,7 +3703,7 @@ theorem Shared0Option.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst
   tls_serialize_detached_spec := by pf_fc_combine Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0Option.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem core.option.Option.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (core.option.Option T)
@@ -3703,7 +3714,7 @@ theorem core.option.Option.Insts.Tls_codecDeserialize.Lawful {T : Type}
   tls_deserialize_exact_spec := by pf_fc_combine core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom core.option.Option.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem Pair.Insts.Tls_codecDeserialize.Lawful {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecDeserialize.Lawful {T : Type _} {U : Type _}
   (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1) :
@@ -3715,7 +3726,7 @@ theorem Pair.Insts.Tls_codecDeserialize.Lawful {T : Type} {U : Type}
   tls_deserialize_exact_spec := by pf_fc_combine Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom Pair.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem Pair.Insts.Tls_codecSerialize.Lawful {T : Type} {U : Type}
+theorem Pair.Insts.Tls_codecSerialize.Lawful {T : Type _} {U : Type _}
   (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1) :
@@ -3727,9 +3738,9 @@ theorem Pair.Insts.Tls_codecSerialize.Lawful {T : Type} {U : Type}
   tls_serialize_detached_spec := by pf_fc_combine Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Pair.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem TupleTUV.Insts.Tls_codecDeserialize.Lawful {T : Type} {U : Type} {V :
-  Type} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize U)
-  (DeserializeInst2 : Deserialize V)
+theorem TupleTUV.Insts.Tls_codecDeserialize.Lawful {T : Type _} {U : Type _} {V
+  : Type _} (DeserializeInst : Deserialize T) (DeserializeInst1 : Deserialize
+  U) (DeserializeInst2 : Deserialize V)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   (DeserializeInst1Lawful : Deserialize.Lawful U DeserializeInst1)
   (DeserializeInst2Lawful : Deserialize.Lawful V DeserializeInst2) :
@@ -3741,8 +3752,8 @@ theorem TupleTUV.Insts.Tls_codecDeserialize.Lawful {T : Type} {U : Type} {V :
   tls_deserialize_exact_spec := by pf_fc_combine TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom TupleTUV.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem TupleTUV.Insts.Tls_codecSerialize.Lawful {T : Type} {U : Type} {V :
-  Type} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
+theorem TupleTUV.Insts.Tls_codecSerialize.Lawful {T : Type _} {U : Type _} {V :
+  Type _} (SerializeInst : Serialize T) (SerializeInst1 : Serialize U)
   (SerializeInst2 : Serialize V)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -3771,7 +3782,8 @@ theorem Tuple.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine Tuple.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Tuple.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.Lawful (T : Type) :
+theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.Lawful (T : Type _)
+  :
   Deserialize.Lawful (core.marker.PhantomData T)
   (core.marker.PhantomData.Insts.Tls_codecDeserialize T)
   := {
@@ -3780,7 +3792,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecDeserialize.Lawful (T : Type) :
   tls_deserialize_exact_spec := by pf_fc_combine core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom core.marker.PhantomData.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem core.marker.PhantomData.Insts.Tls_codecSerialize.Lawful (T : Type) :
+theorem core.marker.PhantomData.Insts.Tls_codecSerialize.Lawful (T : Type _) :
   Serialize.Lawful (core.marker.PhantomData T)
   (core.marker.PhantomData.Insts.Tls_codecSerialize T)
   := {
@@ -3789,7 +3801,7 @@ theorem core.marker.PhantomData.Insts.Tls_codecSerialize.Lawful (T : Type) :
   tls_serialize_detached_spec := by pf_fc_combine core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom core.marker.PhantomData.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Box.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst :
+theorem Box.Insts.Tls_codecSerialize.Lawful {T : Type _} (SerializeInst :
   Serialize T) (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful T (Box.Insts.Tls_codecSerialize SerializeInst)
   := {
@@ -3798,7 +3810,7 @@ theorem Box.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst :
   tls_serialize_detached_spec := by pf_fc_combine Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Box.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Box.Insts.Tls_codecDeserialize.Lawful {T : Type} (DeserializeInst :
+theorem Box.Insts.Tls_codecDeserialize.Lawful {T : Type _} (DeserializeInst :
   Deserialize T) (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst)
   : Deserialize.Lawful T (Box.Insts.Tls_codecDeserialize DeserializeInst)
   := {
@@ -3817,76 +3829,12 @@ theorem U8.Insts.Tls_codecDeserialize.Lawful :
   tls_deserialize_exact_spec := by pf_fc_combine U8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem U16.Insts.Tls_codecDeserialize.Lawful :
-  Deserialize.Lawful Std.U16 U16.Insts.Tls_codecDeserialize
-  := {
-  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem U24.Insts.Tls_codecDeserialize.Lawful :
-  Deserialize.Lawful U24 U24.Insts.Tls_codecDeserialize
-  := {
-  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem U32.Insts.Tls_codecDeserialize.Lawful :
-  Deserialize.Lawful Std.U32 U32.Insts.Tls_codecDeserialize
-  := {
-  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem U64.Insts.Tls_codecDeserialize.Lawful :
-  Deserialize.Lawful Std.U64 U64.Insts.Tls_codecDeserialize
-  := {
-  SizeInstLawful := by lawful_parent U64.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
 theorem U8.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful Std.U8 U8.Insts.Tls_codecSerialize
   := {
   SizeInstLawful := by lawful_parent U8.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine U8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem U16.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful Std.U16 U16.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem U24.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful U24 U24.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine U24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem U32.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful Std.U32 U32.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem U64.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful Std.U64 U64.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent U64.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine U64.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U64.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem Shared0U8.Insts.Tls_codecSerialize.Lawful :
@@ -3897,12 +3845,44 @@ theorem Shared0U8.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine Shared0U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0U8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
+theorem U16.Insts.Tls_codecDeserialize.Lawful :
+  Deserialize.Lawful Std.U16 U16.Insts.Tls_codecDeserialize
+  := {
+  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem U16.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful Std.U16 U16.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent U16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
 theorem Shared0U16.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful Std.U16 Shared0U16.Insts.Tls_codecSerialize
   := {
   SizeInstLawful := by lawful_parent Shared0U16.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine Shared0U16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0U16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine Shared0U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0U16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem U24.Insts.Tls_codecDeserialize.Lawful :
+  Deserialize.Lawful U24 U24.Insts.Tls_codecDeserialize
+  := {
+  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem U24.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful U24 U24.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent U24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine U24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem Shared0U24.Insts.Tls_codecSerialize.Lawful :
@@ -3913,12 +3893,44 @@ theorem Shared0U24.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine Shared0U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0U24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
+theorem U32.Insts.Tls_codecDeserialize.Lawful :
+  Deserialize.Lawful Std.U32 U32.Insts.Tls_codecDeserialize
+  := {
+  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem U32.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful Std.U32 U32.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent U32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
 theorem Shared0U32.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful Std.U32 Shared0U32.Insts.Tls_codecSerialize
   := {
   SizeInstLawful := by lawful_parent Shared0U32.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine Shared0U32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0U32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine Shared0U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0U32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem U64.Insts.Tls_codecDeserialize.Lawful :
+  Deserialize.Lawful Std.U64 U64.Insts.Tls_codecDeserialize
+  := {
+  SizeInstLawful := by lawful_parent U64.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom U64.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom U64.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem U64.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful Std.U64 U64.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent U64.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine U64.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom U64.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom U64.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem Shared0U64.Insts.Tls_codecSerialize.Lawful :
@@ -3949,7 +3961,7 @@ theorem quic_vec.ContentLength.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (alloc.vec.Vec T)
@@ -3960,8 +3972,8 @@ theorem alloc.vec.Vec.Insts.Tls_codecDeserialize.Lawful {T : Type}
   tls_deserialize_exact_spec := by pf_fc_combine alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem alloc.vec.Vec.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   Serialize.Lawful (alloc.vec.Vec T) (alloc.vec.Vec.Insts.Tls_codecSerialize
@@ -3972,8 +3984,8 @@ theorem alloc.vec.Vec.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst
   tls_serialize_detached_spec := by pf_fc_combine alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Shared0Slice.Insts.Tls_codecSerialize.Lawful {T : Type} (SerializeInst
-  : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
+theorem Shared0Slice.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T) (corefmtDebugInst : core.fmt.Debug T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   Serialize.Lawful (Slice T) (Shared0Slice.Insts.Tls_codecSerialize
@@ -4127,7 +4139,7 @@ theorem alloc.string.String.Insts.Tls_codecDeserialize.Lawful :
 
 /-! ### tls_vec: TlsVecU* -/
 
-theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsVecU8 T)
@@ -4138,40 +4150,7 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU16 T)
-  (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU24 T)
-  (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU32 T)
-  (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsVecU8 T)
@@ -4182,40 +4161,7 @@ theorem Shared0TlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU16 T)
-  (Shared0TlsVecU16.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU24 T)
-  (Shared0TlsVecU24.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsVecU32 T)
-  (Shared0TlsVecU32.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (tls_vec.TlsVecU8 T)
@@ -4226,7 +4172,29 @@ theorem tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.Lawful {T : Type}
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU16 T)
+  (tls_vec.TlsVecU16.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU16 T)
+  (Shared0TlsVecU16.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (tls_vec.TlsVecU16 T)
@@ -4237,7 +4205,29 @@ theorem tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.Lawful {T : Type}
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU24 T)
+  (tls_vec.TlsVecU24.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU24 T)
+  (Shared0TlsVecU24.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (tls_vec.TlsVecU24 T)
@@ -4248,7 +4238,29 @@ theorem tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.Lawful {T : Type}
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU32 T)
+  (tls_vec.TlsVecU32.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsVecU32 T)
+  (Shared0TlsVecU32.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.Lawful {T : Type _}
   (DeserializeInst : Deserialize T)
   (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
   Deserialize.Lawful (tls_vec.TlsVecU32 T)
@@ -4257,164 +4269,6 @@ theorem tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.Lawful {T : Type}
   SizeInstLawful := by lawful_parent tls_vec.TlsVecU32.Insts.Tls_codecSize.Lawful
   tls_deserialize_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-/-! ### tls_vec: SecretTlsVecU* -/
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU8 T)
-  (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU16 T)
-  (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU24 T)
-  (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.SecretTlsVecU32 T)
-  (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst
-  SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
-  Deserialize.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst
-  DeserializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
-  Deserialize.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst
-  DeserializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
-  Deserialize.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst
-  DeserializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
-  Deserialize.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst
-  DeserializeInst)
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful
-  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
-  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
 /-! ### tls_vec: TlsByteVecU* -/
@@ -4428,33 +4282,6 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU16
-  tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU24
-  tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU32
-  tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
 theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful tls_vec.TlsByteVecU8
   Shared0TlsByteVecU8.Insts.Tls_codecSerialize
@@ -4462,33 +4289,6 @@ theorem Shared0TlsByteVecU8.Insts.Tls_codecSerialize.Lawful :
   SizeInstLawful := by lawful_parent Shared0TlsByteVecU8.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU16
-  Shared0TlsByteVecU16.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteVecU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU24
-  Shared0TlsByteVecU24.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteVecU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteVecU32
-  Shared0TlsByteVecU32.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteVecU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.Lawful :
@@ -4500,6 +4300,24 @@ theorem tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.Lawful :
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsByteVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
+theorem tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU16
+  tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsByteVecU16.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU16
+  Shared0TlsByteVecU16.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
 theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.Lawful :
   Deserialize.Lawful tls_vec.TlsByteVecU16
   tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize
@@ -4507,6 +4325,24 @@ theorem tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.Lawful :
   SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU16.Insts.Tls_codecSize.Lawful
   tls_deserialize_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsByteVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU24
+  tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsByteVecU24.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU24
+  Shared0TlsByteVecU24.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.Lawful :
@@ -4518,6 +4354,24 @@ theorem tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.Lawful :
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsByteVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
+theorem tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU32
+  tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsByteVecU32.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteVecU32
+  Shared0TlsByteVecU32.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
 theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.Lawful :
   Deserialize.Lawful tls_vec.TlsByteVecU32
   tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize
@@ -4525,6 +4379,164 @@ theorem tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.Lawful :
   SizeInstLawful := by lawful_parent tls_vec.TlsByteVecU32.Insts.Tls_codecSize.Lawful
   tls_deserialize_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
   tls_deserialize_exact_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+/-! ### tls_vec: SecretTlsVecU* -/
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU8 T)
+  (Shared0SecretTlsVecU8.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU8.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
+  Deserialize.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize zeroizeZeroizeInst
+  DeserializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU8.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU16 T)
+  (Shared0SecretTlsVecU16.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
+  Deserialize.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize zeroizeZeroizeInst
+  DeserializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU16.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU24 T)
+  (Shared0SecretTlsVecU24.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
+  Deserialize.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize zeroizeZeroizeInst
+  DeserializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU24.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (SerializeInst : Serialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.SecretTlsVecU32 T)
+  (Shared0SecretTlsVecU32.Insts.Tls_codecSerialize zeroizeZeroizeInst
+  SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0SecretTlsVecU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0SecretTlsVecU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (DeserializeInst : Deserialize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (DeserializeInstLawful : Deserialize.Lawful T DeserializeInst) :
+  Deserialize.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize zeroizeZeroizeInst
+  DeserializeInst)
+  := {
+  SizeInstLawful := by lawful_parent tls_vec.SecretTlsVecU32.Insts.Tls_codecSize.Lawful
+  tls_deserialize_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_spec.functional_correctness
+  tls_deserialize_exact_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.Tls_codecDeserialize.tls_deserialize_exact_spec.functional_correctness
 }
 
 /-! ### tls_vec: TlsByteSliceU* -/
@@ -4538,33 +4550,6 @@ theorem Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteSliceU16
-  Shared0TlsByteSliceU16.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteSliceU24
-  Shared0TlsByteSliceU24.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful :
-  Serialize.Lawful tls_vec.TlsByteSliceU32
-  Shared0TlsByteSliceU32.Insts.Tls_codecSerialize
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
 theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful tls_vec.TlsByteSliceU8
   tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize
@@ -4572,6 +4557,15 @@ theorem tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.Lawful :
   SizeInstLawful := by lawful_parent tls_vec.TlsByteSliceU8.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteSliceU16
+  Shared0TlsByteSliceU16.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful :
@@ -4583,6 +4577,15 @@ theorem tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.Lawful :
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
+theorem Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteSliceU24
+  Shared0TlsByteSliceU24.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
 theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful tls_vec.TlsByteSliceU24
   tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize
@@ -4590,6 +4593,15 @@ theorem tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.Lawful :
   SizeInstLawful := by lawful_parent tls_vec.TlsByteSliceU24.Insts.Tls_codecSize.Lawful
   tls_serialize_spec := by pf_fc_combine tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsByteSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful :
+  Serialize.Lawful tls_vec.TlsByteSliceU32
+  Shared0TlsByteSliceU32.Insts.Tls_codecSerialize
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsByteSliceU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsByteSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
 theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful :
@@ -4603,7 +4615,7 @@ theorem tls_vec.TlsByteSliceU32.Insts.Tls_codecSerialize.Lawful :
 
 /-! ### tls_vec: TlsSliceU* -/
 
-theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsSliceU8 T)
@@ -4614,40 +4626,7 @@ theorem Shared0TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsSliceU16 T)
-  (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsSliceU24 T)
-  (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.Lawful {T : Type}
-  (SerializeInst : Serialize T)
-  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
-  Serialize.Lawful (tls_vec.TlsSliceU32 T)
-  (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst)
-  := {
-  SizeInstLawful := by lawful_parent Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful
-  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
-  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
-}
-
-theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsSliceU8 T)
@@ -4658,7 +4637,18 @@ theorem tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsSliceU8.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem Shared0TlsSliceU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsSliceU16 T)
+  (Shared0TlsSliceU16.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsSliceU16.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsSliceU16 T)
@@ -4669,7 +4659,18 @@ theorem tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsSliceU16.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem Shared0TlsSliceU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsSliceU24 T)
+  (Shared0TlsSliceU24.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsSliceU24.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsSliceU24 T)
@@ -4680,7 +4681,18 @@ theorem tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.Lawful {T : Type}
   tls_serialize_detached_spec := by pf_fc_combine tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom tls_vec.TlsSliceU24.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
 }
 
-theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.Lawful {T : Type}
+theorem Shared0TlsSliceU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
+  (SerializeInst : Serialize T)
+  (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
+  Serialize.Lawful (tls_vec.TlsSliceU32 T)
+  (Shared0TlsSliceU32.Insts.Tls_codecSerialize SerializeInst)
+  := {
+  SizeInstLawful := by lawful_parent Shared0TlsSliceU32.Insts.Tls_codecSize.Lawful
+  tls_serialize_spec := by pf_fc_combine Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.panic_freedom Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_spec.functional_correctness
+  tls_serialize_detached_spec := by pf_fc_combine Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.panic_freedom Shared0TlsSliceU32.Insts.Tls_codecSerialize.tls_serialize_detached_spec.functional_correctness
+}
+
+theorem tls_vec.TlsSliceU32.Insts.Tls_codecSerialize.Lawful {T : Type _}
   (SerializeInst : Serialize T)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst) :
   Serialize.Lawful (tls_vec.TlsSliceU32 T)
@@ -4751,29 +4763,6 @@ theorem quic_vec.VLBytes.Insts.CoreConvertFromVecU8.Lawful :
   from_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
 }
 
-theorem quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful quic_vec.VLByteVec (alloc.vec.Vec Std.U8)
-  quic_vec.VLByteVec.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful quic_vec.secret_bytes.SecretVLBytes (alloc.vec.Vec
-  Std.U8) quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem
-  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful quic_vec.secret_byte_vec.SecretVLByteVec
-  (alloc.vec.Vec Std.U8)
-  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
 theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.Lawful :
   core.convert.From.Lawful quic_vec.VLBytes (Slice Std.U8)
   quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8
@@ -4781,11 +4770,55 @@ theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.Lawful :
   from_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
 }
 
+theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful (N :
+  Std.Usize) :
+  core.convert.From.Lawful quic_vec.VLBytes (Array Std.U8 N)
+  (quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N N)
+  := {
+  from_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) quic_vec.VLBytes
+  alloc.vec.VecU8.Insts.CoreConvertFromVLBytes
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from_spec.panic_freedom
+}
+
+theorem quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful quic_vec.VLByteVec (alloc.vec.Vec Std.U8)
+  quic_vec.VLByteVec.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
 theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful :
   core.convert.From.Lawful quic_vec.VLByteVec (Slice Std.U8)
   quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8
   := {
   from_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
+}
+
+theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful (N :
+  Std.Usize) :
+  core.convert.From.Lawful quic_vec.VLByteVec (Array Std.U8 N)
+  (quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N N)
+  := {
+  from_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) quic_vec.VLByteVec
+  alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from_spec.panic_freedom
+}
+
+theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful quic_vec.secret_bytes.SecretVLBytes (alloc.vec.Vec
+  Std.U8) quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
 }
 
 theorem
@@ -4798,6 +4831,24 @@ theorem
 }
 
 theorem
+  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful
+  (N : Std.Usize) :
+  core.convert.From.Lawful quic_vec.secret_bytes.SecretVLBytes (Array Std.U8 N)
+  (quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N N)
+  := {
+  from_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
+}
+
+theorem
+  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful quic_vec.secret_byte_vec.SecretVLByteVec
+  (alloc.vec.Vec Std.U8)
+  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
+theorem
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.Lawful
   :
   core.convert.From.Lawful quic_vec.secret_byte_vec.SecretVLByteVec (Slice
@@ -4805,31 +4856,6 @@ theorem
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8
   := {
   from_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
-}
-
-theorem quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful (N :
-  Std.Usize) :
-  core.convert.From.Lawful quic_vec.VLBytes (Array Std.U8 N)
-  (quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N N)
-  := {
-  from_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
-}
-
-theorem quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.Lawful (N :
-  Std.Usize) :
-  core.convert.From.Lawful quic_vec.VLByteVec (Array Std.U8 N)
-  (quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N N)
-  := {
-  from_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
-}
-
-theorem
-  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.Lawful
-  (N : Std.Usize) :
-  core.convert.From.Lawful quic_vec.secret_bytes.SecretVLBytes (Array Std.U8 N)
-  (quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N N)
-  := {
-  from_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
 }
 
 theorem
@@ -4843,85 +4869,14 @@ theorem
   from_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from_spec.panic_freedom
 }
 
-theorem alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) quic_vec.VLBytes
-  alloc.vec.VecU8.Insts.CoreConvertFromVLBytes
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from_spec.panic_freedom
-}
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) quic_vec.VLByteVec
-  alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsVecU8.Insts.CoreConvertFromVec.Lawful (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreConvertFromVec.Lawful (T : Type _) :
   core.convert.From.Lawful (tls_vec.TlsVecU8 T) (alloc.vec.Vec T)
   (tls_vec.TlsVecU8.Insts.CoreConvertFromVec T)
   := {
   from_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreConvertFromVec.Lawful (T : Type) :
-  core.convert.From.Lawful (tls_vec.TlsVecU16 T) (alloc.vec.Vec T)
-  (tls_vec.TlsVecU16.Insts.CoreConvertFromVec T)
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsVecU24.Insts.CoreConvertFromVec.Lawful (T : Type) :
-  core.convert.From.Lawful (tls_vec.TlsVecU24 T) (alloc.vec.Vec T)
-  (tls_vec.TlsVecU24.Insts.CoreConvertFromVec T)
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsVecU32.Insts.CoreConvertFromVec.Lawful (T : Type) :
-  core.convert.From.Lawful (tls_vec.TlsVecU32 T) (alloc.vec.Vec T)
-  (tls_vec.TlsVecU32.Insts.CoreConvertFromVec T)
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (tls_vec.SecretTlsVecU8 T) (alloc.vec.Vec T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (tls_vec.SecretTlsVecU16 T) (alloc.vec.Vec T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (tls_vec.SecretTlsVecU24 T) (alloc.vec.Vec T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (tls_vec.SecretTlsVecU32 T) (alloc.vec.Vec T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.convert.From.Lawful (tls_vec.TlsVecU8 T) (Slice T)
@@ -4930,7 +4885,21 @@ theorem tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
   from_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.Lawful (T : Type _) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU8 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8 T)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU16.Insts.CoreConvertFromVec.Lawful (T : Type _) :
+  core.convert.From.Lawful (tls_vec.TlsVecU16 T) (alloc.vec.Vec T)
+  (tls_vec.TlsVecU16.Insts.CoreConvertFromVec T)
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.convert.From.Lawful (tls_vec.TlsVecU16 T) (Slice T)
@@ -4939,7 +4908,21 @@ theorem tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
   from_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.Lawful (T : Type _) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU16 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16 T)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU24.Insts.CoreConvertFromVec.Lawful (T : Type _) :
+  core.convert.From.Lawful (tls_vec.TlsVecU24 T) (alloc.vec.Vec T)
+  (tls_vec.TlsVecU24.Insts.CoreConvertFromVec T)
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.convert.From.Lawful (tls_vec.TlsVecU24 T) (Slice T)
@@ -4948,7 +4931,21 @@ theorem tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
   from_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.Lawful (T : Type _) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU24 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24 T)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU32.Insts.CoreConvertFromVec.Lawful (T : Type _) :
+  core.convert.From.Lawful (tls_vec.TlsVecU32 T) (alloc.vec.Vec T)
+  (tls_vec.TlsVecU32.Insts.CoreConvertFromVec T)
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.convert.From.Lawful (tls_vec.TlsVecU32 T) (Slice T)
@@ -4957,8 +4954,108 @@ theorem tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful {T : Type}
   from_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.Lawful (T : Type _) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU32 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32 T)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU8 (alloc.vec.Vec Std.U8)
+  tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU8 (Slice Std.U8)
+  tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU8
+  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU16 (alloc.vec.Vec Std.U8)
+  tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU16 (Slice Std.U8)
+  tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU16
+  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU24 (alloc.vec.Vec Std.U8)
+  tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU24 (Slice Std.U8)
+  tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU24
+  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU32 (alloc.vec.Vec Std.U8)
+  tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.Lawful :
+  core.convert.From.Lawful tls_vec.TlsByteVecU32 (Slice Std.U8)
+  tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8
+  := {
+  from_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
+}
+
+theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.Lawful :
+  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU32
+  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32
+  := {
+  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (tls_vec.SecretTlsVecU8 T) (alloc.vec.Vec T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
 theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
@@ -4969,8 +5066,26 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.Lawful {T :
   from_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU8 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8 zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (tls_vec.SecretTlsVecU16 T) (alloc.vec.Vec T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
 theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
@@ -4981,8 +5096,26 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.Lawful {T :
   from_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU16 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16 zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (tls_vec.SecretTlsVecU24 T) (alloc.vec.Vec T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
 theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
@@ -4993,8 +5126,26 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.Lawful {T :
   from_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU24 T)
+  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24 zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.convert.From.Lawful (tls_vec.SecretTlsVecU32 T) (alloc.vec.Vec T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec zeroizeZeroizeInst)
+  := {
+  from_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreConvertFromVec.from_spec.panic_freedom
+}
+
 theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
   core.clone.Clone T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
@@ -5005,62 +5156,7 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.Lawful {T :
   from_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreConvertFromShared0Slice.from_spec.panic_freedom
 }
 
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.Lawful (T : Type) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU8 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8 T)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU8.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.Lawful (T : Type) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU16 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16 T)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU16.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.Lawful (T : Type) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU24 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24 T)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU24.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.Lawful (T : Type) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.TlsVecU32 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32 T)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromTlsVecU32.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU8 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8 zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU8.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU16 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16 zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU16.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU24 T)
-  (alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24 zeroizeZeroizeInst)
-  := {
-  from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU24.from_spec.panic_freedom
-}
-
-theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.convert.From.Lawful (alloc.vec.Vec T) (tls_vec.SecretTlsVecU32 T)
@@ -5069,95 +5165,10 @@ theorem alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.Lawful {T : Type}
   from_spec := by pf_only_combine alloc.vec.Vec.Insts.CoreConvertFromSecretTlsVecU32.from_spec.panic_freedom
 }
 
-theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU8 (alloc.vec.Vec Std.U8)
-  tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8
+theorem Error.Insts.CoreConvertFromNever.Lawful :
+  core.convert.From.Lawful Error Never Error.Insts.CoreConvertFromNever
   := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU8.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU16 (alloc.vec.Vec Std.U8)
-  tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU16.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU24 (alloc.vec.Vec Std.U8)
-  tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU24.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU32 (alloc.vec.Vec Std.U8)
-  tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreConvertFromVecU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU8 (Slice Std.U8)
-  tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU8.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU16 (Slice Std.U8)
-  tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU16.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU24 (Slice Std.U8)
-  tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU24.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
-}
-
-theorem tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.Lawful :
-  core.convert.From.Lawful tls_vec.TlsByteVecU32 (Slice Std.U8)
-  tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8
-  := {
-  from_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreConvertFromShared0SliceU8.from_spec.panic_freedom
-}
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU8
-  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU8.from_spec.panic_freedom
-}
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU16
-  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU16.from_spec.panic_freedom
-}
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU24
-  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU24.from_spec.panic_freedom
-}
-
-theorem alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.Lawful :
-  core.convert.From.Lawful (alloc.vec.Vec Std.U8) tls_vec.TlsByteVecU32
-  alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32
-  := {
-  from_spec := by pf_only_combine alloc.vec.VecU8.Insts.CoreConvertFromTlsByteVecU32.from_spec.panic_freedom
-}
-
-theorem Error.Insts.CoreConvertFromInfallible.Lawful :
-  core.convert.From.Lawful Error core.convert.Infallible
-  Error.Insts.CoreConvertFromInfallible
-  := {
-  from_spec := by pf_only_combine Error.Insts.CoreConvertFromInfallible.from_spec.panic_freedom
+  from_spec := by pf_only_combine Error.Insts.CoreConvertFromNever.from_spec.panic_freedom
 }
 
 theorem U64.Insts.CoreConvertFromTlsVarInt.Lawful :
@@ -5261,7 +5272,7 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.Lawful :
   ne_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.ne_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.Lawful {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) :
@@ -5272,7 +5283,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.Lawful {T : Type}
   ne_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.ne_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.Lawful {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) :
@@ -5283,7 +5294,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.Lawful {T : Type}
   ne_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.ne_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.Lawful {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) :
@@ -5294,7 +5305,7 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.Lawful {T : Type}
   ne_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.ne_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.Lawful {T : Type _}
   (corecmpPartialEqInst : core.cmp.PartialEq T T)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
   corecmpPartialEqInst) :
@@ -5306,7 +5317,7 @@ theorem tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.Lawful {T : Type}
 }
 
 theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -5320,7 +5331,7 @@ theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.Lawful {T :
 }
 
 theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.Lawful {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -5335,7 +5346,7 @@ theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.Lawful {T
 }
 
 theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.Lawful {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -5350,7 +5361,7 @@ theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.Lawful {T
 }
 
 theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.Lawful {T
-  : Type} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
+  : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T) (corecmpPartialEqInst :
   core.cmp.PartialEq T T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
   (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful T T
@@ -5367,12 +5378,12 @@ theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.Lawful {T
 /-! ### core.ops.function.FnOnce -/
 
 theorem
-  arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.Lawful
+  arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENShared0SliceU8Bool.Lawful
   (LEN : Std.Usize) :
   core.ops.function.FnOnce.Lawful
   (arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure
   LEN) ((Array Std.U8 LEN) × (Slice Std.U8)) Bool
-  (arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool
+  (arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENShared0SliceU8Bool
   LEN)
   := ⟨⟩
 
@@ -5387,7 +5398,7 @@ theorem
   := ⟨⟩
 
 theorem __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.Lawful
-  {Self_ : Type} {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+  {Self_ : Type _} {W : Type _} (coreiowriteWriteInst : core.io.write.Write W)
   (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
   (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
   coreiowriteWriteInst) (SizeInstLawful : Size.Lawful Self_ SizeInst)
@@ -5399,7 +5410,7 @@ theorem __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.Lawful
 
 theorem
   __5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
+  {Self_ : Type _} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
   (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst) :
   core.ops.function.FnOnce.Lawful (__5.ensures.closure.closure Self_)
@@ -5409,7 +5420,7 @@ theorem
   := ⟨⟩
 
 theorem __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
+  {Self_ : Type _} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
   (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst) :
   core.ops.function.FnOnce.Lawful (__5.ensures.closure Self_) (alloc.vec.Vec
@@ -5418,7 +5429,7 @@ theorem __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
   := ⟨⟩
 
 theorem __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes
+  {Self_ : Type _} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes
   Self_) (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (SerializeBytesInstLawful : SerializeBytes.Lawful Self_ SerializeBytesInst) :
   core.ops.function.FnOnce.Lawful (__6.ensures.closure Self_) (alloc.vec.Vec
@@ -5427,7 +5438,7 @@ theorem __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
   := ⟨⟩
 
 theorem __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {Self_ : Type _} {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (SizeInst : Size Self_) (DeserializeInst : Deserialize Self_)
   (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R allocioreadReadInst)
   (SizeInstLawful : Size.Lawful Self_ SizeInst)
@@ -5438,7 +5449,7 @@ theorem __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
   := ⟨⟩
 
 theorem __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} {T1 : Type} (SizeInst : Size Self_) (DeserializeInst :
+  {Self_ : Type _} {T1 : Type _} (SizeInst : Size Self_) (DeserializeInst :
   Deserialize Self_) (coreconvertAsRefT1SliceU8Inst : core.convert.AsRef T1
   (Slice Std.U8)) (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
@@ -5450,19 +5461,19 @@ theorem __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
   := ⟨⟩
 
 theorem
-  __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
-  {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
+  __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful
+  {Self_ : Type _} (SizeInst : Size Self_) (DeserializeBytesInst :
   DeserializeBytes Self_) (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
   DeserializeBytesInst) :
   core.ops.function.FnOnce.Lawful (__9.ensures.closure Self_) (Self_ × (Slice
   Std.U8)) Bool
-  (__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  (__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool
   SizeInst DeserializeBytesInst)
   := ⟨⟩
 
 theorem __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
+  {Self_ : Type _} (SizeInst : Size Self_) (DeserializeBytesInst :
   DeserializeBytes Self_) (SizeInstLawful : Size.Lawful Self_ SizeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
   DeserializeBytesInst) :
@@ -5473,8 +5484,8 @@ theorem __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
 
 theorem
   primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful
-  {T : Type} {W : Type} (SerializeInst : Serialize T) (coreiowriteWriteInst :
-  core.io.write.Write W)
+  {T : Type _} {W : Type _} (SerializeInst : Serialize T) (coreiowriteWriteInst
+  : core.io.write.Write W)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
   coreiowriteWriteInst) :
@@ -5486,7 +5497,7 @@ theorem
 
 theorem
   primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {T : Type} (SerializeBytesInst : SerializeBytes T)
+  {T : Type _} (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   core.ops.function.FnOnce.Lawful
   (primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure T)
@@ -5496,8 +5507,19 @@ theorem
   := ⟨⟩
 
 theorem
+  primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0U8Bool.Lawful
+  {T : Type _} (SerializeBytesInst : SerializeBytes T)
+  (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
+  core.ops.function.FnOnce.Lawful
+  (primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.closure
+  T) Std.U8 Bool
+  (primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0U8Bool
+  SerializeBytesInst)
+  := ⟨⟩
+
+theorem
   primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {T : Type} (SerializeBytesInst : SerializeBytes T)
+  {T : Type _} (SerializeBytesInst : SerializeBytes T)
   (SerializeBytesInstLawful : SerializeBytes.Lawful T SerializeBytesInst) :
   core.ops.function.FnOnce.Lawful
   (primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1 T)
@@ -5507,14 +5529,14 @@ theorem
   := ⟨⟩
 
 theorem
-  primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+  primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionShared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
   core.ops.function.FnOnce.Lawful
   (primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure T)
   ((core.option.Option T) × (Slice Std.U8)) Bool
-  (primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool
+  (primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionShared0SliceU8Bool
   DeserializeBytesInst)
   := ⟨⟩
 
@@ -5528,12 +5550,30 @@ theorem
   := ⟨⟩
 
 theorem
+  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure (Std.U8
+  × (Slice Std.U8)) Bool
+  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8Shared0SliceU8Bool
+  := ⟨⟩
+
+theorem
   primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful
   :
   core.ops.function.FnOnce.Lawful
   primitives.DeserializeBytesU16.tls_deserialize_bytes.closure
   core.array.TryFromSliceError Error
   primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError
+  := ⟨⟩
+
+theorem
+  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure
+  (Std.U16 × (Slice Std.U8)) Bool
+  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16Shared0SliceU8Bool
   := ⟨⟩
 
 theorem
@@ -5546,12 +5586,30 @@ theorem
   := ⟨⟩
 
 theorem
+  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure (U24
+  × (Slice Std.U8)) Bool
+  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24Shared0SliceU8Bool
+  := ⟨⟩
+
+theorem
   primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful
   :
   core.ops.function.FnOnce.Lawful
   primitives.DeserializeBytesU32.tls_deserialize_bytes.closure
   core.array.TryFromSliceError Error
   primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError
+  := ⟨⟩
+
+theorem
+  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure
+  (Std.U32 × (Slice Std.U8)) Bool
+  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32Shared0SliceU8Bool
   := ⟨⟩
 
 theorem
@@ -5564,53 +5622,17 @@ theorem
   := ⟨⟩
 
 theorem
-  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure (Std.U8
-  × (Slice Std.U8)) Bool
-  primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure
-  (Std.U16 × (Slice Std.U8)) Bool
-  primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure (U24
-  × (Slice Std.U8)) Bool
-  primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure
-  (Std.U32 × (Slice Std.U8)) Bool
-  primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool.Lawful
+  primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64Shared0SliceU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
   primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure
   (Std.U64 × (Slice Std.U8)) Bool
-  primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool
+  primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64Shared0SliceU8Bool
   := ⟨⟩
 
 theorem
   primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful
-  {T : Type} {U : Type} {W : Type} (SerializeInst : Serialize T)
+  {T : Type _} {U : Type _} {W : Type _} (SerializeInst : Serialize T)
   (SerializeInst1 : Serialize U) (coreiowriteWriteInst : core.io.write.Write W)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -5624,8 +5646,8 @@ theorem
 
 theorem
   primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.Lawful
-  {T : Type} {U : Type} {V : Type} {W : Type} (SerializeInst : Serialize T)
-  (SerializeInst1 : Serialize U) (SerializeInst2 : Serialize V)
+  {T : Type _} {U : Type _} {V : Type _} {W : Type _} (SerializeInst :
+  Serialize T) (SerializeInst1 : Serialize U) (SerializeInst2 : Serialize V)
   (coreiowriteWriteInst : core.io.write.Write W)
   (SerializeInstLawful : Serialize.Lawful T SerializeInst)
   (SerializeInst1Lawful : Serialize.Lawful U SerializeInst1)
@@ -5659,7 +5681,7 @@ theorem
 
 theorem
   quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnOnce.Lawful
   (quic_vec.SizeShared0Slice.tls_serialized_len.closure_1 T)
   quic_vec.ContentLength Std.Usize
@@ -5668,12 +5690,12 @@ theorem
   := ⟨⟩
 
 theorem
-  quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared2TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnOnce.Lawful
   (quic_vec.SizeShared0Slice.tls_serialized_len.closure T) (Std.Usize × T)
   Std.Usize
-  (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
+  (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared2TUsize
   SizeInst)
   := ⟨⟩
 
@@ -5723,7 +5745,7 @@ theorem
 
 theorem
   varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.Lawful
-  {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R allocioreadReadInst)
   :
   core.ops.function.FnOnce.Lawful
@@ -5735,7 +5757,7 @@ theorem
 
 theorem
   spec.__1.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_VecU8Bool.Lawful
-  {Self_ : Type} (SerializeBytesInst : SerializeBytes Self_)
+  {Self_ : Type _} (SerializeBytesInst : SerializeBytes Self_)
   (DeserializeBytesInst : DeserializeBytes Self_) (corecmpPartialEqInst :
   core.cmp.PartialEq Self_ Self_) (RoundTripInst : spec.RoundTrip Self_)
   (SerializeBytesInstLawful : SerializeBytes.Lawful Self_ SerializeBytesInst)
@@ -5752,7 +5774,7 @@ theorem
 
 theorem
   spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool.Lawful
-  {Self_ : Type} (SerializeBytesInst : SerializeBytes Self_)
+  {Self_ : Type _} (SerializeBytesInst : SerializeBytes Self_)
   (DeserializeBytesInst : DeserializeBytes Self_) (corecmpPartialEqInst :
   core.cmp.PartialEq Self_ Self_) (RoundTripInst : spec.RoundTrip Self_)
   (SerializeBytesInstLawful : SerializeBytes.Lawful Self_ SerializeBytesInst)
@@ -5769,7 +5791,7 @@ theorem
 
 theorem
   spec.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (RoundTripInst : spec.RoundTrip Self_) (NonEmptyInst :
+  {Self_ : Type _} (RoundTripInst : spec.RoundTrip Self_) (NonEmptyInst :
   spec.NonEmpty Self_)
   (RoundTripInstLawful : spec.RoundTrip.Lawful Self_ RoundTripInst)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful Self_ NonEmptyInst) :
@@ -6030,7 +6052,7 @@ theorem
 
 theorem
   spec.io.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {Self_ : Type _} {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (SerializeInst : Serialize Self_) (DeserializeInst : Deserialize Self_)
   (corecmpPartialEqInst : core.cmp.PartialEq Self_ Self_) (RoundTripStdInst :
   spec.io.RoundTripStd Self_)
@@ -6049,7 +6071,7 @@ theorem
 
 theorem
   spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} (SerializeInst : Serialize Self_) (DeserializeInst :
+  {Self_ : Type _} (SerializeInst : Serialize Self_) (DeserializeInst :
   Deserialize Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_ Self_)
   (RoundTripStdInst : spec.io.RoundTripStd Self_)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst)
@@ -6066,7 +6088,7 @@ theorem
 
 theorem
   spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {Self_ : Type _} {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (SerializeInst : Serialize Self_) (DeserializeInst : Deserialize Self_)
   (corecmpPartialEqInst : core.cmp.PartialEq Self_ Self_) (RoundTripStdInst :
   spec.io.RoundTripStd Self_)
@@ -6086,7 +6108,7 @@ theorem
 
 theorem
   spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SerializeInst : Serialize Self_) (DeserializeInst :
+  {Self_ : Type _} (SerializeInst : Serialize Self_) (DeserializeInst :
   Deserialize Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_ Self_)
   (RoundTripStdInst : spec.io.RoundTripStd Self_)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst)
@@ -6103,7 +6125,7 @@ theorem
 
 theorem
   spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  {Self_ : Type _} (RoundTripStdInst : spec.io.RoundTripStd Self_)
   (NonEmptyStdInst : spec.io.NonEmptyStd Self_)
   (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
   (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful Self_ NonEmptyStdInst) :
@@ -6115,7 +6137,7 @@ theorem
 
 theorem
   spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SerializeInst : Serialize Self_) (SerializeBytesInst :
+  {Self_ : Type _} (SerializeInst : Serialize Self_) (SerializeBytesInst :
   SerializeBytes Self_) (SameBytesInst : spec.io.SameBytes Self_)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst)
   (SerializeBytesInstLawful : SerializeBytes.Lawful Self_ SerializeBytesInst)
@@ -6128,7 +6150,7 @@ theorem
 
 theorem
   spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (SerializeInst : Serialize Self_) (SerializeBytesInst :
+  {Self_ : Type _} (SerializeInst : Serialize Self_) (SerializeBytesInst :
   SerializeBytes Self_) (SameBytesInst : spec.io.SameBytes Self_)
   (SerializeInstLawful : Serialize.Lawful Self_ SerializeInst)
   (SerializeBytesInstLawful : SerializeBytes.Lawful Self_ SerializeBytesInst)
@@ -6141,7 +6163,7 @@ theorem
 
 theorem
   spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
-  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {Self_ : Type _} {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
   DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
   Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
@@ -6160,9 +6182,9 @@ theorem
   := ⟨⟩
 
 theorem
-  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
-  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
-  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful
+  {Self_ : Type _} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst
+  : DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
   Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
   (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
@@ -6173,13 +6195,13 @@ theorem
   DecodersAgreeInst) :
   core.ops.function.FnOnce.Lawful (spec.io.__7.ensures.closure Self_) (Self_ ×
   (Slice Std.U8)) Bool
-  (spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  (spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool
   DeserializeInst DeserializeBytesInst corecmpPartialEqInst DecodersAgreeInst)
   := ⟨⟩
 
 theorem
-  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
-  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool.Lawful
+  {Self_ : Type _} (RoundTripStdInst : spec.io.RoundTripStd Self_)
   (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
   spec.io.RoundTripMixed Self_)
   (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
@@ -6189,13 +6211,13 @@ theorem
   RoundTripMixedInst) :
   core.ops.function.FnOnce.Lawful (spec.io.__9.ensures.closure Self_) (Self_ ×
   (Slice Std.U8)) Bool
-  (spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  (spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_Shared0SliceU8Bool
   RoundTripStdInst DecodersAgreeInst RoundTripMixedInst)
   := ⟨⟩
 
 theorem
   spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
-  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  {Self_ : Type _} (RoundTripStdInst : spec.io.RoundTripStd Self_)
   (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
   spec.io.RoundTripMixed Self_)
   (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
@@ -6210,26 +6232,26 @@ theorem
   := ⟨⟩
 
 theorem
-  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.Lawful
+  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecShared0SliceU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
   string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure
   (quic_vec.VLByteVec × (Slice Std.U8)) Bool
-  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool
+  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecShared0SliceU8Bool
   := ⟨⟩
 
 theorem
-  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.Lawful
+  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringShared0SliceU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
   string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure
   (alloc.string.String × (Slice Std.U8)) Bool
-  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool
+  string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringShared0SliceU8Bool
   := ⟨⟩
 
 theorem
   string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.Lawful
-  {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  {R : Type _} (allocioreadReadInst : alloc.io.read.Read R)
   (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R allocioreadReadInst)
   :
   core.ops.function.FnOnce.Lawful
@@ -6240,266 +6262,90 @@ theorem
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnOnce.Lawful
   (tls_vec.TlsVecU8.tls_serialized_length.closure T) (Std.Usize × T) Std.Usize
-  (tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
+  (tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (SizeInstLawful : Size.Lawful T SizeInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (SizeInstLawful : Size.Lawful T SizeInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (SizeInstLawful : Size.Lawful T SizeInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (SizeInstLawful : Size.Lawful T SizeInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsSliceU8.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsSliceU16.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsSliceU24.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.TlsSliceU32.tls_serialized_length.closure T) (Std.Usize × T)
-  Std.Usize
-  (tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
-  SizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure
-  (tls_vec.TlsByteVecU8 × (Slice Std.U8)) Bool
-  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure
-  (tls_vec.TlsByteVecU16 × (Slice Std.U8)) Bool
-  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure
-  (tls_vec.TlsByteVecU24 × (Slice Std.U8)) Bool
-  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool.Lawful
-  :
-  core.ops.function.FnOnce.Lawful
-  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure
-  (tls_vec.TlsByteVecU32 × (Slice Std.U8)) Bool
-  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool
-  := ⟨⟩
-
-theorem
-  tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+  tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
   core.ops.function.FnOnce.Lawful
   (tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure T) ((tls_vec.TlsVecU8
   T) × (Slice Std.U8)) Bool
-  (tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool
+  (tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8Shared0SliceU8Bool
   DeserializeBytesInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+  tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
   core.ops.function.FnOnce.Lawful
   (tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure T) ((tls_vec.TlsVecU16
   T) × (Slice Std.U8)) Bool
-  (tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool
+  (tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16Shared0SliceU8Bool
   DeserializeBytesInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+  tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
   core.ops.function.FnOnce.Lawful
   (tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure T) ((tls_vec.TlsVecU24
   T) × (Slice Std.U8)) Bool
-  (tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool
+  (tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24Shared0SliceU8Bool
   DeserializeBytesInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T)
+  tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T)
   (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
   :
   core.ops.function.FnOnce.Lawful
   (tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure T) ((tls_vec.TlsVecU32
   T) × (Slice Std.U8)) Bool
-  (tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool
+  (tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32Shared0SliceU8Bool
   DeserializeBytesInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T)
-  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure T)
-  ((tls_vec.SecretTlsVecU8 T) × (Slice Std.U8)) Bool
-  (tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool
-  DeserializeBytesInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T)
-  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure T)
-  ((tls_vec.SecretTlsVecU16 T) × (Slice Std.U8)) Bool
-  (tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool
-  DeserializeBytesInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T)
-  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure T)
-  ((tls_vec.SecretTlsVecU24 T) × (Slice Std.U8)) Bool
-  (tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool
-  DeserializeBytesInst zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem
-  tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool.Lawful
-  {T : Type} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst :
-  zeroize.Zeroize T)
-  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.function.FnOnce.Lawful
-  (tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure T)
-  ((tls_vec.SecretTlsVecU32 T) × (Slice Std.U8)) Bool
-  (tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool
-  DeserializeBytesInst zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem
@@ -6512,12 +6358,30 @@ theorem
   := ⟨⟩
 
 theorem
+  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure
+  (tls_vec.TlsByteVecU8 × (Slice Std.U8)) Bool
+  tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8Shared0SliceU8Bool
+  := ⟨⟩
+
+theorem
   tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
   tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure (alloc.vec.Vec
   Std.U8) Bool
   tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure
+  (tls_vec.TlsByteVecU16 × (Slice Std.U8)) Bool
+  tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16Shared0SliceU8Bool
   := ⟨⟩
 
 theorem
@@ -6530,6 +6394,15 @@ theorem
   := ⟨⟩
 
 theorem
+  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure
+  (tls_vec.TlsByteVecU24 × (Slice Std.U8)) Bool
+  tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24Shared0SliceU8Bool
+  := ⟨⟩
+
+theorem
   tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
@@ -6539,12 +6412,161 @@ theorem
   := ⟨⟩
 
 theorem
-  varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool.Lawful
+  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32Shared0SliceU8Bool.Lawful
+  :
+  core.ops.function.FnOnce.Lawful
+  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure
+  (tls_vec.TlsByteVecU32 × (Slice Std.U8)) Bool
+  tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32Shared0SliceU8Bool
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (SizeInstLawful : Size.Lawful T SizeInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst
+  : zeroize.Zeroize T)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure T)
+  ((tls_vec.SecretTlsVecU8 T) × (Slice Std.U8)) Bool
+  (tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8Shared0SliceU8Bool
+  DeserializeBytesInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (SizeInstLawful : Size.Lawful T SizeInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst
+  : zeroize.Zeroize T)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure T)
+  ((tls_vec.SecretTlsVecU16 T) × (Slice Std.U8)) Bool
+  (tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16Shared0SliceU8Bool
+  DeserializeBytesInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (SizeInstLawful : Size.Lawful T SizeInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst
+  : zeroize.Zeroize T)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure T)
+  ((tls_vec.SecretTlsVecU24 T) × (Slice Std.U8)) Bool
+  (tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24Shared0SliceU8Bool
+  DeserializeBytesInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (SizeInstLawful : Size.Lawful T SizeInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared0TUsize
+  SizeInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32Shared0SliceU8Bool.Lawful
+  {T : Type _} (DeserializeBytesInst : DeserializeBytes T) (zeroizeZeroizeInst
+  : zeroize.Zeroize T)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful T DeserializeBytesInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure T)
+  ((tls_vec.SecretTlsVecU32 T) × (Slice Std.U8)) Bool
+  (tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32Shared0SliceU8Bool
+  DeserializeBytesInst zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsSliceU8.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsSliceU16.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsSliceU24.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  core.ops.function.FnOnce.Lawful
+  (tls_vec.TlsSliceU32.tls_serialized_length.closure T) (Std.Usize × T)
+  Std.Usize
+  (tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared1TUsize
+  SizeInst)
+  := ⟨⟩
+
+theorem
+  varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntShared0SliceU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
   varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure
   (varint.TlsVarInt × (Slice Std.U8)) Bool
-  varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool
+  varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntShared0SliceU8Bool
   := ⟨⟩
 
 theorem
@@ -6575,6 +6597,11 @@ theorem quic_vec.VLByteVec.Insts.CoreFmtDebug.Lawful :
   quic_vec.VLByteVec.Insts.CoreFmtDebug
   := ⟨⟩
 
+theorem quic_vec.VLByteSlice.Insts.CoreFmtDebug.Lawful :
+  core.fmt.Debug.Lawful quic_vec.VLByteSlice
+  quic_vec.VLByteSlice.Insts.CoreFmtDebug
+  := ⟨⟩
+
 theorem quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.Lawful :
   core.fmt.Debug.Lawful quic_vec.secret_bytes.SecretVLBytes
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug
@@ -6585,73 +6612,32 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.Lawful :
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug
   := ⟨⟩
 
-theorem quic_vec.VLByteSlice.Insts.CoreFmtDebug.Lawful :
-  core.fmt.Debug.Lawful quic_vec.VLByteSlice
-  quic_vec.VLByteSlice.Insts.CoreFmtDebug
-  := ⟨⟩
-
-theorem tls_vec.TlsVecU8.Insts.CoreFmtDebug.Lawful {T : Type} (corefmtDebugInst
-  : core.fmt.Debug T)
+theorem tls_vec.TlsVecU8.Insts.CoreFmtDebug.Lawful {T : Type _}
+  (corefmtDebugInst : core.fmt.Debug T)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   core.fmt.Debug.Lawful (tls_vec.TlsVecU8 T)
   (tls_vec.TlsVecU8.Insts.CoreFmtDebug corefmtDebugInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU16.Insts.CoreFmtDebug.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreFmtDebug.Lawful {T : Type _}
   (corefmtDebugInst : core.fmt.Debug T)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   core.fmt.Debug.Lawful (tls_vec.TlsVecU16 T)
   (tls_vec.TlsVecU16.Insts.CoreFmtDebug corefmtDebugInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU24.Insts.CoreFmtDebug.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreFmtDebug.Lawful {T : Type _}
   (corefmtDebugInst : core.fmt.Debug T)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   core.fmt.Debug.Lawful (tls_vec.TlsVecU24 T)
   (tls_vec.TlsVecU24.Insts.CoreFmtDebug corefmtDebugInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU32.Insts.CoreFmtDebug.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreFmtDebug.Lawful {T : Type _}
   (corefmtDebugInst : core.fmt.Debug T)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
   core.fmt.Debug.Lawful (tls_vec.TlsVecU32 T)
   (tls_vec.TlsVecU32.Insts.CoreFmtDebug corefmtDebugInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.Lawful {T : Type}
-  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
-  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug corefmtDebugInst
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.Lawful {T : Type}
-  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
-  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug corefmtDebugInst
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.Lawful {T : Type}
-  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
-  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug corefmtDebugInst
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.Lawful {T : Type}
-  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
-  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug corefmtDebugInst
-  zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreFmtDebug.Lawful :
@@ -6672,6 +6658,42 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreFmtDebug.Lawful :
 theorem tls_vec.TlsByteVecU32.Insts.CoreFmtDebug.Lawful :
   core.fmt.Debug.Lawful tls_vec.TlsByteVecU32
   tls_vec.TlsByteVecU32.Insts.CoreFmtDebug
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.Lawful {T : Type _}
+  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
+  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug corefmtDebugInst
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.Lawful {T : Type _}
+  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
+  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug corefmtDebugInst
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.Lawful {T : Type _}
+  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
+  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug corefmtDebugInst
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.Lawful {T : Type _}
+  (corefmtDebugInst : core.fmt.Debug T) (zeroizeZeroizeInst : zeroize.Zeroize
+  T) (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.fmt.Debug.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug corefmtDebugInst
+  zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem varint.TlsVarInt.Insts.CoreFmtDebug.Lawful :
@@ -6712,7 +6734,7 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq.Lawful :
   eq_spec := by pf_fc_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq.eq_spec.panic_freedom quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.Lawful {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) :
   core.cmp.Eq.Lawful (tls_vec.TlsVecU8 T) (tls_vec.TlsVecU8.Insts.CoreCmpEq
   corecmpEqInst)
@@ -6720,7 +6742,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
   eq_spec := by pf_fc_combine tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.TlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.Lawful {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) :
   core.cmp.Eq.Lawful (tls_vec.TlsVecU16 T) (tls_vec.TlsVecU16.Insts.CoreCmpEq
   corecmpEqInst)
@@ -6728,7 +6750,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
   eq_spec := by pf_fc_combine tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.TlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.Lawful {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) :
   core.cmp.Eq.Lawful (tls_vec.TlsVecU24 T) (tls_vec.TlsVecU24.Insts.CoreCmpEq
   corecmpEqInst)
@@ -6736,52 +6758,12 @@ theorem tls_vec.TlsVecU24.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
   eq_spec := by pf_fc_combine tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.TlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst :
+theorem tls_vec.TlsVecU32.Insts.CoreCmpEq.Lawful {T : Type _} (corecmpEqInst :
   core.cmp.Eq T) (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst) :
   core.cmp.Eq.Lawful (tls_vec.TlsVecU32 T) (tls_vec.TlsVecU32.Insts.CoreCmpEq
   corecmpEqInst)
   := {
   eq_spec := by pf_fc_combine tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.TlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.Lawful {T : Type} (corecmpEqInst
-  : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
-  := {
-  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.Lawful {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
-  := {
-  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.Lawful {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
-  := {
-  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.Lawful {T : Type}
-  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
-  := {
-  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreCmpEq.Lawful :
@@ -6809,6 +6791,46 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCmpEq.Lawful :
   tls_vec.TlsByteVecU32.Insts.CoreCmpEq
   := {
   eq_spec := by pf_fc_combine tls_vec.TlsByteVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.TlsByteVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.Lawful {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
+  := {
+  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU8.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.Lawful {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
+  := {
+  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU16.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.Lawful {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
+  := {
+  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU24.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.Lawful {T : Type _}
+  (corecmpEqInst : core.cmp.Eq T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (corecmpEqInstLawful : core.cmp.Eq.Lawful T corecmpEqInst)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.cmp.Eq.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreCmpEq corecmpEqInst zeroizeZeroizeInst)
+  := {
+  eq_spec := by pf_fc_combine tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.panic_freedom tls_vec.SecretTlsVecU32.Insts.CoreCmpEq.eq_spec.functional_correctness
 }
 
 theorem varint.TlsVarInt.Insts.CoreCmpEq.Lawful :
@@ -6901,7 +6923,7 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.Lawful :
   clone_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.Lawful {T : Type}
+theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.clone.Clone.Lawful (tls_vec.TlsVecU8 T)
@@ -6910,7 +6932,7 @@ theorem tls_vec.TlsVecU8.Insts.CoreCloneClone.Lawful {T : Type}
   clone_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.clone.Clone.Lawful (tls_vec.TlsVecU16 T)
@@ -6919,7 +6941,7 @@ theorem tls_vec.TlsVecU16.Insts.CoreCloneClone.Lawful {T : Type}
   clone_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.clone.Clone.Lawful (tls_vec.TlsVecU24 T)
@@ -6928,61 +6950,13 @@ theorem tls_vec.TlsVecU24.Insts.CoreCloneClone.Lawful {T : Type}
   clone_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreCloneClone.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreCloneClone.Lawful {T : Type _}
   (corecloneCloneInst : core.clone.Clone T)
   (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
   core.clone.Clone.Lawful (tls_vec.TlsVecU32 T)
   (tls_vec.TlsVecU32.Insts.CoreCloneClone corecloneCloneInst)
   := {
   clone_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
-  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreCloneClone zeroizeZeroizeInst
-  corecloneCloneInst)
-  := {
-  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
-  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreCloneClone zeroizeZeroizeInst
-  corecloneCloneInst)
-  := {
-  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
-  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreCloneClone zeroizeZeroizeInst
-  corecloneCloneInst)
-  := {
-  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
-  core.clone.Clone T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
-  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreCloneClone zeroizeZeroizeInst
-  corecloneCloneInst)
-  := {
-  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreCloneClone.Lawful :
@@ -7011,6 +6985,54 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreCloneClone.Lawful :
   tls_vec.TlsByteVecU32.Insts.CoreCloneClone
   := {
   clone_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
+  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreCloneClone zeroizeZeroizeInst
+  corecloneCloneInst)
+  := {
+  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreCloneClone.clone_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
+  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreCloneClone zeroizeZeroizeInst
+  corecloneCloneInst)
+  := {
+  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreCloneClone.clone_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
+  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreCloneClone zeroizeZeroizeInst
+  corecloneCloneInst)
+  := {
+  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreCloneClone.clone_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corecloneCloneInst :
+  core.clone.Clone T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corecloneCloneInstLawful : core.clone.Clone.Lawful T corecloneCloneInst) :
+  core.clone.Clone.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreCloneClone zeroizeZeroizeInst
+  corecloneCloneInst)
+  := {
+  clone_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreCloneClone.clone_spec.panic_freedom
 }
 
 theorem varint.TlsVarInt.Insts.CoreCloneClone.Lawful :
@@ -7051,68 +7073,32 @@ theorem U24.Insts.CoreDefaultDefault.Lawful :
   default_spec := by pf_only_combine U24.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU8.Insts.CoreDefaultDefault.Lawful (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreDefaultDefault.Lawful (T : Type _) :
   core.default.Default.Lawful (tls_vec.TlsVecU8 T)
   (tls_vec.TlsVecU8.Insts.CoreDefaultDefault T)
   := {
   default_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreDefaultDefault.Lawful (T : Type) :
+theorem tls_vec.TlsVecU16.Insts.CoreDefaultDefault.Lawful (T : Type _) :
   core.default.Default.Lawful (tls_vec.TlsVecU16 T)
   (tls_vec.TlsVecU16.Insts.CoreDefaultDefault T)
   := {
   default_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreDefaultDefault.Lawful (T : Type) :
+theorem tls_vec.TlsVecU24.Insts.CoreDefaultDefault.Lawful (T : Type _) :
   core.default.Default.Lawful (tls_vec.TlsVecU24 T)
   (tls_vec.TlsVecU24.Insts.CoreDefaultDefault T)
   := {
   default_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreDefaultDefault.Lawful (T : Type) :
+theorem tls_vec.TlsVecU32.Insts.CoreDefaultDefault.Lawful (T : Type _) :
   core.default.Default.Lawful (tls_vec.TlsVecU32 T)
   (tls_vec.TlsVecU32.Insts.CoreDefaultDefault T)
   := {
   default_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.default.Default.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault zeroizeZeroizeInst)
-  := {
-  default_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.default.Default.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault zeroizeZeroizeInst)
-  := {
-  default_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.default.Default.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault zeroizeZeroizeInst)
-  := {
-  default_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.default.Default.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault zeroizeZeroizeInst)
-  := {
-  default_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreDefaultDefault.Lawful :
@@ -7143,6 +7129,42 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.Lawful :
   default_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom
 }
 
+theorem tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.default.Default.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault zeroizeZeroizeInst)
+  := {
+  default_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreDefaultDefault.default_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.default.Default.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault zeroizeZeroizeInst)
+  := {
+  default_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreDefaultDefault.default_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.default.Default.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault zeroizeZeroizeInst)
+  := {
+  default_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreDefaultDefault.default_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.default.Default.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault zeroizeZeroizeInst)
+  := {
+  default_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedom
+}
+
 /-! ### core.convert.TryFrom -/
 
 theorem U24.Insts.CoreConvertTryFromUsizeError.Lawful :
@@ -7162,175 +7184,141 @@ theorem varint.TlsVarInt.Insts.CoreConvertTryFromU64Error.Lawful :
 /-! ### core.ops.function.FnMut -/
 
 theorem
-  quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (quic_vec.SizeShared0Slice.tls_serialized_len.closure T) (Std.Usize × T)
   Std.Usize
-  (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsVecU8.tls_serialized_length.closure T) (Std.Usize × T) Std.Usize
-  (tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.SecretTlsVecU8.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.SecretTlsVecU16.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.SecretTlsVecU24.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
+  tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (zeroizeZeroizeInst : zeroize.Zeroize T)
   (SizeInstLawful : Size.Lawful T SizeInst)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.SecretTlsVecU32.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared0TUsize
   SizeInst zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsSliceU8.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsSliceU16.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsSliceU24.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize
   SizeInst)
   := ⟨⟩
 
 theorem
-  tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.Lawful
-  {T : Type} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
+  tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize.Lawful
+  {T : Type _} (SizeInst : Size T) (SizeInstLawful : Size.Lawful T SizeInst) :
   core.ops.function.FnMut.Lawful
   (tls_vec.TlsSliceU32.tls_serialized_length.closure T) (Std.Usize × T)
   Std.Usize
-  (tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
+  (tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared1TUsize
   SizeInst)
   := ⟨⟩
-
-/-! ### core.convert.AsRef -/
-
-theorem quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8.Lawful :
-  core.convert.AsRef.Lawful quic_vec.VLBytes (Slice Std.U8)
-  quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8
-  := {
-  as_ref_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
-}
-
-theorem quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8.Lawful :
-  core.convert.AsRef.Lawful quic_vec.VLByteVec (Slice Std.U8)
-  quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8
-  := {
-  as_ref_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
-}
-
-theorem
-  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.Lawful :
-  core.convert.AsRef.Lawful quic_vec.secret_bytes.SecretVLBytes (Slice Std.U8)
-  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8
-  := {
-  as_ref_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
-}
-
-theorem
-  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.Lawful
-  :
-  core.convert.AsRef.Lawful quic_vec.secret_byte_vec.SecretVLByteVec (Slice
-  Std.U8)
-  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8
-  := {
-  as_ref_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
-}
 
 /-! ### core.hash.Hash -/
 
@@ -7353,68 +7341,32 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash.Lawful :
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash
   := ⟨⟩
 
-theorem tls_vec.TlsVecU8.Insts.CoreHashHash.Lawful {T : Type} (corehashHashInst
-  : core.hash.Hash T)
+theorem tls_vec.TlsVecU8.Insts.CoreHashHash.Lawful {T : Type _}
+  (corehashHashInst : core.hash.Hash T)
   (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
   core.hash.Hash.Lawful (tls_vec.TlsVecU8 T)
   (tls_vec.TlsVecU8.Insts.CoreHashHash corehashHashInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU16.Insts.CoreHashHash.Lawful {T : Type}
+theorem tls_vec.TlsVecU16.Insts.CoreHashHash.Lawful {T : Type _}
   (corehashHashInst : core.hash.Hash T)
   (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
   core.hash.Hash.Lawful (tls_vec.TlsVecU16 T)
   (tls_vec.TlsVecU16.Insts.CoreHashHash corehashHashInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU24.Insts.CoreHashHash.Lawful {T : Type}
+theorem tls_vec.TlsVecU24.Insts.CoreHashHash.Lawful {T : Type _}
   (corehashHashInst : core.hash.Hash T)
   (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
   core.hash.Hash.Lawful (tls_vec.TlsVecU24 T)
   (tls_vec.TlsVecU24.Insts.CoreHashHash corehashHashInst)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU32.Insts.CoreHashHash.Lawful {T : Type}
+theorem tls_vec.TlsVecU32.Insts.CoreHashHash.Lawful {T : Type _}
   (corehashHashInst : core.hash.Hash T)
   (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
   core.hash.Hash.Lawful (tls_vec.TlsVecU32 T)
   (tls_vec.TlsVecU32.Insts.CoreHashHash corehashHashInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreHashHash.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
-  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
-  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU8 T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreHashHash zeroizeZeroizeInst
-  corehashHashInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreHashHash.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
-  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
-  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU16 T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreHashHash zeroizeZeroizeInst
-  corehashHashInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreHashHash.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
-  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
-  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU24 T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreHashHash zeroizeZeroizeInst
-  corehashHashInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreHashHash.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
-  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
-  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
-  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU32 T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreHashHash zeroizeZeroizeInst
-  corehashHashInst)
   := ⟨⟩
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreHashHash.Lawful :
@@ -7435,6 +7387,42 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreHashHash.Lawful :
 theorem tls_vec.TlsByteVecU32.Insts.CoreHashHash.Lawful :
   core.hash.Hash.Lawful tls_vec.TlsByteVecU32
   tls_vec.TlsByteVecU32.Insts.CoreHashHash
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreHashHash.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
+  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
+  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU8 T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreHashHash zeroizeZeroizeInst
+  corehashHashInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreHashHash.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
+  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
+  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU16 T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreHashHash zeroizeZeroizeInst
+  corehashHashInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreHashHash.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
+  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
+  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU24 T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreHashHash zeroizeZeroizeInst
+  corehashHashInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreHashHash.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T) (corehashHashInst : core.hash.Hash
+  T) (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst)
+  (corehashHashInstLawful : core.hash.Hash.Lawful T corehashHashInst) :
+  core.hash.Hash.Lawful (tls_vec.SecretTlsVecU32 T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreHashHash zeroizeZeroizeInst
+  corehashHashInst)
   := ⟨⟩
 
 theorem varint.TlsVarInt.Insts.CoreHashHash.Lawful :
@@ -7498,6 +7486,40 @@ theorem varint.TlsVarInt.Insts.CoreCmpOrd.Lawful :
   core.cmp.Ord.Lawful varint.TlsVarInt varint.TlsVarInt.Insts.CoreCmpOrd
   := ⟨⟩
 
+/-! ### core.convert.AsRef -/
+
+theorem quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8.Lawful :
+  core.convert.AsRef.Lawful quic_vec.VLBytes (Slice Std.U8)
+  quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8
+  := {
+  as_ref_spec := by pf_only_combine quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
+}
+
+theorem quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8.Lawful :
+  core.convert.AsRef.Lawful quic_vec.VLByteVec (Slice Std.U8)
+  quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8
+  := {
+  as_ref_spec := by pf_only_combine quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
+}
+
+theorem
+  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.Lawful :
+  core.convert.AsRef.Lawful quic_vec.secret_bytes.SecretVLBytes (Slice Std.U8)
+  quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8
+  := {
+  as_ref_spec := by pf_only_combine quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
+}
+
+theorem
+  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.Lawful
+  :
+  core.convert.AsRef.Lawful quic_vec.secret_byte_vec.SecretVLByteVec (Slice
+  Std.U8)
+  quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8
+  := {
+  as_ref_spec := by pf_only_combine quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref_spec.panic_freedom
+}
+
 /-! ### zeroize.Zeroize -/
 
 theorem quic_vec.VLBytes.Insts.ZeroizeZeroize.Lawful :
@@ -7519,28 +7541,28 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize.Lawful :
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU8.Insts.ZeroizeZeroize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.ZeroizeZeroize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   zeroize.Zeroize.Lawful (tls_vec.SecretTlsVecU8 T)
   (tls_vec.SecretTlsVecU8.Insts.ZeroizeZeroize zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU16.Insts.ZeroizeZeroize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.ZeroizeZeroize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   zeroize.Zeroize.Lawful (tls_vec.SecretTlsVecU16 T)
   (tls_vec.SecretTlsVecU16.Insts.ZeroizeZeroize zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU24.Insts.ZeroizeZeroize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.ZeroizeZeroize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   zeroize.Zeroize.Lawful (tls_vec.SecretTlsVecU24 T)
   (tls_vec.SecretTlsVecU24.Insts.ZeroizeZeroize zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU32.Insts.ZeroizeZeroize.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.ZeroizeZeroize.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   zeroize.Zeroize.Lawful (tls_vec.SecretTlsVecU32 T)
@@ -7559,28 +7581,28 @@ theorem quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop.Lawful :
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsDropDrop.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsDropDrop.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.drop.Drop.Lawful (tls_vec.SecretTlsVecU8 T)
   (tls_vec.SecretTlsVecU8.Insts.CoreOpsDropDrop zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsDropDrop.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsDropDrop.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.drop.Drop.Lawful (tls_vec.SecretTlsVecU16 T)
   (tls_vec.SecretTlsVecU16.Insts.CoreOpsDropDrop zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsDropDrop.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsDropDrop.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.drop.Drop.Lawful (tls_vec.SecretTlsVecU24 T)
   (tls_vec.SecretTlsVecU24.Insts.CoreOpsDropDrop zeroizeZeroizeInst)
   := ⟨⟩
 
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsDropDrop.Lawful {T : Type}
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsDropDrop.Lawful {T : Type _}
   (zeroizeZeroizeInst : zeroize.Zeroize T)
   (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
   core.ops.drop.Drop.Lawful (tls_vec.SecretTlsVecU32 T)
@@ -7657,7 +7679,7 @@ theorem ArrayU84.Insts.Tls_codecSpecRoundTrip.Lawful :
   round_trip_spec := by pf_fc_combine ArrayU84.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom ArrayU84.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness
 }
 
-theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecRoundTrip.Lawful {T : Type _}
   (RoundTripInst : spec.RoundTrip T)
   (RoundTripInstLawful : spec.RoundTrip.Lawful T RoundTripInst) :
   spec.RoundTrip.Lawful (core.option.Option T)
@@ -7739,7 +7761,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecRoundTrip.Lawful :
   round_trip_spec := by pf_fc_combine alloc.string.String.Insts.Tls_codecSpecRoundTrip.round_trip_spec.panic_freedom alloc.string.String.Insts.Tls_codecSpecRoundTrip.round_trip_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecRoundTrip.Lawful {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) :
   spec.RoundTrip.Lawful (alloc.vec.Vec T)
@@ -7796,7 +7818,7 @@ theorem ArrayU84.Insts.Tls_codecSpecNonEmpty.Lawful :
   nonempty_spec := by pf_fc_combine ArrayU84.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom ArrayU84.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness
 }
 
-theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.Lawful {T : Type}
+theorem core.option.Option.Insts.Tls_codecSpecNonEmpty.Lawful {T : Type _}
   (RoundTripInst1 : spec.RoundTrip T)
   (RoundTripInst1Lawful : spec.RoundTrip.Lawful T RoundTripInst1) :
   spec.NonEmpty.Lawful (core.option.Option T)
@@ -7862,7 +7884,7 @@ theorem alloc.string.String.Insts.Tls_codecSpecNonEmpty.Lawful :
   nonempty_spec := by pf_fc_combine alloc.string.String.Insts.Tls_codecSpecNonEmpty.nonempty_spec.panic_freedom alloc.string.String.Insts.Tls_codecSpecNonEmpty.nonempty_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecNonEmpty.Lawful {T : Type _}
   (NonEmptyInst : spec.NonEmpty T)
   (NonEmptyInstLawful : spec.NonEmpty.Lawful T NonEmptyInst) :
   spec.NonEmpty.Lawful (alloc.vec.Vec T)
@@ -7895,7 +7917,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.Lawful :
   round_trip_exact_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.round_trip_exact_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd.Lawful {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
@@ -7927,7 +7949,7 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.Lawful :
   nonempty_std_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd.nonempty_std_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd.Lawful {T : Type _}
   (NonEmptyStdInst : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug
   T) (NonEmptyStdInstLawful : spec.io.NonEmptyStd.Lawful T NonEmptyStdInst)
   (corefmtDebugInstLawful : core.fmt.Debug.Lawful T corefmtDebugInst) :
@@ -8036,7 +8058,7 @@ theorem
   bytes_prefix_only_spec := by pf_fc_combine quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
 }
 
-theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.Lawful {T : Type}
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.Lawful {T : Type _}
   (DecodersAgreeInst : spec.io.DecodersAgree T)
   (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst)
   :
@@ -8071,52 +8093,24 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.Lawful :
 
 /-! ### core.ops.index.Index -/
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type _) :
   core.ops.index.Index.Lawful (tls_vec.TlsVecU8 T) Std.Usize T
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type _) :
   core.ops.index.Index.Lawful (tls_vec.TlsVecU16 T) Std.Usize T
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type _) :
   core.ops.index.Index.Lawful (tls_vec.TlsVecU24 T) Std.Usize T
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful (T : Type _) :
   core.ops.index.Index.Lawful (tls_vec.TlsVecU32 T) Std.Usize T
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexUsizeT T)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU8 T) Std.Usize T
-  (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU16 T) Std.Usize T
-  (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU24 T) Std.Usize T
-  (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU32 T) Std.Usize T
-  (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreOpsIndexIndexUsizeU8.Lawful :
@@ -8139,54 +8133,57 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexUsizeU8.Lawful :
   tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexUsizeU8
   := ⟨⟩
 
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU8 T) Std.Usize T
+  (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU16 T) Std.Usize T
+  (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU24 T) Std.Usize T
+  (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.Index.Lawful (tls_vec.SecretTlsVecU32 T) Std.Usize T
+  (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
 /-! ### core.ops.index.IndexMut -/
 
-theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type _) :
   core.ops.index.IndexMut.Lawful (tls_vec.TlsVecU8 T) Std.Usize T
   (tls_vec.TlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type _)
+  :
   core.ops.index.IndexMut.Lawful (tls_vec.TlsVecU16 T) Std.Usize T
   (tls_vec.TlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type _)
+  :
   core.ops.index.IndexMut.Lawful (tls_vec.TlsVecU24 T) Std.Usize T
   (tls_vec.TlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT T)
   := ⟨⟩
 
-theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type) :
+theorem tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful (T : Type _)
+  :
   core.ops.index.IndexMut.Lawful (tls_vec.TlsVecU32 T) Std.Usize T
   (tls_vec.TlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT T)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU8 T) Std.Usize T
-  (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU16 T) Std.Usize T
-  (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU24 T) Std.Usize T
-  (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
-  Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU32 T) Std.Usize T
-  (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful :
@@ -8209,70 +8206,62 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexMutUsizeU8.Lawful :
   tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexMutUsizeU8
   := ⟨⟩
 
+theorem tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU8 T) Std.Usize T
+  (tls_vec.SecretTlsVecU8.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU16 T) Std.Usize T
+  (tls_vec.SecretTlsVecU16.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU24 T) Std.Usize T
+  (tls_vec.SecretTlsVecU24.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT.Lawful {T :
+  Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.ops.index.IndexMut.Lawful (tls_vec.SecretTlsVecU32 T) Std.Usize T
+  (tls_vec.SecretTlsVecU32.Insts.CoreOpsIndexIndexMutUsizeT zeroizeZeroizeInst)
+  := ⟨⟩
+
 /-! ### core.borrow.Borrow -/
 
-theorem tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful (T : Type) :
+theorem tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful (T : Type _) :
   core.borrow.Borrow.Lawful (tls_vec.TlsVecU8 T) (Slice T)
   (tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice T)
   := {
   borrow_spec := by pf_only_combine tls_vec.TlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful (T : Type) :
+theorem tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful (T : Type _) :
   core.borrow.Borrow.Lawful (tls_vec.TlsVecU16 T) (Slice T)
   (tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice T)
   := {
   borrow_spec := by pf_only_combine tls_vec.TlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful (T : Type) :
+theorem tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful (T : Type _) :
   core.borrow.Borrow.Lawful (tls_vec.TlsVecU24 T) (Slice T)
   (tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice T)
   := {
   borrow_spec := by pf_only_combine tls_vec.TlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
 }
 
-theorem tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful (T : Type) :
+theorem tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful (T : Type _) :
   core.borrow.Borrow.Lawful (tls_vec.TlsVecU32 T) (Slice T)
   (tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice T)
   := {
   borrow_spec := by pf_only_combine tls_vec.TlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU8 T) (Slice T)
-  (tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
-  := {
-  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU16 T) (Slice T)
-  (tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
-  := {
-  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU24 T) (Slice T)
-  (tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
-  := {
-  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
-}
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful {T : Type}
-  (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU32 T) (Slice T)
-  (tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
-  := {
-  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
 }
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreBorrowBorrowSliceU8.Lawful :
@@ -8303,62 +8292,66 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.Lawful :
   borrow_spec := by pf_only_combine tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_freedom
 }
 
+theorem tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU8 T) (Slice T)
+  (tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
+  := {
+  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU8.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU16 T) (Slice T)
+  (tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
+  := {
+  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU16.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU24 T) (Slice T)
+  (tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
+  := {
+  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU24.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
+}
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.Lawful {T : Type _}
+  (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.borrow.Borrow.Lawful (tls_vec.SecretTlsVecU32 T) (Slice T)
+  (tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice zeroizeZeroizeInst)
+  := {
+  borrow_spec := by pf_only_combine tls_vec.SecretTlsVecU32.Insts.CoreBorrowBorrowSlice.borrow_spec.panic_freedom
+}
+
 /-! ### core.iter.traits.collect.FromIterator -/
 
 theorem tls_vec.TlsVecU8.Insts.CoreIterTraitsCollectFromIterator.Lawful (T :
-  Type) :
+  Type _) :
   core.iter.traits.collect.FromIterator.Lawful (tls_vec.TlsVecU8 T) T
   (tls_vec.TlsVecU8.Insts.CoreIterTraitsCollectFromIterator T)
   := ⟨⟩
 
 theorem tls_vec.TlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful (T :
-  Type) :
+  Type _) :
   core.iter.traits.collect.FromIterator.Lawful (tls_vec.TlsVecU16 T) T
   (tls_vec.TlsVecU16.Insts.CoreIterTraitsCollectFromIterator T)
   := ⟨⟩
 
 theorem tls_vec.TlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful (T :
-  Type) :
+  Type _) :
   core.iter.traits.collect.FromIterator.Lawful (tls_vec.TlsVecU24 T) T
   (tls_vec.TlsVecU24.Insts.CoreIterTraitsCollectFromIterator T)
   := ⟨⟩
 
 theorem tls_vec.TlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful (T :
-  Type) :
+  Type _) :
   core.iter.traits.collect.FromIterator.Lawful (tls_vec.TlsVecU32 T) T
   (tls_vec.TlsVecU32.Insts.CoreIterTraitsCollectFromIterator T)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator.Lawful
-  {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU8 T) T
-  (tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful
-  {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU16 T) T
-  (tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful
-  {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU24 T) T
-  (tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator
-  zeroizeZeroizeInst)
-  := ⟨⟩
-
-theorem tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful
-  {T : Type} (zeroizeZeroizeInst : zeroize.Zeroize T)
-  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
-  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU32 T) T
-  (tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator
-  zeroizeZeroizeInst)
   := ⟨⟩
 
 theorem tls_vec.TlsByteVecU8.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful :
@@ -8382,6 +8375,38 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful
   :
   core.iter.traits.collect.FromIterator.Lawful tls_vec.TlsByteVecU32 Std.U8
   tls_vec.TlsByteVecU32.Insts.CoreIterTraitsCollectFromIteratorU8
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator.Lawful
+  {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU8 T) T
+  (tls_vec.SecretTlsVecU8.Insts.CoreIterTraitsCollectFromIterator
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator.Lawful
+  {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU16 T) T
+  (tls_vec.SecretTlsVecU16.Insts.CoreIterTraitsCollectFromIterator
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator.Lawful
+  {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU24 T) T
+  (tls_vec.SecretTlsVecU24.Insts.CoreIterTraitsCollectFromIterator
+  zeroizeZeroizeInst)
+  := ⟨⟩
+
+theorem tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator.Lawful
+  {T : Type _} (zeroizeZeroizeInst : zeroize.Zeroize T)
+  (zeroizeZeroizeInstLawful : zeroize.Zeroize.Lawful T zeroizeZeroizeInst) :
+  core.iter.traits.collect.FromIterator.Lawful (tls_vec.SecretTlsVecU32 T) T
+  (tls_vec.SecretTlsVecU32.Insts.CoreIterTraitsCollectFromIterator
+  zeroizeZeroizeInst)
   := ⟨⟩
 
 end tls_codec

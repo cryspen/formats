@@ -21,7 +21,7 @@ namespace tls_codec
 
 /-- Transport across types: a serializer running as `SI`'s on another value, with the same size,
 meets the contract. -/
-theorem SerSpec.transportT {T T' : Type} {SI : Serialize T} {x : T} (h : SerSpec SI x)
+theorem SerSpec.transportT {T T' : Type _} {SI : Serialize T} {x : T} (h : SerSpec SI x)
     (SI' : Serialize T') (x' : T')
     (hser : ∀ (W : Type) (WI : core.io.write.Write W) w,
       SI'.tls_serialize WI x' w = SI.tls_serialize WI x w)
@@ -36,6 +36,13 @@ theorem SerSpec.transportT {T T' : Type} {SI : Serialize T} {x : T} (h : SerSpec
   exact Serialize.tls_serialize_spec_of_runs' SI' x' sz (hsz.trans hsz0) _
     (fun hle b hb => h.enc_len sz hsz0 hle b hb) hr WI hWI w hpre
 
+/-- `as_slice` / `as_bytes` (monadic since aeneas 38960402; no longer reduced by `rfl`). -/
+theorem VLBytes.as_slice_ok (x : quic_vec.VLBytes) : quic_vec.VLBytes.as_slice x = ok x.vec := by
+  simp [quic_vec.VLBytes.as_slice, quic_vec.VLBytes.impl.vec, core.Slice.Insts.CoreConvertAsRefSlice.as_ref,
+    alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref, alloc.vec.Vec.as_slice_ok]
+
+theorem Str.as_bytes_ok (s : Str) : core.str.Str.as_bytes s = ok s := rfl
+
 /-! ### `VLByteVec`: deserializer (the shared `VLGen.de` of `Std/VLBytes.lean`) -/
 
 def VLDeV (l : List Std.U8) (x : quic_vec.VLByteVec) (n : Nat) : Prop :=
@@ -43,11 +50,11 @@ def VLDeV (l : List Std.U8) (x : quic_vec.VLByteVec) (n : Nat) : Prop :=
     l.take n = varint.enc x.vec.val.length ++ x.vec.val ∧
     n = varint.lenOf x.vec.val.length + x.vec.val.length
 
-theorem VLByteVec.de_eq {R : Type} (RI : alloc.io.read.Read R) (r : R) :
+theorem VLByteVec.de_eq {R : Type _} (RI : alloc.io.read.Read R) (r : R) :
     quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize RI r =
       VLGen.de quic_vec.VLByteVec.new (fun b => { vec := b }) RI r := rfl
 
-theorem VLByteVec.std_de_content {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
+theorem VLByteVec.std_de_content {R : Type _} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
     {a : R → Nat → R} (law : StdIo.RLaw RI v a) (r : R) :
     ⦃ ⌜ True ⌝ ⦄ quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize RI r
     ⦃ ⇓ p => ⌜ ∀ x, p.1 = .Ok x → ∃ n, n ≤ (v r).length ∧ p.2 = a r n ∧ VLDeV (v r) x n ⌝ ⦄ := by
@@ -63,7 +70,7 @@ theorem VLByteVec.de_runs : DeRuns quic_vec.VLByteVec.Insts.Tls_codecDeserialize
   obtain ⟨sz, hsz, hszv⟩ : ∃ sz : Std.Usize,
       quic_vec.VLByteVec.Insts.Tls_codecSize.tls_serialized_len x = ok sz ∧
         sz.val = x.vec.val.length + varint.lenOf x.vec.val.length := by
-    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (quic_vec.VLByteVec.serialized_len_char x hde.2.1)
     exact ⟨sz, hsz, hP⟩
   exact ⟨n, sz, hn, hadv, hsz, by rw [hszv, hde.2.2.2]; omega, hde⟩
@@ -85,13 +92,22 @@ theorem Shared0VLByteVec.serSpec (x : quic_vec.VLByteVec) :
     SerSpec Shared0VLByteVec.Insts.Tls_codecSerialize x :=
   (VLByteVec.serSpec x).transport _ (fun _ _ _ => rfl) rfl (VLByteVec.size_ex x)
 
+theorem VLByteSlice.size_eq (s : quic_vec.VLByteSlice) :
+    quic_vec.VLByteSlice.Insts.Tls_codecSize.tls_serialized_len s =
+      quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len ⟨s⟩ := by
+  simp [quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len, VLBytes.as_slice_ok,
+    quic_vec.VLByteSlice.Insts.Tls_codecSize.tls_serialized_len]
+
 theorem VLByteSlice.size_ex (s : quic_vec.VLByteSlice) :
     ∃ sz, quic_vec.VLByteSlice.Insts.Tls_codecSize.tls_serialized_len s = ok sz :=
-  VLBytes.size_ex ⟨s⟩
+  VLByteSlice.size_eq s ▸ VLBytes.size_ex ⟨s⟩
 
 theorem VLByteSlice.serSpec (s : quic_vec.VLByteSlice) :
     SerSpec quic_vec.VLByteSlice.Insts.Tls_codecSerialize s :=
-  (VLBytes.serSpec ⟨s⟩).transportT _ s (fun _ _ _ => rfl) rfl (VLBytes.size_ex _)
+  (VLBytes.serSpec ⟨s⟩).transportT _ s (fun _ _ _ => by
+    simp [quic_vec.VLBytes.Insts.Tls_codecSerialize.tls_serialize, VLBytes.as_slice_ok,
+      quic_vec.VLByteSlice.Insts.Tls_codecSerialize.tls_serialize]) (VLByteSlice.size_eq s)
+    (VLBytes.size_ex _)
 
 theorem Shared0VLByteSlice.serSpec (s : quic_vec.VLByteSlice) :
     SerSpec Shared0VLByteSlice.Insts.Tls_codecSerialize s :=
@@ -102,7 +118,7 @@ theorem Shared0VLByteSlice.serSpec (s : quic_vec.VLByteSlice) :
 theorem varint.size_ex (x : varint.TlsVarInt) :
     ∃ sz, varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len x = ok sz ∧
       sz.val = varint.lenOf x.val := by
-  obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec x)
+  obtain ⟨sz, hsz, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp (varint.TlsVarInt.bytes_len_spec x)
   exact ⟨sz, hsz, (varint.lenOf_char _ _ hP).1⟩
 
 /-- The output of the `TlsVarInt` serializer: its canonical encoding, or an error above `2^62 - 1`. -/
@@ -149,15 +165,19 @@ theorem ContentLength.deSpec : DeSpec quic_vec.ContentLength.Insts.Tls_codecDese
 
 /-! ### `SecretVLByteVec`: as `VLByteVec` -/
 
-theorem SecretVLByteVec.de_eq {R : Type} (RI : alloc.io.read.Read R) (r : R) :
+theorem SecretVLByteVec.de_eq {R : Type _} (RI : alloc.io.read.Read R) (r : R) :
     quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserialize.tls_deserialize RI r =
       quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize RI r := by
   unfold quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserialize.tls_deserialize
   generalize quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize RI r = m
-  rcases m with ⟨res, b⟩ | e | _
-  · cases res <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok p =>
+    obtain ⟨res, b⟩ := p
+    cases res <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from]
+  | fail e => simp
+  | div => simp
 
 theorem SecretVLByteVec.serSpec (x : quic_vec.secret_byte_vec.SecretVLByteVec) :
     SerSpec quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSerialize x :=
@@ -173,30 +193,37 @@ theorem SecretVLByteVec.deSpec :
 
 /-! ### `&[T]`: as `Vec<T>` (aeneas represents both as a `Slice`) -/
 
-theorem Vec.serSpec {T : Type} {SI : Serialize T} (Dbg : core.fmt.Debug T)
+theorem Vec.serSpec {T : Type _} {SI : Serialize T} (Dbg : core.fmt.Debug T)
     (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) :
     SerSpec (alloc.vec.Vec.Insts.Tls_codecSerialize SI Dbg) v :=
   fun _ WI hWI w hpre => Vec.ser_spec write_length_runs Dbg hL WI hWI v w hpre
 
-theorem Vec.size_ex' {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) :
+theorem Vec.size_ex' {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) :
     ∃ sz, (alloc.vec.Vec.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len v = ok sz := by
-  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (alloc.vec.Vec.size_rel SI.SizeInst hL.SizeInstLawful v)
   exact ⟨sz, hsz⟩
 
-theorem Shared0Slice.size_ex {T : Type} {SI : Serialize T} (hL : Serialize.Lawful T SI)
+theorem Shared0Slice.size_eq {T : Type _} (S : Size T) (x : Slice T) :
+    (Shared0Slice.Insts.Tls_codecSize S).tls_serialized_len x =
+      (alloc.vec.Vec.Insts.Tls_codecSize S).tls_serialized_len x := by
+  simp [alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len, alloc.vec.Vec.as_slice_ok]
+
+theorem Shared0Slice.size_ex {T : Type _} {SI : Serialize T} (hL : Serialize.Lawful T SI)
     (x : Slice T) :
     ∃ sz, (Shared0Slice.Insts.Tls_codecSize SI.SizeInst).tls_serialized_len x = ok sz :=
-  Vec.size_ex' hL x
+  Shared0Slice.size_eq _ x ▸ Vec.size_ex' hL x
 
-theorem Shared0Slice.serSpec {T : Type} {SI : Serialize T} (Dbg : core.fmt.Debug T)
+theorem Shared0Slice.serSpec {T : Type _} {SI : Serialize T} (Dbg : core.fmt.Debug T)
     (hL : Serialize.Lawful T SI) (x : Slice T) :
     SerSpec (Shared0Slice.Insts.Tls_codecSerialize SI Dbg) x :=
-  (Vec.serSpec Dbg hL x).transportT _ x (fun _ _ _ => rfl) rfl (Vec.size_ex' hL x)
+  (Vec.serSpec Dbg hL x).transportT _ x (fun _ _ _ => by
+    simp [alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize, alloc.vec.Vec.as_slice_ok])
+    (Shared0Slice.size_eq _ x) (Vec.size_ex' hL x)
 
 /-! ### `str`, `&str`: as `&[u8]` -/
 
-theorem Size.lawful_of_ok {T : Type} (S : Size T) (h : ∀ x, ∃ sz, S.tls_serialized_len x = ok sz) :
+theorem Size.lawful_of_ok {T : Type _} (S : Size T) (h : ∀ x, ∃ sz, S.tls_serialized_len x = ok sz) :
     Size.Lawful T S :=
   ⟨fun x _ => by
     obtain ⟨sz, hs⟩ := h x
@@ -206,15 +233,30 @@ theorem Size.lawful_of_ok {T : Type} (S : Size T) (h : ∀ x, ∃ sz, S.tls_seri
 theorem U8.lawful : Serialize.Lawful Std.U8 U8.Insts.Tls_codecSerialize where
   SizeInstLawful := Size.lawful_of_ok _ fun _ => ⟨_, rfl⟩
   tls_serialize_spec := fun WI hWI x w h => U8.ser_spec WI hWI x w h
-  tls_serialize_detached_spec := fun x _ => SerSpec.detached (U8.serSpec x) ⟨_, rfl⟩
+  tls_serialize_detached_spec := fun x _ => by
+    rw [show U8.Insts.Tls_codecSerialize.tls_serialize_detached x =
+      Serialize.tls_serialize_detached.default U8.Insts.Tls_codecSerialize x from rfl]
+    exact SerSpec.detached (U8.serSpec x) ⟨_, rfl⟩
 
 theorem Str.serSpec (x : Str) : SerSpec Str.Insts.Tls_codecSerialize x :=
   (Shared0Slice.serSpec core.U8.Insts.CoreFmtDebug U8.lawful x).transportT _ x
-    (fun _ _ _ => rfl) rfl (Shared0Slice.size_ex U8.lawful x)
+    (fun _ _ _ => by
+      simp only [Str.Insts.Tls_codecSerialize, Str.Insts.Tls_codecSerialize.tls_serialize, Str.as_bytes_ok]
+      exact Aeneas.Std.bind_ok _ _)
+    (by
+      simp only [Str.Insts.Tls_codecSerialize, Str.Insts.Tls_codecSize, Str.Insts.Tls_codecSize.tls_serialized_len, Str.as_bytes_ok]
+      exact Aeneas.Std.bind_ok _ _)
+    (Shared0Slice.size_ex U8.lawful x)
 
 theorem Shared0Str.serSpec (x : Str) : SerSpec Shared0Str.Insts.Tls_codecSerialize x :=
   (Shared0Slice.serSpec core.U8.Insts.CoreFmtDebug U8.lawful x).transportT _ x
-    (fun _ _ _ => rfl) rfl (Shared0Slice.size_ex U8.lawful x)
+    (fun _ _ _ => by
+      simp only [Shared0Str.Insts.Tls_codecSerialize, Shared0Str.Insts.Tls_codecSerialize.tls_serialize, Str.as_bytes_ok]
+      exact Aeneas.Std.bind_ok _ _)
+    (by
+      simp only [Shared0Str.Insts.Tls_codecSerialize, Shared0Str.Insts.Tls_codecSize, Shared0Str.Insts.Tls_codecSize.tls_serialized_len, Str.as_bytes_ok]
+      exact Aeneas.Std.bind_ok _ _)
+    (Shared0Slice.size_ex U8.lawful x)
 
 /-! #### `SecretVLBytes`, `SecretVLByteVec`: `tls_deserialize_bytes` is the wrapped type's -/
 
@@ -223,19 +265,25 @@ theorem SecretVLBytes.deser_bytes_eq (bytes : Slice Std.U8) :
       quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes := by
   unfold quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   generalize quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes = m
-  rcases m with r | e | _
-  · cases r <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok r =>
+    rcases r with ⟨_, _⟩ | _ <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from]
+  | fail e => simp
+  | div => simp
 
 theorem SecretVLByteVec.deser_bytes_eq (bytes : Slice Std.U8) :
     quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes =
       quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes := by
   unfold quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   generalize quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes bytes = m
-  rcases m with r | e | _
-  · cases r <;> rfl
-  · rfl
-  · rfl
+  cases m with
+  | ok r =>
+    rcases r with ⟨_, _⟩ | _ <;> simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from]
+  | fail e => simp
+  | div => simp
 
 end tls_codec

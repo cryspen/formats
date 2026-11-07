@@ -15,7 +15,7 @@ false in Rust for an `io::Error::Custom` whose payload's `Debug` fails; proved f
 lawful readers produce (`Helpers/ErrorFrom.lean`).
 
 Audit status (`scripts/Audit.lean`): all 281 function specs proved (PF / FC / PO 281 / 281);
-per-impl `Lawful`: LPF 580 / 581, LFC 382 / 382, LAW 655 / 656. The one open obligation is that
+per-impl `Lawful`: LPF 598 / 599, LFC 400 / 400, LAW 670 / 671. The one open obligation is that
 `from_spec.panic_freedom`, so 2 theorems are not clean: it and `Error.Insts.CoreConvertFromError.Lawful`.
 
 ## Layout
@@ -97,8 +97,9 @@ contain proofs; `--force` drops all proofs. `ProofObligations.lean` is always re
   counts per group (`PF`, `FC`, `PO` function specs; `LPF`, `LFC` Lawful fields; `LAW` per-impl
   `Lawful`, per trait) and writes `scripts/audit_*_clean.txt` (clean theorems with their non-standard
   axioms). Expected non-standard axioms: the `Assumptions/` ones (fmt ASSUMED no-fail, `size_of*`,
-  `numBits_eq_64`, `append_bytes(_spec)`, fmt / hash / zeroize signatures reached by statements)
-  and the extraction's own `…tls_deserialize_bytes_loop.body._native.decide.ax_*`.
+  `numBits_eq_64`, `append_bytes(_spec)`, fmt / hash / zeroize signatures reached by statements),
+  i.e. exactly the 40 entries of `scripts/axiom_whitelist.txt` (all used), plus `sorryAx` only for the
+  OPEN `Error.Insts.CoreConvertFromError.from_spec.panic_freedom` (and the `Lawful` built on it).
 - Regression gate: save `scripts/audit_*_clean.txt` before a refactor, then
   `python3 scripts/audit_compare.py <saved dir>` after the audit.
 - `lean_verify` needs the `tls_codec.` prefix on names.

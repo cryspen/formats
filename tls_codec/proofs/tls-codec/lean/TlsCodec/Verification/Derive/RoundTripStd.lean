@@ -10,9 +10,9 @@ fact that a value larger than `B` never serializes (`RtStd.of_lawful`, `RtStd.of
 (`RoundTripStd.lawful_of_rtStd`, `NonEmptyStd.lawful_of_rtStd`).
 
 Obligations: none in TlsCodec; the downstream round-trip obligations use it.
-Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `size_of`, `size_of_U16`, `numBits_eq_64`
+Axioms reached (`scripts/axiom_whitelist.txt`): ASSUMED `numBits_eq_64`
 (`imax_64` only: the room for compositions above `2^31 - 1` bytes); 1 signature-only stub
-(`core.io.error.Error.Insts.CoreFmtDebug.fmt`); `native_decide` (1, through `Vec<T>`). -/
+(`core.io.error.Error.Insts.CoreFmtDebug.fmt`). -/
 import TlsCodec.Verification.ProofObligations
 import TlsCodec.Verification.Derive.Std
 open CoreModels Aeneas
@@ -30,7 +30,7 @@ open tls_codec
 /-! ## The predicate -/
 
 /-- Round-trip facts of a `std` codec pair whose encodings have between `L` and `B` bytes. -/
-structure RtStd {T : Type} (SI : Serialize T) (DI : Deserialize T) (L B : Nat) : Prop where
+structure RtStd {T : Type _} (SI : Serialize T) (DI : Deserialize T) (L B : Nat) : Prop where
   room : B ≤ imax
   ser : ∀ (x : T) (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
     ∀ w : W, (core.io.write.Write.view WI w).length + B ≤ imax →
@@ -40,7 +40,7 @@ structure RtStd {T : Type} (SI : Serialize T) (DI : Deserialize T) (L B : Nat) :
   lo : ∀ x b, encOut SI x = some b → L ≤ b.length
   dec : ∀ x b, encOut SI x = some b → DecodesTo DI b x
 
-theorem encOut_some {T : Type} {SI : Serialize T} {x : T} {b : List Std.U8}
+theorem encOut_some {T : Type _} {SI : Serialize T} {x : T} {b : List Std.U8}
     (h : encOut SI x = some b) :
     ∃ bv : alloc.vec.Vec Std.U8, spec.io.encode SI x = ok (.Ok bv) ∧ (bv : Slice Std.U8).val = b := by
   unfold encOut at h
@@ -50,7 +50,7 @@ theorem encOut_some {T : Type} {SI : Serialize T} {x : T} {b : List Std.U8}
   · cases h
 
 /-- `encode` from the behaviour of the serializer on writers with room for `B` bytes. -/
-theorem encode_of_post {T : Type} (SI : Serialize T) (x : T) (o : Option (List Std.U8))
+theorem encode_of_post {T : Type _} (SI : Serialize T) (x : T) (o : Option (List Std.U8))
     (sz B : Nat) (hB : B ≤ imax)
     (h : ∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
       ∀ w : W, (core.io.write.Write.view WI w).length + B ≤ imax →
@@ -58,15 +58,20 @@ theorem encode_of_post {T : Type} (SI : Serialize T) (x : T) (o : Option (List S
     (∀ b, o = some b → ∃ bv : alloc.vec.Vec Std.U8,
       spec.io.encode SI x = ok (.Ok bv) ∧ (bv : Slice Std.U8).val = b) ∧
     (o = none → ∃ e, spec.io.encode SI x = ok (.Err e)) := by
-  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (h _ alloc.vec.VecU8.Insts.CoreIoWriteWrite StdIo.vec_lawful ⟨[], by simp⟩
+  obtain ⟨⟨r, w'⟩, hr, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
+    (h _ alloc.vec.VecU8.Insts.CoreIoWriteWrite StdIo.vec_lawful (Slice.new _)
       (by rw [StdIo.vec_sink]; simpa using hB))
-  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok ⟨[], by simp⟩ := rfl
+  have hnew : CoreModels.alloc.vec.Vec.new Std.U8 = ok (Slice.new _) := by
+    simp [CoreModels.alloc.vec.Vec.new, rust_primitives.sequence.seq_empty, Aeneas.Std.bind_ok,
+      Aeneas.Std.bind_tc_ok]
   cases r with
   | Ok n =>
     obtain ⟨-, b, hb, -, hv⟩ := hp.1 n rfl
     have he : spec.io.encode SI x = ok (.Ok w') := by
-      unfold spec.io.encode; rw [hnew]; simp only [bind_tc_ok]; rw [hr]; rfl
+      unfold spec.io.encode; rw [hnew]; simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]; rw [hr]
+      simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+        core.convert.From.Blanket, core.convert.From.Blanket.from, Aeneas.Std.bind_ok]
     rw [StdIo.vec_sink, StdIo.vec_sink] at hv
     subst hb
     refine ⟨fun b' hb' => ⟨w', he, ?_⟩, fun h => (by cases h)⟩
@@ -76,9 +81,12 @@ theorem encode_of_post {T : Type} (SI : Serialize T) (x : T) (o : Option (List S
     have ho := hp.2 e rfl
     subst ho
     refine ⟨fun b hb => (by cases hb), fun _ => ⟨e, ?_⟩⟩
-    unfold spec.io.encode; rw [hnew]; simp only [bind_tc_ok]; rw [hr]; rfl
+    unfold spec.io.encode; rw [hnew]; simp only [Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]; rw [hr]
+    simp [core.result.Result.Insts.CoreOpsTry_traitTryTResultInfallibleE.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual,
+      core.convert.From.Blanket, core.convert.From.Blanket.from, Aeneas.Std.bind_ok]
 
-theorem encOut_of_post {T : Type} (SI : Serialize T) (x : T) (o : Option (List Std.U8))
+theorem encOut_of_post {T : Type _} (SI : Serialize T) (x : T) (o : Option (List Std.U8))
     (sz B : Nat) (hB : B ≤ imax)
     (h : ∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
       ∀ w : W, (core.io.write.Write.view WI w).length + B ≤ imax →
@@ -90,7 +98,7 @@ theorem encOut_of_post {T : Type} (SI : Serialize T) (x : T) (o : Option (List S
   | none => obtain ⟨e, he⟩ := hn rfl; exact encOut_err he
 
 /-- The encoding of a successful `encode` is the one `RtStd` speaks of. -/
-theorem RtStd.encode_cases {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.encode_cases {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (h : RtStd SI DI L B) (x : T) :
     (∃ bv : alloc.vec.Vec Std.U8, spec.io.encode SI x = ok (.Ok bv) ∧
       encOut SI x = some (bv : Slice Std.U8).val) ∨
@@ -112,7 +120,7 @@ theorem imax_64 : 2 ^ 62 ≤ imax := by
 
 /-! ## From the predicate to the lemma traits -/
 
-theorem RoundTripStd.lawful_of_rtStd {T : Type} (RT : spec.io.RoundTripStd T)
+theorem RoundTripStd.lawful_of_rtStd {T : Type _} (RT : spec.io.RoundTripStd T)
     (hS : Serialize.Lawful T RT.SerializeInst) (hD : Deserialize.Lawful T RT.DeserializeInst)
     (hEq : core.cmp.PartialEq.Lawful T T RT.corecmpPartialEqInst) {L B : Nat}
     (h : RtStd RT.SerializeInst RT.DeserializeInst L B)
@@ -141,7 +149,7 @@ theorem RoundTripStd.lawful_of_rtStd {T : Type} (RT : spec.io.RoundTripStd T)
         exact Deserialize.tls_deserialize_exact.default_decodes _ _ x (h.dec x _ ho) s hs
     · exact spec.io.RoundTripStd.round_trip_exact_err RT x e he
 
-theorem NonEmptyStd.lawful_of_rtStd {T : Type} (NE : spec.io.NonEmptyStd T)
+theorem NonEmptyStd.lawful_of_rtStd {T : Type _} (NE : spec.io.NonEmptyStd T)
     (hRT : spec.io.RoundTripStd.Lawful T NE.RoundTripStdInst) {L B : Nat}
     (h : RtStd NE.RoundTripStdInst.SerializeInst NE.RoundTripStdInst.DeserializeInst L B)
     (hL : 1 ≤ L)
@@ -159,7 +167,7 @@ theorem NonEmptyStd.lawful_of_rtStd {T : Type} (NE : spec.io.NonEmptyStd T)
     · exact spec.io.NonEmptyStd.nonempty_std_err NE x e he
 
 /-- `DecodesTo` of a lawful `RoundTripStd`, through `encOut`. -/
-theorem rt_decodes_out {T : Type} {RT : spec.io.RoundTripStd T}
+theorem rt_decodes_out {T : Type _} {RT : spec.io.RoundTripStd T}
     (h : spec.io.RoundTripStd.Lawful T RT) (x : T) (b : List Std.U8)
     (hb : encOut RT.SerializeInst x = some b) : DecodesTo RT.DeserializeInst b x := by
   obtain ⟨bv, he, rfl⟩ := encOut_some hb
@@ -168,7 +176,7 @@ theorem rt_decodes_out {T : Type} {RT : spec.io.RoundTripStd T}
 /-! ## Leaves -/
 
 /-- `RtStd` of a codec meeting its contracts, whose values of size above `B` never serialize. -/
-theorem RtStd.of_lawful {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.of_lawful {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (hL : Serialize.Lawful T SI) (hB : B ≤ imax)
     (big : ∀ x, B < (szv SI.SizeInst x).val → ∀ (W : Type) (WI : core.io.write.Write W),
       core.io.write.Write.Lawful W WI → ∀ w : W,
@@ -191,7 +199,7 @@ theorem RtStd.of_lawful {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B 
     · rw [hnone x (by omega)] at hb; cases hb
 
 /-- `RtStd` of a codec of constant size `n ≤ B`. -/
-theorem RtStd.of_const {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.of_const {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (hL : Serialize.Lawful T SI) (hB : B ≤ imax) (hsz : ∀ x, (szv SI.SizeInst x).val ≤ B)
     (lo : ∀ x b, encOut SI x = some b → L ≤ b.length)
     (dec : ∀ x b, encOut SI x = some b → DecodesTo DI b x) : RtStd SI DI L B :=
@@ -221,7 +229,7 @@ theorem U16.rtStd : RtStd U16.Insts.Tls_codecSerialize U16.Insts.Tls_codecDeseri
 /-- The size of a `VLBytes` value whose length fits the MLS bound. -/
 theorem VLBytes.szv_small (x : quic_vec.VLBytes) (hx : x.vec.val.length ≤ 2 ^ 30 - 1) :
     (szv quic_vec.VLBytes.Insts.Tls_codecSize x).val ≤ 2 ^ 30 + 3 := by
-  obtain ⟨sz, hsz, hv⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨sz, hsz, hv⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLBytes.serialized_len_char x hx)
   rw [szv_eq hsz, hv]
   unfold varint.lenOf
@@ -243,18 +251,18 @@ theorem VLBytes.rtStd :
     by_cases hx : x.vec.val.length ≤ 2 ^ 30 - 1
     · obtain ⟨bv', he', hbv⟩ := VLBytes.encode_ok x hx
       rw [he] at he'
-      cases he'
+      replace he' := RustM.ok_injective he'; cases he'
       rw [hbv, List.length_append, varint.enc_length]
       have := varint.lenOf_pos x.vec.val.length
       omega
     · obtain ⟨e, he'⟩ := VLBytes.encode_big x (by omega)
-      rw [he] at he'; cases he'
+      rw [he] at he'; replace he' := RustM.ok_injective he'; cases he'
 
 /-! ## Derived codecs -/
 
 /-- A field decoder call, in the form `mvcgen` uses: on a reader starting with `b`, it returns
 `x` and consumes `b`. -/
-theorem DecodesTo.spec {T : Type} {DI : Deserialize T} {b : List Std.U8} {x : T}
+theorem DecodesTo.spec {T : Type _} {DI : Deserialize T} {b : List Std.U8} {x : T}
     (h : DecodesTo DI b x) {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
     {a : R → Nat → R} (law : StdIo.RLaw RI v a) (r : R) :
     ⦃ ⌜ ∃ rest, v r = b ++ rest ⌝ ⦄ DI.tls_deserialize RI r
@@ -264,7 +272,7 @@ theorem DecodesTo.spec {T : Type} {DI : Deserialize T} {b : List Std.U8} {x : T}
   exact triple_post_mono (h _ RI v a law r rest hv) (fun p hp => ⟨hp.1, by rw [hv, hp.2]⟩) trivial
 
 /-- A field serializer call, in the form `mvcgen` uses. -/
-theorem RtStd.ser_spec {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.ser_spec {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (h : RtStd SI DI L B) {W : Type} (WI : core.io.write.Write W)
     (hWI : core.io.write.Write.Lawful W WI) (x : T) (w : W) :
     ⦃ ⌜ (core.io.write.Write.view WI w).length + B ≤ imax ⌝ ⦄ SI.tls_serialize WI x w
@@ -273,7 +281,7 @@ theorem RtStd.ser_spec {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B :
 
 /-- `RtStd` from, for each value, an encoding `o` that the serializer appends on writers with
 room for `B` bytes, of at most `B` bytes and decoding back to the value. -/
-theorem RtStd.of_post {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.of_post {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (hB : B ≤ imax)
     (h : ∀ x : T, ∃ o : Option (List Std.U8),
       (∀ (W : Type) (WI : core.io.write.Write W), core.io.write.Write.Lawful W WI →
@@ -319,7 +327,7 @@ elab "rt_bounds " "[" fs:term,* "]" : tactic => withMainContext do
 
 /-- A field decoder call, in the form `mvcgen` uses: on a reader starting with an encoding, the
 decoder returns the encoded value and consumes the encoding (for every such encoding). -/
-theorem RtStd.de_spec {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
+theorem RtStd.de_spec {T : Type _} {SI : Serialize T} {DI : Deserialize T} {L B : Nat}
     (h : RtStd SI DI L B) {R : Type} {RI : alloc.io.read.Read R} {v : R → List Std.U8}
     {a : R → Nat → R} (law : StdIo.RLaw RI v a) (r : R) :
     ⦃ ⌜ ∃ y b rest, encOut SI y = some b ∧ v r = b ++ rest ⌝ ⦄ DI.tls_deserialize RI r
@@ -327,13 +335,13 @@ theorem RtStd.de_spec {T : Type} {SI : Serialize T} {DI : Deserialize T} {L B : 
       p.1 = .Ok y ∧ v p.2 = rest ⌝ ⦄ := by
   intro hpre
   obtain ⟨y, b, rest, hb, hv⟩ := hpre
-  obtain ⟨p, hp, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (h.dec y b hb _ RI v a law r rest hv)
+  obtain ⟨p, hp, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (h.dec y b hb _ RI v a law r rest hv)
   rw [hp]
   refine ok_triple_of (fun y' b' rest' hb' hv' => ?_) trivial
-  obtain ⟨p', hp', hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨p', hp', hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (h.dec y' b' hb' _ RI v a law r rest' hv')
   rw [hp] at hp'
-  cases hp'
+  obtain rfl := RustM.ok_injective hp'
   exact hpost
 
 open Lean Elab Tactic Meta in
@@ -531,7 +539,7 @@ macro_rules
 /-! ## Vectors -/
 
 /-- A vector whose content exceeds the MLS bound is rejected on every writer with some room. -/
-theorem Vec.ser_big {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
+theorem Vec.ser_big {T : Type _} {SI : Serialize T} (DbgI : core.fmt.Debug T)
     (hL : Serialize.Lawful T SI) (v : alloc.vec.Vec T) {N : Nat}
     (hN : SizeNat SI.SizeInst v.val N) (hbig : 2 ^ 30 - 1 < N) {W : Type}
     (WI : core.io.write.Write W) (hWI : core.io.write.Write.Lawful W WI) (w : W)
@@ -582,7 +590,7 @@ theorem Vec.ser_big {T : Type} {SI : Serialize T} (DbgI : core.fmt.Debug T)
     exact ⟨_, rfl⟩
 
 /-- `RtStd` of `Vec<T>` from the elements' `NonEmptyStd` (its round trip). -/
-theorem Vec.rtStd {T : Type} (NE : spec.io.NonEmptyStd T) (DbgI : core.fmt.Debug T)
+theorem Vec.rtStd {T : Type _} (NE : spec.io.NonEmptyStd T) (DbgI : core.fmt.Debug T)
     (hNE : spec.io.NonEmptyStd.Lawful T NE) (hDbg : core.fmt.Debug.Lawful T DbgI) :
     RtStd (alloc.vec.Vec.Insts.Tls_codecSerialize NE.RoundTripStdInst.SerializeInst DbgI)
       (alloc.vec.Vec.Insts.Tls_codecDeserialize NE.RoundTripStdInst.DeserializeInst)
@@ -598,7 +606,7 @@ theorem Vec.rtStd {T : Type} (NE : spec.io.NonEmptyStd T) (DbgI : core.fmt.Debug
     obtain ⟨N, hN⟩ := SizeNat.exists hLe.SizeInstLawful v.val
     by_cases hN30 : N ≤ 2 ^ 30 - 1
     · exfalso
-      obtain ⟨sz, hsz, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+      obtain ⟨sz, hsz, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp
         (alloc.vec.Vec.size_rel _ hLe.SizeInstLawful v)
       obtain ⟨c, -, hc, hszv⟩ := Vec.size_exact hLe v sz hsz hN
       have hl4 : varint.lenOf N ≤ 4 := by unfold varint.lenOf; split_ifs <;> omega

@@ -21,7 +21,7 @@ namespace tls_codec
 
 /-- The `requires` of `RoundTrip::round_trip`: `tls_serialized_len self` returns `n` and
 `rest.len + n` fits in a `usize`. -/
-theorem spec.RoundTrip.round_trip.pre_elim {T : Type} (RT : spec.RoundTrip T) (x : T)
+theorem spec.RoundTrip.round_trip.pre_elim {T : Type _} (RT : spec.RoundTrip T) (x : T)
     (rest : Slice Std.U8)
     (h : (spec.RoundTrip.round_trip.pre RT.SerializeBytesInst RT.DeserializeBytesInst
       RT.corecmpPartialEqInst RT x rest).holds) :
@@ -32,12 +32,12 @@ theorem spec.RoundTrip.round_trip.pre_elim {T : Type} (RT : spec.RoundTrip T) (x
   cases hn : RT.SerializeBytesInst.SizeInst.tls_serialized_len x with
   | ok n =>
     refine ⟨n, rfl, ?_⟩
-    simp only [hl, hn, bind_tc_ok] at h
+    simp only [hl, hn, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok] at h
     cases hs : (core.num.Usize.MAX - n : RustM Std.Usize) with
     | ok m =>
       have := Aeneas.Std.UScalar.sub_equiv (core.num.Usize.MAX) n
       rw [hs] at this
-      simp only [hs, bind_tc_ok] at h
+      simp only [hs, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok] at h
       have h2 := holds_ok_iff.mp h
       obtain ⟨_, hm, _⟩ := this
       simp only [decide_eq_true_eq] at h2
@@ -60,19 +60,19 @@ theorem spec.RoundTrip.round_trip.pre_elim {T : Type} (RT : spec.RoundTrip T) (x
     simp [hl, hn, Functor.map, Std.Do.wp, Std.Do.PredTrans.apply] at this
 
 /-- `RoundTrip::round_trip`, PF: the lemma method returns `()`. -/
-theorem spec.RoundTrip.round_trip.default_pf {Self : Type} (self : Self) (rest : Slice Std.U8) :
+theorem spec.RoundTrip.round_trip.default_pf {Self : Type _} (self : Self) (rest : Slice Std.U8) :
     ⦃ ⌜ True ⌝ ⦄ spec.RoundTrip.round_trip.default self rest ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold spec.RoundTrip.round_trip.default
   mvcgen
 
 /-- `NonEmpty::nonempty`, PF: the lemma method returns `()`. -/
-theorem spec.NonEmpty.nonempty.default_pf {Self : Type} (self : Self) :
+theorem spec.NonEmpty.nonempty.default_pf {Self : Type _} (self : Self) :
     ⦃ ⌜ True ⌝ ⦄ spec.NonEmpty.nonempty.default self ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   unfold spec.NonEmpty.nonempty.default
   mvcgen
 
 /-- A total triple under a proposition precondition: assume it. -/
-theorem triple_pre_prop {α : Type} {m : RustM α} {P : Prop} {Q : α → Prop}
+theorem triple_pre_prop {α : Type _} {m : RustM α} {P : Prop} {Q : α → Prop}
     (h : P → ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄) : ⦃ ⌜ P ⌝ ⦄ m ⦃ ⇓ r => ⌜ Q r ⌝ ⦄ :=
   SPred.pure_elim' h
 
@@ -80,7 +80,7 @@ theorem triple_pre_prop {α : Type} {m : RustM α} {P : Prop} {Q : α → Prop}
 `spec.encode_decode_rest`. If every `Ok` output of the serializer satisfies `Enc`, and the
 deserializer recovers the value and the remainder from any `Enc` output followed by `rest`, then the
 post holds (the calls are total: `hser_pf`, `hser_fc`, `hdes`). -/
-theorem spec.RoundTrip.round_trip.default_fc_enc {T : Type} (RT : spec.RoundTrip T) (x : T)
+theorem spec.RoundTrip.round_trip.default_fc_enc {T : Type _} (RT : spec.RoundTrip T) (x : T)
     (rest : Slice Std.U8) (Enc : alloc.vec.Vec Std.U8 → Prop)
     (hpre : (spec.RoundTrip.round_trip.pre RT.SerializeBytesInst RT.DeserializeBytesInst
       RT.corecmpPartialEqInst RT x rest).holds)
@@ -103,14 +103,16 @@ theorem spec.RoundTrip.round_trip.default_fc_enc {T : Type} (RT : spec.RoundTrip
   mvcgen
   unfold spec.RoundTrip.round_trip.post RustM.holds
   mvcgen [spec.encode_decode_rest, hser', hdes, alloc.vec.Vec.extend_from_slice_U8_spec]
-  · rename_i res hp _ _ _ hc
+  · rename_i res hp cf hc val1 hx
+    subst hx
     have hr := continue_eq_tryCF.mp hc
     subst hr
     obtain ⟨m, hm, hl⟩ := SerializeBytes.post_ok_elim _ _ _ _ hp.1
     have := ok.inj (hn.symm.trans hm)
     subst this
     scalar_tac
-  · rename_i res hp _ val1 _ hc _ hrest _ hr
+  · rename_i res hp cf hc val1 hx _ hrest _ hr
+    subst hx
     exact ⟨val1, hp.2 _ (continue_eq_tryCF.mp hc), by rw [hr, hrest]⟩
   · rename_i hex _ hrv _ _
     obtain ⟨p, hp, hx, hr⟩ := hex
@@ -126,13 +128,13 @@ theorem spec.RoundTrip.round_trip.default_fc_enc {T : Type} (RT : spec.RoundTrip
   · rename_i hex _ _
     obtain ⟨_, hp, _⟩ := hex
     cases hp
-  · apply try_break_vc
-    intros
-    mvcgen
+  · try_vcs
+    intro h; subst h
+    simp [PostCond.ok, core.result.Result.is_err, RustM.holds, RustM.wpDown, WP.wp, PredTrans.apply]
 
 /-- `default_fc_enc` with a total deserializer lemma, stated for one `Enc` output and the input
 `enc ++ rest`. -/
-theorem spec.RoundTrip.round_trip.default_fc_enc_total {T : Type} (RT : spec.RoundTrip T)
+theorem spec.RoundTrip.round_trip.default_fc_enc_total {T : Type _} (RT : spec.RoundTrip T)
     (x : T) (rest : Slice Std.U8) (Enc : alloc.vec.Vec Std.U8 → Prop)
     (hpre : (spec.RoundTrip.round_trip.pre RT.SerializeBytesInst RT.DeserializeBytesInst
       RT.corecmpPartialEqInst RT x rest).holds)
@@ -154,13 +156,13 @@ theorem spec.RoundTrip.round_trip.default_fc_enc_total {T : Type} (RT : spec.Rou
     triple_pre_prop fun ⟨v, hE, hs⟩ => hdes v s hE hs
 
 /-- Discharge the proposition precondition of a partial triple. -/
-theorem partial_triple_of_pre {α : Type} {m : RustM α} {P : Prop} {Q : α → Prop}
+theorem partial_triple_of_pre {α : Type _} {m : RustM α} {P : Prop} {Q : α → Prop}
     (h : ⦃ ⌜ P ⌝ ⦄ m ⦃ ⇓? r => ⌜ Q r ⌝ ⦄) (hp : P) : ⦃ ⌜ True ⌝ ⦄ m ⦃ ⇓? r => ⌜ Q r ⌝ ⦄ :=
   Triple.of_entails_left _ h (SPred.pure_mono fun _ => hp)
 
 /-- `default_fc_enc` with the exact serializer output `enc`; the deserializer's total triple comes
 from its panic freedom `hdes_pf` and its partial triple `hdes`. -/
-theorem spec.RoundTrip.round_trip.default_fc {T : Type} (RT : spec.RoundTrip T) (x : T)
+theorem spec.RoundTrip.round_trip.default_fc {T : Type _} (RT : spec.RoundTrip T) (x : T)
     (rest : Slice Std.U8) (enc : List Std.U8)
     (hpre : (spec.RoundTrip.round_trip.pre RT.SerializeBytesInst RT.DeserializeBytesInst
       RT.corecmpPartialEqInst RT x rest).holds)
@@ -186,7 +188,7 @@ theorem spec.RoundTrip.round_trip.default_fc {T : Type} (RT : spec.RoundTrip T) 
 /-- `RoundTrip::round_trip` of a `TlsByteVecU*`-style wrapper, from the facts about its
 serializer (`hser`: an `Ok` output is `enc a` followed by the payload, `pval a` the payload length)
 and deserializer (the generic `TlsByteVecGen.deser`, `hdes`). -/
-theorem TlsByteVecGen.rt_fc {W P E : Type} (RT : spec.RoundTrip W) (vec : W → alloc.vec.Vec Std.U8)
+theorem TlsByteVecGen.rt_fc {W P E : Type _} (RT : spec.RoundTrip W) (vec : W → alloc.vec.Vec Std.U8)
     (mk : alloc.vec.Vec Std.U8 → W) (hmk : ∀ v, vec (mk v) = v) (hinj : ∀ a b, vec a = vec b → a = b)
     (enc : P → List Std.U8) (pval : P → Nat) (w : Std.Usize) (henc : ∀ a, (enc a).length = w.val)
     (readLen : Slice Std.U8 → RustM (core.result.Result (P × Slice Std.U8) Error))
@@ -404,10 +406,9 @@ theorem quic_vec.VLBytes.deserialize_enc_rest (x : quic_vec.VLBytes) (rest s : S
     ⦃ ⌜ True ⌝ ⦄ quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes s
     ⦃ ⇓ r => ⌜ ∃ p, r = .Ok p ∧ p.1 = x ∧ p.2.val = rest.val ⌝ ⦄ := by
   refine triple_post_mono (quic_vec.VLBytes.deserialize_list x.vec.val rest s hn hs) ?_
-  rintro r ⟨⟨raw⟩, rem, rfl, hv, hr⟩
-  obtain ⟨⟨c, hc⟩⟩ := x
-  simp only at hv
-  subst hv
+  rintro r ⟨⟨rv⟩, rem, rfl, hv, hr⟩
+  obtain ⟨xv⟩ := x
+  obtain rfl := (Slice.eq_iff rv xv).mpr hv
   exact ⟨_, rfl, rfl, hr⟩
 
 /-- `String::tls_deserialize_bytes` on the encoding of `t` followed by `rest`: succeeds, returns `t`
@@ -418,7 +419,7 @@ theorem alloc.string.String.deserialize_enc_rest (t : alloc.string.String) (rest
       (alloc.string.String.utf8U8 t).map (·.val) ++ rest.val.map (·.val)) :
     ⦃ ⌜ True ⌝ ⦄ alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes s
     ⦃ ⇓ r => ⌜ ∃ p, r = .Ok p ∧ p.1 = t ∧ p.2.val = rest.val ⌝ ⦄ := by
-  obtain ⟨_, hr0, raw, rem, rfl, hraw, hrem⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨_, hr0, raw, rem, rfl, hraw, hrem⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (quic_vec.VLByteVec.deserialize_list _ rest s hn hs)
   unfold alloc.string.String.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   rw [hr0]
@@ -444,7 +445,7 @@ theorem alloc.string.String.deserialize_enc_rest (t : alloc.string.String) (rest
 /-! ### `RoundTrip`: T's codecs from T's `RoundTrip.Lawful`, for the generic `Option` / `Vec` -/
 
 /-- Converse of `round_trip.pre_elim`. -/
-theorem spec.RoundTrip.round_trip.pre_intro {T : Type} (RT : spec.RoundTrip T) (x : T)
+theorem spec.RoundTrip.round_trip.pre_intro {T : Type _} (RT : spec.RoundTrip T) (x : T)
     (rest : Slice Std.U8) (n : Std.Usize)
     (hn : RT.SerializeBytesInst.SizeInst.tls_serialized_len x = ok n)
     (hle : rest.val.length + n.val ≤ Std.Usize.max) :
@@ -454,7 +455,7 @@ theorem spec.RoundTrip.round_trip.pre_intro {T : Type} (RT : spec.RoundTrip T) (
   apply pre_holds_of_ok_true
   have hl : core.slice.Slice.len rest = ok (Slice.len rest) := rfl
   have hsub := Aeneas.Std.UScalar.sub_equiv (core.num.Usize.MAX) n
-  simp only [hl, hn, bind_tc_ok]
+  simp only [hl, hn, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok]
   cases hs : (core.num.Usize.MAX - n : RustM Std.Usize) with
   | ok m =>
     rw [hs] at hsub
@@ -466,7 +467,7 @@ theorem spec.RoundTrip.round_trip.pre_intro {T : Type} (RT : spec.RoundTrip T) (
 
 /-- The free function `spec.encode_decode_rest` on a serializer output `b`: it deserializes
 `b ++ rest` and wraps the result. -/
-theorem spec.encode_decode_rest.char {T : Type} (S : SerializeBytes T) (D : DeserializeBytes T)
+theorem spec.encode_decode_rest.char {T : Type _} (S : SerializeBytes T) (D : DeserializeBytes T)
     (hdpf : ∀ s : Slice Std.U8, ⦃ ⌜ True ⌝ ⦄ D.tls_deserialize_bytes s ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
     (x : T) (rest : Slice Std.U8) (b : alloc.vec.Vec Std.U8)
     (hb : S.tls_serialize_bytes x = ok (.Ok b))
@@ -481,31 +482,30 @@ theorem spec.encode_decode_rest.char {T : Type} (S : SerializeBytes T) (D : Dese
     rw [hb]; apply RustM.ok_spec; rfl
   have hd : ∀ s : Slice Std.U8, ⦃ ⌜ True ⌝ ⦄ D.tls_deserialize_bytes s
       ⦃ ⇓ r => ⌜ D.tls_deserialize_bytes s = ok r ⌝ ⦄ := fun s => by
-    obtain ⟨v, hv, -⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hdpf s)
+    obtain ⟨v, hv, -⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hdpf s)
     rw [hv]; apply RustM.ok_spec; rfl
   mvcgen [spec.encode_decode_rest, hs, hd, alloc.vec.Vec.extend_from_slice_U8_spec]
-  · rename_i _ h1 _ val1 _ h2
-    subst h1
+  · rename_i _ h1 _ h2 val1 hx
+    subst h1 hx
     cases continue_eq_tryCF.mp h2
     exact hlen
-  · rename_i _ h1 _ val1 _ h2 _ h3 _ h4 _ p _ hd _ h5
-    subst h1 h4 h5
+  · rename_i _ h1 _ h2 val1 hx _ h3 _ h4 _ p _ hd _ h5
+    subst h1 hx h4 h5
     cases continue_eq_tryCF.mp h2
     refine ⟨_, _, h3, hd, ?_, by simp⟩
     rintro out rem h
     cases h
     exact ⟨_, rfl, rfl⟩
-  · rename_i _ h1 _ val1 _ h2 _ h3 _ h4 _ e _ hd
-    subst h1 h4
+  · rename_i _ h1 _ h2 val1 hx _ h3 _ h4 _ e _ hd
+    subst h1 hx h4
     cases continue_eq_tryCF.mp h2
     exact ⟨_, _, h3, hd, by simp, by simp⟩
-  · rename_i _ h1 _ _ _
-    subst h1
-    intro h
-    simp [tryCF] at h
+  · rename_i _ h1 _ h2 _ hx
+    subst h1 hx
+    simp [tryCF] at h2
 
 /-- The closure of the `ensures` of `RoundTrip::round_trip`, on an `Option`. -/
-theorem spec.RoundTrip.call_once_char {T : Type} {RT : spec.RoundTrip T}
+theorem spec.RoundTrip.call_once_char {T : Type _} {RT : spec.RoundTrip T}
     (hl : spec.RoundTrip.Lawful T RT) (x : T) (rest : Slice Std.U8)
     (o : core.option.Option (T × alloc.vec.Vec Std.U8)) :
     ⦃ ⌜ True ⌝ ⦄ spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool.call_once
@@ -539,7 +539,7 @@ theorem spec.RoundTrip.call_once_char {T : Type} {RT : spec.RoundTrip T}
 
 /-- The container-facing form of `RoundTrip.Lawful`: if `T`'s serializer returns `Ok b` on `x`, then
 `T`'s deserializer, on any `b ++ rest` that fits in a slice, returns `x` and `rest`. -/
-theorem spec.RoundTrip.Lawful.dec {T : Type} {RT : spec.RoundTrip T}
+theorem spec.RoundTrip.Lawful.dec {T : Type _} {RT : spec.RoundTrip T}
     (hl : spec.RoundTrip.Lawful T RT) (x : T) (rest : Slice Std.U8) (b : alloc.vec.Vec Std.U8)
     (hb : RT.SerializeBytesInst.tls_serialize_bytes x = ok (.Ok b))
     (hlen : b.val.length + rest.val.length ≤ Std.Usize.max) (s : Slice Std.U8) :
@@ -550,29 +550,29 @@ theorem spec.RoundTrip.Lawful.dec {T : Type} {RT : spec.RoundTrip T}
   by_cases hs : s.val = b.val ++ rest.val
   swap
   · exact triple_post_mono (hdpf s) fun _ _ h => absurd h hs
-  obtain ⟨v, hv, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨v, hv, hP⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (hl.SerializeBytesInstLawful.tls_serialize_bytes_spec x (pre_holds_of_ok_true rfl))
   rw [hb] at hv
-  cases hv
+  obtain rfl := RustM.ok_injective hv
   obtain ⟨n, hn, hnl⟩ := SerializeBytes.post_ok_elim _ _ _ _ hP
   have hpre := spec.RoundTrip.round_trip.pre_intro RT x rest n hn (by scalar_tac)
-  obtain ⟨u, hu, hpost⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (hl.round_trip_spec x rest hpre)
-  obtain ⟨r0, hr0, hc⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+  obtain ⟨u, hu, hpost⟩ := Aeneas.Std.triple_iff_exists_ok.mp (hl.round_trip_spec x rest hpre)
+  obtain ⟨r0, hr0, hc⟩ := Aeneas.Std.triple_iff_exists_ok.mp
     (spec.encode_decode_rest.char RT.SerializeBytesInst RT.DeserializeBytesInst hdpf x rest b hb hlen)
   unfold spec.RoundTrip.round_trip.post at hpost
   rw [hr0] at hpost
   obtain ⟨s', r1, hs', hd, hok, herr⟩ := hc
-  obtain rfl : s' = s := Subtype.ext (hs'.trans hs.symm)
+  obtain rfl : s' = s := (Slice.eq_iff _ _).mpr (hs'.trans hs.symm)
   rw [hd]
   apply RustM.ok_spec
   intro _
-  have hcall := fun o => Aeneas.Std.WP.triple_iff_exists_ok.mp (spec.RoundTrip.call_once_char hl x rest o)
+  have hcall := fun o => Aeneas.Std.triple_iff_exists_ok.mp (spec.RoundTrip.call_once_char hl x rest o)
   cases r1 with
   | Err e =>
     obtain rfl := herr e rfl
     simp [core.result.Result.is_err, core.result.Result.is_ok_and, Functor.map] at hpost
     obtain ⟨c, hc, hiff⟩ := hcall .None
-    rw [hc] at hpost
+    simp only [hc, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok] at hpost
     have := hiff.mp (holds_ok_iff.mp hpost)
     simp at this
   | Ok p =>
@@ -580,14 +580,14 @@ theorem spec.RoundTrip.Lawful.dec {T : Type} {RT : spec.RoundTrip T}
     obtain ⟨w, hw, rfl⟩ := hok out rem rfl
     simp [core.result.Result.is_err, core.result.Result.is_ok_and, Functor.map] at hpost
     obtain ⟨c, hc, hiff⟩ := hcall (.Some (out, w))
-    rw [hc] at hpost
+    simp only [hc, Aeneas.Std.bind_ok, Aeneas.Std.bind_tc_ok] at hpost
     obtain ⟨o, w', h, ho, hw'⟩ := hiff.mp (holds_ok_iff.mp hpost)
     cases h
     exact ⟨_, rfl, ho, hw.symm.trans hw'⟩
 
 /-- `Option<T>::tls_serialize_bytes`: an `Ok out` is `[0]` (`None`) or `1 :: b` for an `Ok b` of `T`'s
 serializer on the payload. -/
-theorem Option_serialize_rt {T : Type} (inst : SerializeBytes T)
+theorem Option_serialize_rt {T : Type _} (inst : SerializeBytes T)
     (hlaw : SerializeBytes.Lawful T inst) (o : core.option.Option T) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes inst o
     ⦃ ⇓ r => ⌜ ∀ out, r = .Ok out →
@@ -598,7 +598,7 @@ theorem Option_serialize_rt {T : Type} (inst : SerializeBytes T)
   have hs : ∀ x, ⦃ ⌜ True ⌝ ⦄ inst.tls_serialize_bytes x
       ⦃ ⇓ r => ⌜ inst.tls_serialize_bytes x = ok r ∧ (SerializeBytes.tls_serialize_bytes.post
         inst.SizeInst inst x r).holds ⌝ ⦄ := fun x => by
-    obtain ⟨v, hv, hp⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
+    obtain ⟨v, hv, hp⟩ := Aeneas.Std.triple_iff_exists_ok.mp
       (hlaw.tls_serialize_bytes_spec x (pre_holds_of_ok_true rfl))
     rw [hv]; apply RustM.ok_spec; exact ⟨rfl, hp⟩
   cases o with
@@ -606,7 +606,7 @@ theorem Option_serialize_rt {T : Type} (inst : SerializeBytes T)
     exact triple_post_mono (Option_serialize_char inst hlaw .None) fun r h out hr =>
       (h.1 out hr).elim (fun h => Or.inl h) (fun ⟨_, _, _, ho, _⟩ => by cases ho)
   | some e =>
-    obtain ⟨n, hn, -⟩ := (Aeneas.Std.WP.triple_iff_exists_ok).1
+    obtain ⟨n, hn, -⟩ := (Aeneas.Std.triple_iff_exists_ok).1
       (hsz e (pre_holds_of_ok_true rfl))
     mvcgen [core.option.Option.Insts.Tls_codecSerializeBytes.tls_serialize_bytes, hn, hs,
       checked_alloc_len_ok, alloc.vec.Vec.with_capacity, alloc.vec.Vec.append,
@@ -616,14 +616,14 @@ theorem Option_serialize_rt {T : Type} (inst : SerializeBytes T)
     all_goals (try (intros; simp [PostCond.ok]; done))
     · rename_i _ _ _ _ _ _ hr3 _
       subst hr3
-      simp [Slice.new]
+      simp [Slice.new_val]
       scalar_tac
     · rename_i r5 hchk cf0 val x1 r3 hr3 out1 hout1 r1 hpost cf1 val1 x2 comb hlen hcv hr1
       intro out hout
       have hout' := core.result.Result.Ok.inj hout
       subst hout' hr1
       refine Or.inr ⟨e, val1, rfl, hpost.1, ?_⟩
-      simp [comb, hout1, hr3, Slice.new]
+      simp [comb, hout1, hr3, Slice.new_val]
     · rename_i r5 hchk cf0 val x1 r3 hr3 out1 hout1 r1 hpost cf1 val1 x2 comb hlen hcv hr1
       exfalso
       subst hr1
@@ -634,70 +634,75 @@ theorem Option_serialize_rt {T : Type} (inst : SerializeBytes T)
       subst hr3
       apply hlen
       simp only [comb, hout1, List.length_append, hl]
-      simp [Slice.new]
+      simp [Slice.new_val]
       scalar_tac
 
 /-- `Option<T>::tls_deserialize_bytes` on `0 :: rest`: `None` and `rest`. -/
-theorem Option_deserialize_none {T : Type} (inst : DeserializeBytes T) (rest s : Slice Std.U8)
+theorem Option_deserialize_none {T : Type _} (inst : DeserializeBytes T) (rest s : Slice Std.U8)
     (hs : s.val = 0#u8 :: rest.val) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst s
     ⦃ ⇓ r => ⌜ ∃ p, r = .Ok p ∧ p.1 = .None ∧ p.2.val = rest.val ⌝ ⦄ := by
   mvcgen [core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes, U8_deserialize_char]
-  · rename_i r1 hP cf p hx hz hr1
+  · rename_i r1 hP cf hr1 p hx hz
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     rw [hs] at hb
     exact ⟨_, rfl, rfl, by rw [hp2]; exact (List.cons.inj hb).2.symm⟩
-  · rename_i r1 hP cf p hx hz hr1
+  · rename_i r1 hP cf hr1 p hx hz
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     simp only [hs, List.cons.injEq, hz] at hb
     exact absurd hb.1 (by decide)
-  · rename_i r1 hP cf p hx t h0 h1 hpt hr1 _ _ _ _ _
+  · rename_i r1 hP cf hr1 p hx t h0 h1 hpt _ _ _ _ _
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     simp only [hs, List.cons.injEq] at hb
     exact absurd (hpt ▸ hb.1.symm) h0
-  · rename_i r1 hP cf resid hx
-    intro h
+  · rename_i r1 hP cf hcf resid hx
     have hb := hP.1 (by simp [hs])
     obtain ⟨a, t, -, -, hr⟩ := hb
-    subst hr
-    simp [tryCF] at h
+    subst hr hx
+    simp [tryCF] at hcf
 
 /-- `Option<T>::tls_deserialize_bytes` on `1 :: (b ++ rest)`, when `T`'s deserializer returns `x`
 and `rest` on `b ++ rest`: `Some x` and `rest`. -/
-theorem Option_deserialize_some {T : Type} (inst : DeserializeBytes T) (rest s : Slice Std.U8)
+theorem Option_deserialize_some {T : Type _} (inst : DeserializeBytes T) (rest s : Slice Std.U8)
     (x : T) (b : List Std.U8) (hs : s.val = 1#u8 :: (b ++ rest.val))
     (hd : ∀ t : Slice Std.U8, ⦃ ⌜ True ⌝ ⦄ inst.tls_deserialize_bytes t
       ⦃ ⇓ r => ⌜ t.val = b ++ rest.val → ∃ p, r = .Ok p ∧ p.1 = x ∧ p.2.val = rest.val ⌝ ⦄) :
     ⦃ ⌜ True ⌝ ⦄ core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes inst s
     ⦃ ⇓ r => ⌜ ∃ p, r = .Ok p ∧ p.1 = .Some x ∧ p.2.val = rest.val ⌝ ⦄ := by
   mvcgen [core.option.Option.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes, U8_deserialize_char, hd]
-  · rename_i r1 hP cf p hx hz hr1
+  · rename_i r1 hP cf hr1 p hx hz
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     simp only [hs, List.cons.injEq, hz] at hb
     exact absurd hb.1 (by decide)
-  · rename_i r1 hP cf p hx hz hr1 r2 hP2 cf2 p2 hx2 hr2
+  · rename_i r1 hP cf hr1 p hx hz r2 hP2 cf2 p2 hx2 hr2
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     rw [hs] at hb
     obtain ⟨q, hq, hq1, hq2⟩ := hP2 (by rw [hp2]; exact (List.cons.inj hb).2.symm)
     subst hq
     cases continue_eq_tryCF.mp hr2
     exact ⟨_, rfl, by rw [hq1], hq2⟩
-  · rename_i r1 hP cf p hx hz hr1 r2 hP2 cf2 resid hx2
+  · rename_i r1 hP cf hr1 p hx hz r2 hP2 cf2 resid hx2
+    subst hx
     intro h
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     rw [hs] at hb
     obtain ⟨q, hq, -⟩ := hP2 (by rw [hp2]; exact (List.cons.inj hb).2.symm)
     subst hq
     simp [tryCF] at h
-  · rename_i r1 hP cf p hx t h0 h1 hpt hr1 _ _ _ _ _
+  · rename_i r1 hP cf hr1 p hx t h0 h1 hpt _ _ _ _ _
+    subst hx
     obtain ⟨l, hb, hp2⟩ := U8_deserialize_ok hP hr1
     simp only [hs, List.cons.injEq] at hb
     exact absurd (hpt ▸ hb.1.symm) h1
-  · rename_i r1 hP cf resid hx
-    intro h
+  · rename_i r1 hP cf hcf resid hx
     have hb := hP.1 (by simp [hs])
     obtain ⟨a, t, -, -, hr⟩ := hb
-    subst hr
-    simp [tryCF] at h
+    subst hr hx
+    simp [tryCF] at hcf
 
 end tls_codec
