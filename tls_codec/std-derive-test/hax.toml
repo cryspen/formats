@@ -2,7 +2,7 @@
 [tools]
 # As ../hax.toml (aeneas built by `sh ../proofs/setup.sh`).
 aeneas = { path = "../.hax-tools/aeneas/bin/aeneas" }
-charon = "nightly-2026.09.02"
+charon = "nightly-2026.10.31"
 
 [scenario.std-derive-test]
 backend = "lean"

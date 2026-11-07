@@ -10,11 +10,11 @@
 # pinned is only what the aeneas build drags along with it; see below.
 
 [tools]
-# aeneas built from cryspen/aeneas 4aefccc8 (the revision whose Lean library
+# aeneas built from cryspen/aeneas 38960402 (the revision whose Lean library
 # `proofs/tls-codec/lean/lakefile.toml` requires) by `sh proofs/setup.sh`;
 # the path is relative to this file. charon: the version that aeneas expects.
 aeneas = { path = ".hax-tools/aeneas/bin/aeneas" }
-charon = "nightly-2026.09.02"
+charon = "nightly-2026.10.31"
 
 [scenario.tls-codec]
 backend = "lean"

@@ -20,7 +20,7 @@
 set -eu
 
 AENEAS_URL=${AENEAS_URL:-https://github.com/cryspen/aeneas}
-AENEAS_REV=4aefccc867beefe0e90b2e16279134bf8592e2ff
+AENEAS_REV=38960402afe18843ea3e4a5233b242cb194e96a8
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 dest="$root/.hax-tools/aeneas"

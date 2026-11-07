@@ -10,15 +10,15 @@ name = "TlsCodec"
 leanOptions = { weak.linter.style.nameCheck = false }
 
 # The aeneas Lean library has to match the aeneas binary that
-# `../../../hax.toml` points at: both come from cryspen/aeneas 4aefccc8 (the
+# `../../../hax.toml` points at: both come from cryspen/aeneas 38960402 (the
 # binary is built by `../../setup.sh`).
 [[require]]
 name = "aeneas"
 git = "https://github.com/cryspen/aeneas"
-rev = "4aefccc867beefe0e90b2e16279134bf8592e2ff"
+rev = "38960402afe18843ea3e4a5233b242cb194e96a8"
 subDir = "backends/lean"
 
 [[require]]
 name = "hax"
 git = "https://github.com/cryspen/hax-lean"
-rev = "v0.3.27"
+rev = "v0.3.34"
